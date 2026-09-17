@@ -832,6 +832,141 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This batch hides partial failure from its caller.",
     },
+    "jev/no-duplicated-logic": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function reimplement logic that already exists elsewhere in the repository?",
+          inspect: "Compare the normalized statement fingerprint with each matching function excerpt, the shared literals and member names, shared imports, common callers, and repository callers in the supplied evidence.",
+          focus: "Judge whether the candidate repeats domain behavior already owned elsewhere, rather than sharing only generic scaffolding.",
+          decision_boundary: [
+            "A body that matches another function statement-for-statement, including the same literals and domain member names, is strong evidence of reimplemented logic.",
+            "Shared try/catch structure, map/filter chains, or other generic scaffolding with no shared literals or domain tokens is weak evidence on its own.",
+            "A single shared literal or member name without structural similarity is insufficient; look for the fingerprint and excerpts to agree.",
+            "Matches in test fixtures, generated code, or intentionally parallel implementations with distinct ownership are not duplication that needs one home.",
+            "If the evidence does not establish a concrete matching implementation with shared domain behavior, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function repeats an algorithm or behavior that already exists in another repository function, sharing structure plus domain tokens",
+            remedy: "Extract the shared behavior into one named unit and reuse it from both call sites",
+          },
+          false: {
+            what: "Any similarity is generic scaffolding, the matches have distinct behavior, or no concrete matching implementation is established",
+          },
+        },
+      },
+      message: "This function reimplements logic that already exists elsewhere in the repository.",
+    },
+    "jev/no-type-code-dispatch": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do this function's branches dispatch on a domain type code whose variants should own the behavior instead?",
+          inspect: "Compare the switch discriminant or compared base expression with each arm's variant-specific behavior, the declared union type, other handlers of the same member across the repository, and repository callers in the supplied evidence.",
+          focus: "Judge whether the discriminant is a typed domain code with variant-specific arms, rather than transient local branching.",
+          decision_boundary: [
+            "A multi-arm switch on a member such as node.type, where each arm builds variant behavior and other modules switch on the same member, is strong evidence the variants should own the behavior.",
+            "Two arms on a transient local string with no declared union and no other handlers in the repository is weak evidence on its own.",
+            "Branching on booleans, null checks, or error shapes without a domain type code does not establish this smell.",
+            "A declared union type alone is insufficient; the arms must carry variant-specific behavior that polymorphism could own.",
+            "If the discriminant is not a domain type code or the arms share one behavior, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function switches over a domain type code with variant-specific arms while the variant types could own the behavior",
+            remedy: "Move each arm's behavior onto its variant type behind a shared operation",
+          },
+          false: {
+            what: "The branching is local, transient, or uniform across arms, or the discriminant is not a domain type code",
+          },
+        },
+      },
+      message: "This function dispatches on a domain type code that its variants should own.",
+    },
+    "jev/no-mode-flag-parameter": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function's boolean parameter select between behaviors that callers should invoke as separate operations?",
+          inspect: "Compare the flag parameter declaration with each branch it controls, the overlap between the selected paths, whether the parameter is positional or part of an options bag, and the literal true/false call sites in the supplied evidence.",
+          focus: "Judge whether the flag creates two operations behind one signature that every caller must understand by reading the implementation.",
+          decision_boundary: [
+            "A positional boolean with callers passing literal true and false to select disjoint behavior paths is strong evidence of a mode flag.",
+            "A boolean consumed once in a shared guard with otherwise identical behavior is weak evidence on its own.",
+            "An options-bag field or configuration value that tunes one behavior is not a mode flag.",
+            "A single if on the flag with no alternate path is insufficient; the parameter must select between behaviors.",
+            "If the evidence does not show callers selecting between distinct behaviors through the parameter, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A boolean parameter selects between distinct behaviors that callers pass as literals, forcing each caller to know the implementation",
+            remedy: "Split the function into separately named operations or replace the flag with an explicit strategy",
+          },
+          false: {
+            what: "The parameter tunes one behavior, guards shared logic, lives in an options bag, or lacks evidence of behavior selection",
+          },
+        },
+      },
+      message: "This boolean parameter selects between behaviors that should be separate operations.",
+    },
+    "jev/no-message-chain": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this call chain navigate intermediate objects whose internals the calling function should not need to know?",
+          inspect: "Compare each chain's navigation depth and whether intermediate links take arguments, repeated chain prefixes in the same body, the imported types of the intermediate links, any direct accessor the owner already exposes, and repository callers in the supplied evidence.",
+          focus: "Judge whether the caller depends on the shape of intermediaries it merely passes through.",
+          decision_boundary: [
+            "Reaching through several imported types with argument-free navigation links, such as order.customer().address().zip(), is strong evidence of a message chain.",
+            "A two-link fluent builder chain where the intermediate type is the same module's own builder is weak evidence on its own.",
+            "Chains that compute at each link with meaningful arguments are collaboration, not navigation.",
+            "A single chain with no repetition and no evidence about intermediate ownership is insufficient.",
+            "If the intermediaries are the caller's own objects or the chain stays within one abstraction, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function navigates through intermediate objects it does not own, coupling itself to each intermediary's shape",
+            remedy: "Add a direct operation on the nearest collaborator that hides the navigation",
+          },
+          false: {
+            what: "The chain is a fluent builder, single-level collaboration, or stays within objects the caller owns",
+          },
+        },
+      },
+      message: "This call chain navigates intermediate objects it should not need to know.",
+    },
+    "jev/no-mixed-abstraction-levels": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function mix raw implementation mechanics with domain-level operations instead of staying at one level of abstraction?",
+          inspect: "Compare the extracted mechanical spans with the domain-level calls, their ratio and interleaving, the module imports, any same-module helper that already wraps the mechanics, and repository callers in the supplied evidence.",
+          focus: "Judge whether one body interleaves bit-level or index-level plumbing with domain decisions, rather than isolating the mechanics.",
+          decision_boundary: [
+            "Byte-offset math, counter loops, or buffer manipulation interleaved line-by-line with domain calls such as chargeCustomer() is strong evidence of mixed levels.",
+            "One contained parsing loop feeding a single domain call, with the mechanics isolated in a block, is weak evidence on its own.",
+            "Mechanics alone or domain calls alone never establish mixing; both classes must be present in one body.",
+            "A same-module helper that already wraps the mechanical part weakens the case when this function stays at the domain level.",
+            "If the evidence does not show both raw mechanics and domain operations interleaved in one body, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function interleaves low-level implementation mechanics with domain-level operations in one body",
+            remedy: "Extract the mechanical plumbing into a named helper so the function reads at one level",
+          },
+          false: {
+            what: "The body stays at one level, isolates its mechanics in a block or helper, or lacks evidence of both classes",
+          },
+        },
+      },
+      message: "This function mixes raw mechanics with domain-level operations.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {
