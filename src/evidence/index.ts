@@ -5,6 +5,7 @@ import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.j
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
+import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
@@ -51,6 +52,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-mixed-responsibilities") {
     return { handled: true, evidence: buildMixedResponsibilitiesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-data-clump") {
+    return { handled: true, evidence: buildDataClumpEvidence(candidate, projectFiles) };
   }
   if (ruleId === "jev/no-scattered-policy") {
     return { handled: true, evidence: buildScatteredPolicyEvidence(candidate, projectFiles) };

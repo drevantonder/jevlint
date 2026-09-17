@@ -287,6 +287,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function combines responsibilities with different reasons to change.",
     },
+    "jev/no-data-clump": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is the repeated parameter group a missing domain value that should travel as one concept?",
+          inspect: "Compare the parameter names and types, the responsibilities of every function carrying them, and the observed callers in the supplied repository evidence.",
+          focus: "Require one cohesive concept with useful ownership or invariants. Repetition and parameter count alone are not enough.",
+          decision_boundary: [
+            "Address fields repeatedly passed through quoting, labeling, and validation are strong evidence of a missing Address value.",
+            "Operands intrinsic to a mathematical operation, such as a value and its bounds, need not become an object.",
+            "Framework-mandated callback or middleware signatures are contracts, not data clumps.",
+            "Small public or boundary APIs may intentionally keep conventional scalar arguments for ergonomics.",
+            "Generic names such as source, target, and options do not establish a domain concept. If ownership is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The same values consistently travel together, represent one named domain concept, and gain clearer ownership or invariants when grouped",
+            remedy: "Introduce the domain value and pass it through the affected functions as one concept",
+          },
+          false: {
+            what: "The parameters are independent operands, a required signature, an intentional boundary API, coincidental names, or lack enough evidence for a shared concept",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "These parameters repeatedly travel together as an unnamed domain concept.",
+    },
     "jev/no-scattered-policy": {
       scope: "function",
       question: {

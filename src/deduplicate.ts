@@ -11,6 +11,7 @@ const ACCIDENTAL_COMPLEXITY_PRIORITY = new Map<string, number>([
   ["jev/no-scattered-policy", 80],
   ["jev/no-speculative-generality", 70],
   ["jev/no-mixed-responsibilities", 60],
+  ["jev/no-data-clump", 55],
 ]);
 
 const STATE_MODEL_PRIORITY = new Map<string, number>([

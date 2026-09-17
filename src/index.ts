@@ -10,6 +10,7 @@ export { buildAvoidableOrchestrationEvidence } from "./evidence/avoidable-orches
 export { buildComplexityDisplacementEvidence } from "./evidence/complexity-displacement.js";
 export { buildConditionallyValidStateEvidence } from "./evidence/conditionally-valid-state.js";
 export { buildCorrelatedStateBooleansEvidence } from "./evidence/correlated-state-booleans.js";
+export { buildDataClumpEvidence } from "./evidence/data-clump.js";
 export { buildDisproportionateConfigurationEvidence } from "./evidence/disproportionate-configuration.js";
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
