@@ -15,6 +15,7 @@ export { buildDisproportionateConfigurationEvidence } from "./evidence/dispropor
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
 export { buildHiddenIoEvidence } from "./evidence/hidden-io.js";
+export { buildInterchangeableDomainPrimitivesEvidence } from "./evidence/interchangeable-domain-primitives.js";
 export { buildLossySentinelReturnEvidence } from "./evidence/lossy-sentinel-return.js";
 export { buildMixedResponsibilitiesEvidence } from "./evidence/mixed-responsibilities.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";

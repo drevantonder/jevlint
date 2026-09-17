@@ -112,6 +112,17 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("prefers erased domain meaning over speculative generality", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-speculative-generality", 5, 10),
+      diagnostic("jev/no-interchangeable-domain-primitives", 5, 10),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-interchangeable-domain-primitives",
+    ]);
+  });
+
   it("prefers a hidden command over its generic I/O symptom", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-io", 5, 12),

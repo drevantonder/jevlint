@@ -10,6 +10,7 @@ import { buildDisproportionateConfigurationEvidence } from "./disproportionate-c
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
@@ -110,6 +111,12 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildPersistenceModelLeakEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-interchangeable-domain-primitives") {
+    return {
+      handled: true,
+      evidence: buildInterchangeableDomainPrimitivesEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

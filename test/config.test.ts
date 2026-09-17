@@ -33,6 +33,7 @@ describe("loadConfig", () => {
       "jev/no-complexity-displacement",
       "jev/no-transport-coupled-domain",
       "jev/no-persistence-model-leak",
+      "jev/no-interchangeable-domain-primitives",
       "jev/no-feature-envy",
     ]);
   });

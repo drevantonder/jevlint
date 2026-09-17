@@ -4,6 +4,7 @@ const ACCIDENTAL_COMPLEXITY_PRIORITY = new Map<string, number>([
   ["jev/no-complexity-displacement", 100],
   ["jev/no-transport-coupled-domain", 95],
   ["jev/no-persistence-model-leak", 95],
+  ["jev/no-interchangeable-domain-primitives", 90],
   ["jev/no-disproportionate-configuration", 90],
   ["jev/no-avoidable-orchestration", 90],
   ["jev/no-ad-hoc-branching", 90],

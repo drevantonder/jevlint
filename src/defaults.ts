@@ -628,6 +628,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "A persistence-owned model leaks across its boundary.",
     },
+    "jev/no-interchangeable-domain-primitives": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function make distinct, non-interchangeable domain values unsafe by accepting them as the same bare primitive type?",
+          inspect: "Use the grouped parameters, function behavior, actual argument lists, and consumer source in the supplied evidence.",
+          focus: "Judge whether the signature erases domain identity or invariants strongly enough that validly typed arguments can be swapped or misused in a consequential way.",
+          decision_boundary: [
+            "Source and destination account identifiers in one transfer signature are strong evidence when the body gives them opposing domain roles.",
+            "Primitive values are not a smell by default; require a meaningful domain boundary and evidence of distinct identities or rules.",
+            "Formatting inputs, names, coordinates, ranges, and similarly conventional data pairs usually remain clearest as primitives.",
+            "Wire protocols, cryptographic APIs, serialization, and framework callbacks may require primitive representations at their adapter boundary.",
+            "Different parameter names or an Id suffix alone do not prove harmful interchangeability; if the domain distinction is not demonstrated, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The same primitive type hides materially different domain roles or invariants and permits a consequential argument substitution",
+            remedy: "Represent each role with a distinct domain-owned type or accept a command whose fields preserve their identities",
+          },
+          false: {
+            what: "The values are ordinary data, constrained by an external boundary, safely conventional, or not shown to carry distinct domain meaning",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "Bare primitives erase distinct domain meanings in this API.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {
