@@ -21,7 +21,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "check": "tsc --noEmit && vitest run",
+    "check": "tsc --noEmit && node tools/generate-registry.mjs --check && vitest run",
+    "generate:registry": "node tools/generate-registry.mjs",
     "env:check": "varlock load --agent",
     "jevlint": "varlock run -- node dist/cli.js",
     "lint": "oxlint",
