@@ -218,6 +218,11 @@ describe("loadConfig", () => {
       "jev/no-single-caller-exported-helper",
       "jev/no-string-duplicated-enumeration",
       "jev/no-convergent-twin-types",
+      "jev/no-ambient-dependency-grab",
+      "jev/no-singly-owned-lazy-shared-state",
+      "jev/no-unit-ambiguous-quantity",
+      "jev/no-partially-narrowed-nullable",
+      "jev/no-heterogeneous-primitive-callers",
     ]);
   });
 

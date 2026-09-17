@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- Two hundred seven bundled Jev rules
+- Two hundred twelve bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -41,12 +41,15 @@ The bundled Jev rules judge:
 - configuration disproportionate to observed use
 - avoidable sequential orchestration
 - runtime inputs hidden inside domain or application functions
+- shared dependencies grabbed through ambient accessors instead of parameters
 - initialization order hidden behind mutable module state
+- lazily created module-shared state with no reset its callers can reach
 - all-or-nothing domain operations without an explicit transaction or recovery policy
 - changes that displace rather than reduce complexity
 - domain behavior coupled directly to transport details
 - persistence-owned models leaking into domain or application consumers
 - bare primitive parameters that erase distinct domain identities
+- one bare-primitive slot fed by differently-stemmed values across callers
 - domain policy originating inside transport, provider, or persistence adapters
 - swallowed failures that leave caller-visible success or ordinary absence
 - error translations that discard failure identity, cause, or actionable context
@@ -144,6 +147,8 @@ The bundled Jev rules judge:
 - monetary amounts passing through binary floating arithmetic that accumulates error
 - listings that paginate by offset over changing data, so pages drift
 - calls that mix unit scales the surrounding convention distinguishes
+- quantities whose unit is stated nowhere in name, type, or documentation
+- nullable unions narrowed against one absence while the other reaches a use
 - parses that silently truncate input at the edges, so malformed values look valid
 - dates that cross a boundary in locale-rendered form and cannot round-trip
 - overloads that admit the same call shape for different meanings

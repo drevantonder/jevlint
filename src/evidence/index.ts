@@ -203,6 +203,11 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildAmbientDependencyGrabEvidence } from "./ambient-dependency-grab.js";
+import { buildSinglyOwnedLazySharedStateEvidence } from "./singly-owned-lazy-shared-state.js";
+import { buildUnitAmbiguousQuantityEvidence } from "./unit-ambiguous-quantity.js";
+import { buildPartiallyNarrowedNullableEvidence } from "./partially-narrowed-nullable.js";
+import { buildHeterogeneousPrimitiveCallersEvidence } from "./heterogeneous-primitive-callers.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1142,30 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-ambient-dependency-grab") {
+    return { handled: true, evidence: buildAmbientDependencyGrabEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-singly-owned-lazy-shared-state") {
+    return {
+      handled: true,
+      evidence: buildSinglyOwnedLazySharedStateEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unit-ambiguous-quantity") {
+    return { handled: true, evidence: buildUnitAmbiguousQuantityEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-partially-narrowed-nullable") {
+    return {
+      handled: true,
+      evidence: buildPartiallyNarrowedNullableEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-heterogeneous-primitive-callers") {
+    return {
+      handled: true,
+      evidence: buildHeterogeneousPrimitiveCallersEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
