@@ -158,6 +158,18 @@ describe("loadConfig", () => {
       "jev/no-unclosed-handle",
       "jev/no-bespoke-crypto-construction",
       "jev/no-duplicated-style-object",
+      "jev/no-unmeasured-performance-machinery",
+      "jev/no-unmigrated-schema-change",
+      "jev/no-unconsumed-telemetry",
+      "jev/no-english-only-pluralization",
+      "jev/no-duplicate-config-source",
+      "jev/no-unowned-feature-flag",
+      "jev/no-superseded-api-use",
+      "jev/no-phantom-package-import",
+      "jev/no-interaction-pinning-test",
+      "jev/no-single-use-dependency",
+      "jev/no-second-shelf-dependency",
+      "jev/no-repeated-test-preamble",
     ]);
   });
 

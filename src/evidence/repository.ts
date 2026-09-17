@@ -11,6 +11,7 @@ import type {
   TSInterfaceDeclaration,
   TSTypeAliasDeclaration,
 } from "oxc-parser";
+import { z } from "zod";
 import type { Candidate, ProjectFile } from "../types.js";
 
 export type FunctionNode = OxcFunction | ArrowFunctionExpression;
@@ -429,4 +430,44 @@ function memberObjectRoot(object: Expression): string | null {
   }
   if (object.type === "CallExpression") return calleeRootName(object.callee);
   return null;
+}
+
+const manifestDependencySection = z.record(z.string(), z.string());
+
+const manifestSchema = z.object({
+  dependencies: manifestDependencySection.optional(),
+  devDependencies: manifestDependencySection.optional(),
+  peerDependencies: manifestDependencySection.optional(),
+  optionalDependencies: manifestDependencySection.optional(),
+});
+
+export type ManifestDependency = {
+  name: string;
+  section: string;
+  version: string;
+};
+
+export function manifestDependencies(source: string): ManifestDependency[] {
+  let json: unknown;
+  try {
+    json = JSON.parse(source);
+  } catch {
+    return [];
+  }
+  const parsed = manifestSchema.safeParse(json);
+  if (!parsed.success) return [];
+  const result: ManifestDependency[] = [];
+  const sections = [
+    { section: "dependencies", entries: parsed.data.dependencies },
+    { section: "devDependencies", entries: parsed.data.devDependencies },
+    { section: "peerDependencies", entries: parsed.data.peerDependencies },
+    { section: "optionalDependencies", entries: parsed.data.optionalDependencies },
+  ];
+  for (const { section, entries } of sections) {
+    if (!entries) continue;
+    for (const [name, version] of Object.entries(entries)) {
+      result.push({ name, section, version });
+    }
+  }
+  return result;
 }

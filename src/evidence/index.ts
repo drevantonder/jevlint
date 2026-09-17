@@ -143,6 +143,12 @@ import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logi
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
 import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
+import { buildSupersededApiUseEvidence } from "./superseded-api-use.js";
+import { buildPhantomPackageImportEvidence } from "./phantom-package-import.js";
+import { buildInteractionPinningTestEvidence } from "./interaction-pinning-test.js";
+import { buildSingleUseDependencyEvidence } from "./single-use-dependency.js";
+import { buildSecondShelfDependencyEvidence } from "./second-shelf-dependency.js";
+import { buildRepeatedTestPreambleEvidence } from "./repeated-test-preamble.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -777,6 +783,42 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-duplicated-style-object") {
     return { handled: true, evidence: buildDuplicatedStyleObjectEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-superseded-api-use") {
+    return {
+      handled: true,
+      evidence: buildSupersededApiUseEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-phantom-package-import") {
+    return {
+      handled: true,
+      evidence: buildPhantomPackageImportEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-interaction-pinning-test") {
+    return {
+      handled: true,
+      evidence: buildInteractionPinningTestEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-single-use-dependency") {
+    return {
+      handled: true,
+      evidence: buildSingleUseDependencyEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-second-shelf-dependency") {
+    return {
+      handled: true,
+      evidence: buildSecondShelfDependencyEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-repeated-test-preamble") {
+    return {
+      handled: true,
+      evidence: buildRepeatedTestPreambleEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

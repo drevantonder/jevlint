@@ -1,0 +1,7 @@
+{
+  "name": "single-use-positive",
+  "version": "1.0.0",
+  "dependencies": {
+    "uuid": "^11.0.0"
+  }
+}
