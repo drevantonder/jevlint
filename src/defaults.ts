@@ -5529,5 +5529,86 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type duplicates a field shape already owned by another module.",
     },
+    "jev/no-unpinned-failure-path": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function contain an error or failure path that no test or caller pins, so a wrong recovery stays green?",
+          inspect: "Compare each extracted catch, throw, and error-return path with the test references naming the function, the repository callers, and the related modules owning the error contract in the supplied evidence.",
+          focus: "Judge the pinning gap, not whether the recovery is correct — a catch that maps a dependency failure to a domain error is only guarded when a test or caller depends on the mapping.",
+          decision_boundary: [
+            "A catch mapping a dependency failure to a domain error with zero test references and no caller depending on the mapped error is strong evidence of an unpinned failure path.",
+            "The same catch shape with callers visibly depending on the mapped error, or tests triggering the failure, pins the path even when the recovery looks odd.",
+            "A rethrow that preserves the original error carries less weight than a mapping or a swallow, since callers still observe the failure.",
+            "A function with no catch, throw, or error-return shape answers the question negatively.",
+            "If no test reference or caller can be established either way, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A reachable error or failure path has no test or caller pinning its recovery, so the suite cannot tell a wrong recovery from a right one",
+            remedy: "Add a test triggering the failure and asserting the mapped error or recovery the callers depend on",
+          },
+          false: {
+            what: "Tests or callers pin the failure path, the error propagates unchanged, or the function has no failure path",
+          },
+        },
+      },
+      message: "This function has an error path that no test or caller pins.",
+    },
+    "jev/no-incidental-snapshot": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do this test's snapshot assertions freeze incidental output that churns on unrelated changes, rather than pinning contractual behavior?",
+          inspect: "Compare the snapshotted expression breadth with the outcome assertions on specific values, and whether the snapshotted shape is consumed by importers as a contract or only rendered incidentally, in the supplied evidence.",
+          focus: "Judge what the snapshot pins, not snapshotting itself: a narrow snapshot of a versioned wire payload that callers consume is a contract, while a full-tree render with no focused assertion is incidental.",
+          decision_boundary: [
+            "A full-tree component snapshot with no other assertion on the rendered contract is strong evidence of incidental freezing.",
+            "A narrow snapshot of a serialized wire payload that callers consume as a versioned contract pins deliberate behavior.",
+            "Snapshot assertions alongside outcome assertions on the same contract weaken the claim, since the behavior is pinned twice.",
+            "Inline snapshots with small explicit literals deserve less weight than large generated snapshots nobody reads.",
+            "If the test states no snapshot assertion, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test's snapshots freeze broad incidental output while no assertion pins the contractual behavior underneath",
+            remedy: "Replace the broad snapshot with focused assertions on the contractual values, keeping a narrow snapshot only for versioned wire shapes",
+          },
+          false: {
+            what: "The snapshot pins a narrow contracted shape, outcome assertions carry the behavior, or the test uses no snapshots",
+          },
+        },
+      },
+      message: "This test's snapshot freezes incidental output instead of pinning contractual behavior.",
+    },
+    "jev/no-quarantined-test-coverage": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this disabled test leave behavior unpinned that no other test or caller covers, so the suite silently stops guarding it?",
+          inspect: "Compare the disabled body — the subject exercised and assertions stated — with other test references to the same subject, repository callers covering the path, and any tracking-issue linkage, in the supplied evidence.",
+          focus: "Judge the coverage gap left behind, not the reason for disabling: a skip with a tracking issue still leaves the behavior unguarded until something else covers it.",
+          decision_boundary: [
+            "The only test naming the subject is skipped and no caller exercises the path is strong evidence of silently lost coverage.",
+            "A skipped case duplicating coverage that active tests still assert leaves the behavior guarded and answers the question weakly.",
+            "Callers exercising the disabled path in production weaken the claim, since the behavior still runs under real use.",
+            "A tracking-issue link explains the quarantine but does not restore coverage on its own.",
+            "If the test holder carries no skip, todo, or quarantine modifier, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A disabled test is the only guard for behavior that no other test or caller covers, so the suite silently stops checking it",
+            remedy: "Re-enable the test, link it to its tracking issue, or move its assertions into an active test covering the same subject",
+          },
+          false: {
+            what: "Active tests or callers still cover the disabled path, or the test is not disabled",
+          },
+        },
+      },
+      message: "This disabled test leaves behavior unpinned that nothing else covers.",
+    },
   },
 };

@@ -203,6 +203,9 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildUnpinnedFailurePathEvidence } from "./unpinned-failure-path.js";
+import { buildIncidentalSnapshotEvidence } from "./incidental-snapshot.js";
+import { buildQuarantinedTestCoverageEvidence } from "./quarantined-test-coverage.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1140,24 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unpinned-failure-path") {
+    return {
+      handled: true,
+      evidence: buildUnpinnedFailurePathEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-incidental-snapshot") {
+    return {
+      handled: true,
+      evidence: buildIncidentalSnapshotEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-quarantined-test-coverage") {
+    return {
+      handled: true,
+      evidence: buildQuarantinedTestCoverageEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
