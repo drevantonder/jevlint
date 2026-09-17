@@ -5633,5 +5633,140 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This change narrows what existing callers may pass while current call sites break.",
     },
+    "jev/no-nondeterministic-test-input": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test draw unseeded randomness or live time into values its expectations depend on, so it can pass or fail by luck?",
+          inspect: "Use the extracted nondeterministic reads, whether the drawn values flow into assertions, and whether a seeded PRNG or fake-timer setup controls them in the supplied evidence.",
+          focus: "Judge whether timing or randomness variance can decide the verdict, not whether the test touches async code or waits.",
+          decision_boundary: [
+            "A snapshot or exact assertion over Math.random output or live timestamps with no seed or clock control is strong evidence of a nondeterministic test.",
+            "A seeded PRNG draw with fake timers installed weakens the claim even when randomness appears, since the values are reproducible.",
+            "Fixed literal inputs with no randomness or time reads deserve a negative answer even when the subject itself is time-sensitive.",
+            "A nondeterministic draw that never reaches an assertion is weaker evidence; weigh whether the verdict can actually vary.",
+            "If the evidence cannot establish a nondeterministic read, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Uncontrolled randomness or live time flows into asserted values, so reruns can disagree without any code change",
+            remedy: "Seed the PRNG and freeze the clock, or assert properties that hold for every draw",
+          },
+          false: {
+            what: "The values are seeded, clock-controlled, fixed literals, or never reach an expectation",
+          },
+        },
+      },
+      message: "This test feeds unseeded randomness or live time into its expectations.",
+    },
+    "jev/no-untestable-singleton-grab": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this domain function reach ambient singleton state that tests cannot substitute through its contract?",
+          inspect: "Compare the function's parameters with each extracted singleton grab, whether the singleton arrives as an argument, whether the grab lives in composition-root wiring, the repository callers, and the test doubles available in the supplied evidence.",
+          focus: "Judge whether a test can substitute the singleton through the function's contract, not whether the singleton is documented or the function is otherwise pure.",
+          decision_boundary: [
+            "A pricing or policy function calling a database or store singleton with no such parameter is strong evidence of an untestable grab.",
+            "Receiving the collaborator as a parameter answers the question negatively even when the call site passes a singleton, since the seam exists.",
+            "A grab inside composition-root wiring weakens the claim, since wiring exists to assemble singletons rather than to decide domain outcomes.",
+            "Test doubles mocking the singleton module weaken but do not remove the claim; judge whether the contract itself offers a seam.",
+            "If the evidence cannot establish an ambient singleton read, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Domain behavior depends on ambient singleton state with no parameter or seam a test could substitute",
+            remedy: "Accept the collaborator as a parameter assembled once in wiring",
+          },
+          false: {
+            what: "The singleton arrives through the contract, the grab is wiring rather than domain logic, or no ambient read is established",
+          },
+        },
+      },
+      message: "This domain function grabs ambient singleton state its tests cannot substitute.",
+    },
+    "jev/no-giant-test-arrange": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test bury its behavior under inline setup mass that hides what is actually being verified?",
+          inspect: "Use the extracted arrange-phase statement and line counts, inline object-literal sizes, the assertion count, and the factory or builder helpers available in nearby test files in the supplied evidence.",
+          focus: "Judge the setup-to-assertion imbalance, not fixture duplication across files or whether assertions exist at all.",
+          decision_boundary: [
+            "A large inline object graph feeding one assertion, while nearby tests build the same scenario with factory helpers, is strong evidence of a giant arrange.",
+            "The same scenario built with shared factories in a few lines weakens the claim even when the domain setup is inherently large.",
+            "A proportional setup that each assertion visibly needs is not a smell; require mass that obscures the verified behavior.",
+            "Counts alone are never sufficient; weigh what the setup hides against what the assertions check.",
+            "If the evidence cannot establish an arrange phase before an assertion, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Inline setup mass obscures the behavior under test, so readers cannot tell what the assertions actually verify",
+            remedy: "Build the scenario with the factory helpers the sibling tests use and keep only the case-specific setup inline",
+          },
+          false: {
+            what: "The setup is proportional, factory-built, or absent, and the verified behavior stays visible",
+          },
+        },
+      },
+      message: "This test buries its behavior under inline setup mass.",
+    },
+    "jev/no-private-internals-assertion": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test pin module internals rather than observable behavior, so refactoring breaks the test without breaking users?",
+          inspect: "Use the extracted deep imports bypassing barrels, any-casts, and private member accesses, and whether a public entry point for the module is available in the supplied evidence.",
+          focus: "Judge whether the test couples to representation that owners may change freely, not whether mocks or branches appear in the test.",
+          decision_boundary: [
+            "Importing from an internal path and reading underscore state through an any-cast is strong evidence of an internals-pinning test.",
+            "Driving the public entry and asserting observable outcomes answers the question negatively even when internals exist nearby.",
+            "An any-cast used only to satisfy the type checker around a public API weakens the claim; require coupling to non-public representation.",
+            "A deep import with no internals read deserves suspicion but is weaker evidence on its own.",
+            "If the evidence cannot establish internals coupling, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test asserts on non-public representation, so compatible refactors fail the suite without changing behavior",
+            remedy: "Assert the observable outcomes the public entry promises instead of its internal representation",
+          },
+          false: {
+            what: "The test drives public behavior, or no coupling to internals is established",
+          },
+        },
+      },
+      message: "This test pins module internals rather than observable behavior.",
+    },
+    "jev/no-flaky-order-assertion": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test assert an order over concurrent work that nothing synchronizes, so it passes by scheduling luck?",
+          inspect: "Use the extracted concurrent units with their synchronized flags, the order-sensitive assertions joining them, and the combinator, barrier, or unordered-comparison signals in the supplied evidence.",
+          focus: "Judge whether synchronization forces the asserted order, not whether the test touches async code or sleeps.",
+          decision_boundary: [
+            "Asserting log or call order across promises that are never joined, with no barrier or combinator, is strong evidence of a flaky order assertion.",
+            "Results joined with Promise.all and compared as sorted sets or unordered collections answer the question negatively.",
+            "A barrier, gate, or explicit sequencing primitive between the concurrent units weakens the claim even when order is asserted.",
+            "One order assertion over fully synchronized work is not a smell; require unsynchronized concurrency beneath the asserted order.",
+            "If the evidence cannot establish concurrent work or an order assertion, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The asserted order is decided by scheduling rather than by synchronization, so reruns can disagree without any code change",
+            remedy: "Join the concurrent work explicitly and compare results as sorted sets or assert the order the synchronization guarantees",
+          },
+          false: {
+            what: "Synchronization forces the asserted order, the comparison is order-insensitive, or no concurrent order is asserted",
+          },
+        },
+      },
+      message: "This test asserts an order over concurrent work that nothing synchronizes.",
+    },
   },
 };

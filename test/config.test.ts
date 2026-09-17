@@ -222,6 +222,11 @@ describe("loadConfig", () => {
       "jev/no-mutable-surface-expansion",
       "jev/no-subclass-fragility-hook",
       "jev/no-contract-narrowing-after-ship",
+      "jev/no-nondeterministic-test-input",
+      "jev/no-untestable-singleton-grab",
+      "jev/no-giant-test-arrange",
+      "jev/no-private-internals-assertion",
+      "jev/no-flaky-order-assertion",
     ]);
   });
 
