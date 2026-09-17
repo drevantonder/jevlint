@@ -227,6 +227,10 @@ describe("loadConfig", () => {
       "jev/no-giant-test-arrange",
       "jev/no-private-internals-assertion",
       "jev/no-flaky-order-assertion",
+      "jev/no-stable-surface-widening",
+      "jev/no-team-boundary-crossing",
+      "jev/no-cross-service-source-reach",
+      "jev/no-same-stem-divergent-role",
     ]);
   });
 

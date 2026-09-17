@@ -203,6 +203,10 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildStableSurfaceWideningEvidence } from "./stable-surface-widening.js";
+import { buildTeamBoundaryCrossingEvidence } from "./team-boundary-crossing.js";
+import { buildCrossServiceSourceReachEvidence } from "./cross-service-source-reach.js";
+import { buildSameStemDivergentRoleEvidence } from "./same-stem-divergent-role.js";
 import { buildNondeterministicTestInputEvidence } from "./nondeterministic-test-input.js";
 import { buildUntestableSingletonGrabEvidence } from "./untestable-singleton-grab.js";
 import { buildGiantTestArrangeEvidence } from "./giant-test-arrange.js";
@@ -1199,6 +1203,30 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildFlakyOrderAssertionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-stable-surface-widening") {
+    return {
+      handled: true,
+      evidence: buildStableSurfaceWideningEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-team-boundary-crossing") {
+    return {
+      handled: true,
+      evidence: buildTeamBoundaryCrossingEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-cross-service-source-reach") {
+    return {
+      handled: true,
+      evidence: buildCrossServiceSourceReachEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-same-stem-divergent-role") {
+    return {
+      handled: true,
+      evidence: buildSameStemDivergentRoleEvidence(candidate, projectFiles, changes),
     };
   }
   return { handled: false };

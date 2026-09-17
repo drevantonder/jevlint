@@ -5768,5 +5768,114 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test asserts an order over concurrent work that nothing synchronizes.",
     },
+    "jev/no-stable-surface-widening": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change widen the export surface of an already widely-consumed module, growing the contract every future change must preserve?",
+          inspect: "Read the added export names, the import fan-in with its distinct-area spread, whether the additions are domain concepts or utilities, and whether a barrel re-exports the new symbols.",
+          focus: "Judge whether additive growth of a used surface is a release-sized event, not whether new exports are ever useful.",
+          decision_boundary: [
+            "Several new domain-concept exports on a module imported from several areas, blessed through the barrel, is strong evidence of surface widening.",
+            "New utility-shaped exports, or growth on a module with narrow same-area fan-in, answers the question negatively.",
+            "Removals or renames belong to the export-breakage judgment; this question fires on purely additive growth only.",
+            "Test-only exports carry less weight than runtime surface growth.",
+            "If the diff adds no exports or the module has no consuming surface to grow, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The change adds exports to a widely-consumed module, growing a contract future changes must preserve",
+            remedy: "Place the new surface behind its own module or release it as an explicit surface expansion",
+          },
+          false: {
+            what: "The additions are utilities, the fan-in is narrow or same-area, or the diff adds no exports",
+          },
+        },
+      },
+      message: "This change widens the export surface of an already widely-consumed module.",
+    },
+    "jev/no-team-boundary-crossing": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this new dependency reach into an area owned by a different team, creating coordination cost no in-team review can clear alone?",
+          inspect: "Compare the owner and target owner codes from the ownership file, whether the edge is new, whether it uses the target's documented entry, and whether precedent between the same owners exists.",
+          focus: "Judge whether the diff creates first-time cross-team coupling, not whether cross-area imports are ever convenient.",
+          decision_boundary: [
+            "A first-ever edge between two owner codes that bypasses the target's barrel entry is strong evidence of a team-boundary crossing.",
+            "An edge through the target's documented entry, with established precedent between the same owners, answers the question negatively.",
+            "Ownership read from directory shape alone is not evidence; without a visible ownership file there is no judgment to make.",
+            "Edges within one owner code, or into unowned paths, are not crossings.",
+            "If no ownership file is visible or the edge stays inside one team's area, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new dependency reaches from one team's area into another team's area without precedent or entry discipline",
+            remedy: "Enter through the owning team's documented entry point or agree the coupling with the owning team first",
+          },
+          false: {
+            what: "The edge uses the documented entry, precedent between the owners exists, or both sides share one owner",
+          },
+        },
+      },
+      message: "This new dependency reaches into an area owned by a different team.",
+    },
+    "jev/no-cross-service-source-reach": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change wire two separately-deployable units together at source level, so neither can be built, versioned, or deployed in isolation anymore?",
+          inspect: "Read the owner and target deployment units from their nearest manifests, the specifier shape, whether the edge is new, and whether it uses the target unit's entry.",
+          focus: "Judge whether source-level coupling defeats independent deployability, not whether the two units ever communicate.",
+          decision_boundary: [
+            "A new relative climb across a manifest boundary where a package-name import or entry point exists is strong evidence of cross-service source reach.",
+            "An edge through the workspace package name, which at least versions the coupling, answers the question more weakly than a raw relative reach.",
+            "A single-manifest repository is a monolith by choice; there is no deployment boundary to cross.",
+            "Manifest boundaries read from directory shape alone are not evidence; without two visible manifests there is no judgment to make.",
+            "If fewer than two manifests are visible or the edge stays inside one unit, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new source-level edge crosses a deployment-unit boundary without versioning or entry discipline",
+            remedy: "Depend on the other unit through its workspace package name or a service boundary instead of a relative source reach",
+          },
+          false: {
+            what: "The edge uses the versioned package name, stays inside one unit, or the repo ships as one unit",
+          },
+        },
+      },
+      message: "This change wires two separately-deployable units together at source level.",
+    },
+    "jev/no-same-stem-divergent-role": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this module's file stem collide with a same-named module elsewhere whose exports serve a different role, so the shared name promises a sameness the code does not keep?",
+          inspect: "Compare the candidate's export set with each same-stem twin's exports, the export overlap, the sibling-suffix context of each twin, and whether one client area imports both.",
+          focus: "Judge whether the identical stem misleads importers about sameness, not whether shared names are ever coincidental.",
+          decision_boundary: [
+            "An identical stem with disjoint exports, where both twins are imported into one client area, is strong evidence of a divergent role.",
+            "Stems that collide but share exports describe genuine duplication, which belongs to the duplication judgments rather than this one.",
+            "Twins whose sibling-suffix profiles show each follows its own directory's conventions look native in both places, deepening the confusion.",
+            "Collisions confined to tests, or twins qualified callers never confuse in practice, answer the question negatively.",
+            "If no same-stem twin in another area exists or the exports overlap, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A same-named module elsewhere serves a different role while the shared name promises sameness",
+            remedy: "Rename one of the twins to state its distinct role or converge them onto one shared contract",
+          },
+          false: {
+            what: "The twins share exports, the collision is test-confined, or no cross-area twin exists",
+          },
+        },
+      },
+      message: "This module shares its file stem with a same-named module serving a different role.",
+    },
+
   },
 };
