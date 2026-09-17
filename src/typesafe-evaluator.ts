@@ -8,18 +8,23 @@ const JEV_MODEL = "jev-1.13.0";
 const EVALUATOR_VERSION = "jevlint-system-one-v1";
 
 export function evaluationStateEntry(state: EvaluationState): EntryType {
-  return {
-    file: { path: state.file.path },
-    candidates: state.candidates.map((candidate) => ({
+  const file = state.file.source === undefined
+    ? { path: state.file.path }
+    : { path: state.file.path, source: state.file.source };
+  const candidates = state.candidates.map((candidate) => {
+    const entry = {
       id: candidate.id,
       kind: candidate.kind,
       source: candidate.source,
-      nearbySource: candidate.nearbySource,
       startLine: candidate.startLine,
       endLine: candidate.endLine,
       evidence: candidate.evidence ?? null,
-    })),
-  };
+    };
+    return candidate.nearbySource === undefined
+      ? entry
+      : { ...entry, nearbySource: candidate.nearbySource };
+  });
+  return { file, candidates };
 }
 
 export class TypeSafeEvaluator implements Evaluator {

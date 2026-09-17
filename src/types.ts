@@ -48,7 +48,7 @@ export interface EvaluationCandidate {
   id: string;
   kind: CandidateKind;
   source: string;
-  nearbySource: string;
+  nearbySource?: string;
   startLine: number;
   endLine: number;
   evidence?: Record<string, JsonValue>;
@@ -57,6 +57,7 @@ export interface EvaluationCandidate {
 export interface EvaluationState {
   file: {
     path: string;
+    source?: string;
   };
   candidates: EvaluationCandidate[];
 }
@@ -68,6 +69,19 @@ export interface EvaluationRequest {
 
 export interface Evaluator {
   evaluate(request: EvaluationRequest): Promise<Record<string, number>>;
+}
+
+export interface EvaluationFailure {
+  filePath: string;
+  candidateIds: string[];
+  ruleIds: string[];
+  questionCount: number;
+  message: string;
+}
+
+export interface AnalysisResult {
+  diagnostics: Diagnostic[];
+  failures: EvaluationFailure[];
 }
 
 export interface Diagnostic {

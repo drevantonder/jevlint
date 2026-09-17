@@ -9,9 +9,11 @@ This first slice supports:
 - JavaScript, JSX, TypeScript, and TSX
 - Working-tree and staged Git changes
 - Function, comment, abstraction, and whole-change rules
-- Repository-aware evidence from imports, callers, implementations, and option usage
+- Repository-aware evidence from imports, same-file and cross-file callers, implementations, and option usage
 - Before/after evidence for change-level judgments
 - Root-cause deduplication for overlapping accidental-complexity findings
+- Token-budgeted evaluation batches with recursive token-limit recovery
+- Partial diagnostics when an individual evaluation cannot complete
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Text and JSON diagnostics
@@ -107,7 +109,7 @@ When using a globally linked binary, wrap it directly:
 varlock run -- jevlint diff
 ```
 
-Warnings do not fail the command. Diagnostics configured as errors produce exit code 1. Invalid arguments, configuration failures, Git failures, and API failures produce exit code 2.
+Warnings do not fail the command. Diagnostics configured as errors produce exit code 1. Invalid arguments, configuration failures, Git failures, and API failures produce exit code 2. Jevlint keeps diagnostics from completed batches when an evaluation fails, writes those diagnostics in the requested format, reports a bounded failure summary on stderr, and exits 2 to mark the run as incomplete.
 
 ## Known limitations
 

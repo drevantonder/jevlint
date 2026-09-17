@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { pathToFileURL } from "node:url";
-import { analyzeChanges, analyzeFile } from "./analyze.js";
+import { analyzeChangesWithFailures, analyzeFileWithFailures } from "./analyze.js";
 import { CachedEvaluator } from "./cache.js";
 import type { CacheMode } from "./cache.js";
 import { loadConfig } from "./config.js";
@@ -9,7 +9,9 @@ import { deduplicateDiagnostics } from "./deduplicate.js";
 import { formatJson, formatText } from "./format.js";
 import { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 import { TypeSafeEvaluator } from "./typesafe-evaluator.js";
-import type { Diagnostic, Evaluator } from "./types.js";
+import type { Diagnostic, EvaluationFailure, Evaluator } from "./types.js";
+
+const MAX_REPORTED_FAILURES = 20;
 
 const USAGE = `Usage: jevlint diff [options]
 
@@ -118,28 +120,42 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
       }
     }
     const diagnostics: Diagnostic[] = [];
+    const failures: EvaluationFailure[] = [];
 
     for (const file of files) {
-      diagnostics.push(
-        ...(await analyzeFile(
-          {
-            filePath: file.filePath,
-            source: file.source,
-            changedLines: file.changedLines,
-            config,
-            projectFiles,
-          },
-          evaluator,
-        )),
+      const result = await analyzeFileWithFailures(
+        {
+          filePath: file.filePath,
+          source: file.source,
+          changedLines: file.changedLines,
+          config,
+          projectFiles,
+        },
+        evaluator,
       );
+      diagnostics.push(...result.diagnostics);
+      failures.push(...result.failures);
     }
-    diagnostics.push(...await analyzeChanges({ changes: files, config, projectFiles }, evaluator));
+    const changeResult = await analyzeChangesWithFailures(
+      { changes: files, config, projectFiles },
+      evaluator,
+    );
+    diagnostics.push(...changeResult.diagnostics);
+    failures.push(...changeResult.failures);
 
     const finalDiagnostics = deduplicateDiagnostics(diagnostics);
     const output = options.format === "json"
       ? formatJson(finalDiagnostics)
       : formatText(finalDiagnostics);
     if (output.length > 0 || options.format === "json") stdout(`${output}\n`);
+    for (const failure of failures.slice(0, MAX_REPORTED_FAILURES)) {
+      stderr(
+        `jevlint: ${failure.filePath}: ${failure.questionCount} evaluation question${failure.questionCount === 1 ? "" : "s"} failed (${failure.ruleIds.join(", ")}): ${failure.message}\n`,
+      );
+    }
+    if (failures.length > MAX_REPORTED_FAILURES) {
+      stderr(`jevlint: ${failures.length - MAX_REPORTED_FAILURES} additional evaluation failures omitted.\n`);
+    }
     if (options.verbose) {
       if (cachedEvaluator) {
         const stats = cachedEvaluator.statistics;
@@ -150,6 +166,7 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
         stderr("jevlint cache: disabled\n");
       }
     }
+    if (failures.length > 0) return 2;
     return finalDiagnostics.some((diagnostic) => diagnostic.severity === "error") ? 1 : 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

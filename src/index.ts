@@ -1,4 +1,10 @@
-export { analyzeChanges, analyzeFile } from "./analyze.js";
+export {
+  analyzeChanges,
+  analyzeChangesWithFailures,
+  analyzeFile,
+  analyzeFileWithFailures,
+  EVALUATION_REQUEST_BUDGET_CHARS,
+} from "./analyze.js";
 export { CachedEvaluator } from "./cache.js";
 export type { CacheMode, CacheStatistics, CachedEvaluatorOptions, EvaluatorIdentity } from "./cache.js";
 export { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
