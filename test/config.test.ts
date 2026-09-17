@@ -43,6 +43,12 @@ describe("loadConfig", () => {
       "jev/no-unsafe-retry",
       "jev/no-hidden-partial-failure",
       "jev/no-feature-envy",
+      "jev/no-unawaited-iteration-work",
+      "jev/no-asymmetric-normalization",
+      "jev/no-unguarded-nullable-dereference",
+      "jev/no-falsy-absent-conflation",
+      "jev/no-unanchored-domain-check",
+      "jev/no-contract-signature-drift",
     ]);
   });
 
