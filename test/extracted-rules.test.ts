@@ -140,6 +140,10 @@ const extractedRules = [
   ["jev/no-non-idempotent-retry", "function"],
   ["jev/no-parallel-abstraction", "function"],
   ["jev/no-misplaced-error-boundary", "function"],
+  ["jev/no-clone-and-tweak-sibling", "function"],
+  ["jev/no-single-caller-exported-helper", "function"],
+  ["jev/no-string-duplicated-enumeration", "change"],
+  ["jev/no-convergent-twin-types", "abstraction"],
 ] as const;
 
 describe("extracted review rules", () => {

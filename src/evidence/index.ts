@@ -161,6 +161,10 @@ import { buildCheckThenActRaceEvidence } from "./check-then-act-race.js";
 import { buildNonIdempotentRetryEvidence } from "./non-idempotent-retry.js";
 import { buildParallelAbstractionEvidence } from "./parallel-abstraction.js";
 import { buildMisplacedErrorBoundaryEvidence } from "./misplaced-error-boundary.js";
+import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js";
+import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
+import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
+import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -903,6 +907,24 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildMisplacedErrorBoundaryEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-clone-and-tweak-sibling") {
+    return { handled: true, evidence: buildCloneAndTweakSiblingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-single-caller-exported-helper") {
+    return {
+      handled: true,
+      evidence: buildSingleCallerExportedHelperEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-string-duplicated-enumeration") {
+    return {
+      handled: true,
+      evidence: buildStringDuplicatedEnumerationEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-convergent-twin-types") {
+    return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

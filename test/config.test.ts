@@ -176,6 +176,10 @@ describe("loadConfig", () => {
       "jev/no-non-idempotent-retry",
       "jev/no-parallel-abstraction",
       "jev/no-misplaced-error-boundary",
+      "jev/no-clone-and-tweak-sibling",
+      "jev/no-single-caller-exported-helper",
+      "jev/no-string-duplicated-enumeration",
+      "jev/no-convergent-twin-types",
     ]);
   });
 
