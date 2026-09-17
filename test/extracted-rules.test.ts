@@ -244,6 +244,9 @@ const extractedRules = [
   ["jev/no-unused-exported-helper", "function"],
   ["jev/no-commented-out-implementation", "comment"],
   ["jev/no-unmarked-abandoned-compat-layer", "function"],
+  ["jev/no-variant-partitioned-helper", "function"],
+  ["jev/no-coincidental-similarity", "function"],
+  ["jev/no-entangled-mechanical-change", "change"],
 ] as const;
 
 describe("extracted review rules", () => {

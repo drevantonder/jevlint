@@ -280,6 +280,9 @@ describe("loadConfig", () => {
       "jev/no-unused-exported-helper",
       "jev/no-commented-out-implementation",
       "jev/no-unmarked-abandoned-compat-layer",
+      "jev/no-variant-partitioned-helper",
+      "jev/no-coincidental-similarity",
+      "jev/no-entangled-mechanical-change",
     ]);
   });
 

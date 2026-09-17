@@ -7188,6 +7188,88 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This compat layer has no callers while its successor serves the repository.",
+    },
+
+    "jev/no-variant-partitioned-helper": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this shared helper route disjoint caller slices through per-variant special cases behind a string or options discriminant, so each slice would be clearer as its own operation?",
+          inspect: "Compare the discriminant parameter declaration with each variant arm's branch test and behavior, the opcode overlap between arms, whether each arm returns a data literal, and the repository callers grouped by the literal discriminant value each site passes in the supplied evidence.",
+          focus: "Judge whether one helper hosts separate operations selected by a variant discriminant, rather than one parameterized concept or a data mapping.",
+          decision_boundary: [
+            "A string or options-bag discriminant with literal values at callsites selecting arms that share little behavior, where each caller group exercises one arm, is strong evidence each slice should be its own operation.",
+            "A boolean discriminant belongs to mode-flag-parameter, not this rule; this rule never fires on boolean-annotated or boolean-defaulted parameters.",
+            "Arms that each return a data literal for the discriminant value belong to table-shaped-conditional; arms whose behavior the variant types should own belong to type-code-dispatch.",
+            "Callers that mix variants at one site, arms sharing substantial helpers, or a discriminant tuning one concept rather than selecting operations answer the question negatively.",
+            "If the evidence does not show a non-boolean discriminant selecting between at least two variant arms, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The helper partitions callers by discriminant value into per-variant special cases with little shared behavior",
+            remedy: "Divide the helper so each caller slice invokes its own named operation",
+          },
+          false: {
+            what: "The discriminant tunes one concept, the arms share behavior or map to data, callers mix variants, or no variant partition is established",
+          },
+        },
+      },
+      message: "This helper partitions callers by variant instead of exposing separate operations.",
+    },
+    "jev/no-coincidental-similarity": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do these structurally similar spans encode different domain concepts, so consolidating them would create a false abstraction?",
+          inspect: "Compare the similarity trigger with each lookalike's divergence signals: member and literal names only one side uses, shared versus distinct domain tokens in the names, whether the files share a module role, and whether caller populations and imports overlap in the supplied evidence.",
+          focus: "Judge whether the resemblance is coincidence between distinct concepts that must stay separate, rather than one behavior with two spellings.",
+          decision_boundary: [
+            "High structural overlap together with disjoint domain vocabulary, different module roles, and disjoint callers is strong evidence that merging would forge a false abstraction.",
+            "Shared literals, shared domain member names, common callers, or shared imports indicate one genuine concept and answer the question negatively; the merge-side rules then own the finding.",
+            "Generic scaffolding alone, such as matching try/catch shape with no shared domain tokens, is not a merge risk worth scoring.",
+            "This rule reads the same similarity trigger as duplicated-logic in the opposite direction: high here means do not consolidate, which inverts the usual consolidation remedy.",
+            "If the evidence does not establish both a concrete similarity trigger and divergence in what the spans mean, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Structurally similar spans encode distinct domain concepts with disjoint vocabulary, roles, or audiences, so merging them would invent a false shared abstraction",
+            remedy: "Keep the spans separate and let each evolve under its own domain owner",
+          },
+          false: {
+            what: "The spans share a genuine concept shown by common literals, members, callers, or imports, or no concrete lookalike is established",
+          },
+        },
+      },
+      message: "These lookalikes encode different concepts; consolidating them would forge a false abstraction.",
+    },
+    "jev/no-entangled-mechanical-change": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change mix mechanical-only edits with behavior-changing edits, so the behavioral delta is obscured by mechanical noise?",
+          inspect: "Compare the per-hunk classifications within each touched file, the ratio of mechanical to behavioral lines, whether the two kinds interleave in the same files, and the coverage metadata identifying omitted or unclassifiable modules in the supplied evidence.",
+          focus: "Judge whether reformat or rename noise hides the behavioral delta a reviewer must find, not whether the change is large.",
+          decision_boundary: [
+            "Large whitespace-only or rename-only hunks surrounding small behavioral hunks in the same files, especially interleaved, are strong evidence the behavioral delta is obscured.",
+            "Mechanical and behavioral edits landing in separate files answer the question negatively; the reviewer can read each file on its own terms.",
+            "An all-mechanical or all-behavioral change never reaches this judgment; so does a rename that provably preserves binding resolution with no behavioral hunk beside it.",
+            "Unrelated reasons colliding in one module belong to divergent-change, and moved complexity belongs to complexity-displacement; this rule scores mechanical noise hiding behavior.",
+            "If the coverage metadata shows omitted modules or the evidence shows only one kind of hunk, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Mechanical-only hunks obscure the behavioral delta inside the same files, forcing reviewers to excavate the real change from noise",
+            remedy: "Split the change so mechanical reformatting or renames land separately from the behavioral delta",
+          },
+          false: {
+            what: "The mechanical and behavioral edits are separated by file, the change is all one kind, or the behavioral delta stands clear of the noise",
+          },
+        },
+      },
+      message: "This change buries its behavioral delta under mechanical-only edits.",
 
     },
   },

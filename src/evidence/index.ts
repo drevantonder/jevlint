@@ -261,6 +261,9 @@ import { buildQuarantinedTestCoverageEvidence } from "./quarantined-test-coverag
 import { buildUnusedExportedHelperEvidence } from "./unused-exported-helper.js";
 import { buildCommentedOutImplementationEvidence } from "./commented-out-implementation.js";
 import { buildUnmarkedAbandonedCompatLayerEvidence } from "./unmarked-abandoned-compat-layer.js";
+import { buildVariantPartitionedHelperEvidence } from "./variant-partitioned-helper.js";
+import { buildCoincidentalSimilarityEvidence } from "./coincidental-similarity.js";
+import { buildEntangledMechanicalChangeEvidence } from "./entangled-mechanical-change.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1477,6 +1480,18 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnmarkedAbandonedCompatLayerEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-variant-partitioned-helper") {
+    return { handled: true, evidence: buildVariantPartitionedHelperEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-coincidental-similarity") {
+    return { handled: true, evidence: buildCoincidentalSimilarityEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-entangled-mechanical-change") {
+    return {
+      handled: true,
+      evidence: buildEntangledMechanicalChangeEvidence(candidate, changes, projectFiles),
     };
   }
   return { handled: false };
