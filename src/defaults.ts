@@ -6007,7 +6007,61 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This function's boolean result carries more than one meaning across its callers.",
-
+    },
+    "jev/no-flag-shepherded-control-flow": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function use a mutable local binding only to shepherd execution between statements instead of expressing the control flow directly?",
+          inspect: "Compare each extracted flag with its write sites, later branch reads, write-to-branch distance, and escape signals in the supplied evidence.",
+          focus: "Judge whether the binding carries control-flow information that direct branching, early returns, or structured control flow could state, not whether locals are used at all.",
+          decision_boundary: [
+            "A Boolean or nullish local written in one place and read only in later branch tests, with no other readers, is the central shape.",
+            "Bindings that are returned, passed as arguments, captured by nested functions, or read as domain data carry meaning beyond shepherding and answer the question negatively.",
+            "Numeric accumulators, string builders, and collection gatherers hold domain state rather than shepherd execution.",
+            "A flag whose write and branch sit far apart forces more tracking than one set and tested together, but distance alone never decides.",
+            "If the evidence shows no write-then-branch local, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A mutable local exists only to ferry a decision between statements that direct control flow could express",
+            remedy: "Return early, branch directly, or restructure so the decision is made where it is used",
+          },
+          false: {
+            what: "Flag-shaped locals escape as values, hold domain state, or no write-then-branch local exists",
+          },
+        },
+      },
+      message: "This function shepherds execution through a mutable flag instead of expressing the control flow directly.",
+    },
+    "jev/no-inline-lifecycle-phases": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function implement multiple lifecycle phases — input parsing or validation, computation, durable effects, presentation formatting — inline as one body, leaving no named seam where ordering, transaction, exception, or resource boundaries could attach?",
+          inspect: "Compare the extracted phase regions and their spans, mixed statements, bindings shared across phases, per-phase collaborators and import sources, same-module phase helpers, and scopes spanning phases in the supplied evidence.",
+          focus: "Judge whether the phases are implemented inline without seams, not how many collaborators the function touches or how long it is.",
+          decision_boundary: [
+            "Parsing, pricing, persisting, and rendering one record inline with shared bindings threaded through is the central shape even when the outcome is single.",
+            "A boundary controller that parses input, invokes one use case, and maps its result already has seams at the use-case call and answers the question negatively.",
+            "Pipelines threading one accumulator answer negatively where the work is one phase rather than several phases sharing dataflow.",
+            "Same-module helpers that wrap a single phase, or a collaborator owning the middle of the pipeline, are seams even without extraction.",
+            "Try or transaction scopes covering several phase regions show boundaries already attach somewhere; their absence strengthens the claim.",
+            "If the evidence shows a single phase or none, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The body implements several lifecycle phases inline with no named seam between them, so ordering, transaction, exception, and resource boundaries have nowhere to attach",
+            remedy: "Split the phases behind named helpers or use-case calls so each boundary has a seam, preserving execution order",
+          },
+          false: {
+            what: "The body covers one phase, delegates phases to named seams, or is already a thin boundary sandwich around a use-case call",
+          },
+        },
+      },
+      message: "This function implements multiple lifecycle phases inline with no named seam between them.",
     },
   },
 };

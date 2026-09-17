@@ -236,6 +236,8 @@ describe("loadConfig", () => {
       "jev/no-lopsided-error-handling",
       "jev/no-repeated-predicate",
       "jev/no-overloaded-boolean-return",
+      "jev/no-flag-shepherded-control-flow",
+      "jev/no-inline-lifecycle-phases",
     ]);
   });
 

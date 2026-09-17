@@ -200,6 +200,8 @@ const extractedRules = [
   ["jev/no-lopsided-error-handling", "function"],
   ["jev/no-repeated-predicate", "function"],
   ["jev/no-overloaded-boolean-return", "function"],
+  ["jev/no-flag-shepherded-control-flow", "function"],
+  ["jev/no-inline-lifecycle-phases", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
