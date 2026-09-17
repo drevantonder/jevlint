@@ -48,6 +48,17 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("prefers an invalid state model over generic abstraction findings", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-needless-abstraction", 4, 12),
+      diagnostic("jev/no-conditionally-valid-state", 4, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-conditionally-valid-state",
+    ]);
+  });
+
   it("keeps independent findings in separate spans", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-pass-through-wrapper", 4, 6),

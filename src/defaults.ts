@@ -198,6 +198,34 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "A closed state is represented by an unconstrained string.",
     },
+    "jev/no-conditionally-valid-state": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this record make payload validity depend on a discriminant while its type permits payloads to be missing or present in the wrong cases?",
+          inspect: "Use the finite discriminant, optional or nullable fields, case-specific reads, typed usages, and module context in the repository evidence.",
+          focus: "Judge whether each discriminant case has a different required payload that should be encoded as a separate valid variant.",
+          decision_boundary: [
+            "Non-null assertions or assumed payload reads in particular cases are strong evidence that the flat record omits a type invariant.",
+            "Optional metadata that has the same meaning in every case does not need to become part of each variant.",
+            "Generated wire types and external schemas may need to preserve a permissive upstream contract; prefer mapping them into valid internal state rather than flagging the boundary type itself.",
+            "A tagged record with optional fields is not enough. If case-specific requirements are unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "At least one payload is required or forbidden according to the discriminant, but the declared record accepts combinations that violate that invariant",
+            remedy: "Represent each valid case as a discriminated union member with exactly its required payload",
+          },
+          false: {
+            what: "The loose fields are case-independent metadata, optional by domain meaning, fixed by an external contract, or not proven to depend on a case",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This state type permits invalid discriminant and payload combinations.",
+    },
     "jev/no-needless-abstraction": {
       scope: "abstraction",
       question: {

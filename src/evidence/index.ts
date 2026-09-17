@@ -3,6 +3,7 @@ import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
+import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
@@ -32,6 +33,12 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-needless-abstraction") {
     return { handled: true, evidence: buildNeedlessAbstractionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-conditionally-valid-state") {
+    return {
+      handled: true,
+      evidence: buildConditionallyValidStateEvidence(candidate, projectFiles),
+    };
   }
   if (ruleId === "jev/no-correlated-state-booleans") {
     return {

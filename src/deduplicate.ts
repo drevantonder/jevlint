@@ -2,6 +2,7 @@ import type { Diagnostic } from "./types.js";
 
 const RULE_PRIORITY = new Map<string, number>([
   ["jev/no-complexity-displacement", 100],
+  ["jev/no-conditionally-valid-state", 98],
   ["jev/no-correlated-state-booleans", 95],
   ["jev/no-unconstrained-state-string", 95],
   ["jev/no-disproportionate-configuration", 90],
