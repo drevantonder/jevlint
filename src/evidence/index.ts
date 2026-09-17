@@ -203,6 +203,11 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildSharedKernelNewConsumerEvidence } from "./shared-kernel-new-consumer.js";
+import { buildDirectionReversingEdgeEvidence } from "./direction-reversing-edge.js";
+import { buildCrossContextTestReachEvidence } from "./cross-context-test-reach.js";
+import { buildTwinGatewayEmergenceEvidence } from "./twin-gateway-emergence.js";
+import { buildUnwrappedServiceEdgeEvidence } from "./unwrapped-service-edge.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1142,36 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-shared-kernel-new-consumer") {
+    return {
+      handled: true,
+      evidence: buildSharedKernelNewConsumerEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-direction-reversing-edge") {
+    return {
+      handled: true,
+      evidence: buildDirectionReversingEdgeEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-cross-context-test-reach") {
+    return {
+      handled: true,
+      evidence: buildCrossContextTestReachEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-twin-gateway-emergence") {
+    return {
+      handled: true,
+      evidence: buildTwinGatewayEmergenceEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-unwrapped-service-edge") {
+    return {
+      handled: true,
+      evidence: buildUnwrappedServiceEdgeEvidence(candidate, projectFiles, changes),
+    };
   }
   return { handled: false };
 }

@@ -5529,5 +5529,140 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type duplicates a field shape already owned by another module.",
     },
+    "jev/no-shared-kernel-new-consumer": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change make a previously-unconnected context a consumer of the shared kernel, widening the blast radius of every future kernel change?",
+          inspect: "Read the new edge into the shared kernel, the kernel markers on the target, how widely the kernel is already consumed across areas, and whether the candidate's own area already depends on it.",
+          focus: "Judge whether this consumer deepens the kernel's entrenchment across contexts, not whether shared code is ever reused.",
+          decision_boundary: [
+            "A new edge from a fresh area into a kernel already consumed across several areas, used for a single symbol, is strong evidence of deepening entrenchment.",
+            "A target with no shared-kernel markers, or a candidate area that already consumes the kernel, leaves no new spread to judge.",
+            "Genuinely generic utilities with no domain concepts carry less weight than domain-named kernel surface.",
+            "Narrow single-symbol use deepens entrenchment more quietly than broad reuse, which at least pays for its coupling.",
+            "If the edge is not new or the target is not kernel-shaped, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new consumer from an unconnected context deepens the shared kernel's cross-area entrenchment",
+            remedy: "Depend on a narrower owned interface, or duplicate the small piece so the kernel's consumer set does not grow",
+          },
+          false: {
+            what: "The target is generic or not kernel-shaped, the area already consumes the kernel, or the edge is not new",
+          },
+        },
+      },
+      message: "This change makes a new context a consumer of the shared kernel.",
+    },
+    "jev/no-direction-reversing-edge": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this new dependency run against the established direction between the two areas, making the reliance mutual without closing a cycle?",
+          inspect: "Compare the new edge's target area with the history of imports flowing the other way, how deep that history runs, and whether the areas already depend on each other freely.",
+          focus: "Judge whether the edge reverses a settled direction the repo's own import history establishes, not whether any cross-area edge is suspect.",
+          decision_boundary: [
+            "A lone new edge back against a long one-way history across many files is strong evidence of a reversed direction.",
+            "A single stray incoming import is not an established direction, and areas that already import each other freely have no direction to reverse.",
+            "An edge that closes a dependency cycle belongs to cycle analysis, not to this question.",
+            "A new edge accompanying a documented responsibility move carries less weight than an unexplained reversal.",
+            "If no established one-way history exists or the edge closes a cycle, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new edge reverses the settled import direction between two areas without closing a cycle",
+            remedy: "Move the shared responsibility so the dependency follows the established direction, or make the reversal explicit and mutual by design",
+          },
+          false: {
+            what: "No one-way history exists, the areas already depend on each other, or the edge closes a cycle",
+          },
+        },
+      },
+      message: "This dependency runs against the established direction between the two areas.",
+    },
+    "jev/no-cross-context-test-reach": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this runtime module newly depend on another context's test or fixture sources, promoting a private test seam to a cross-context contract?",
+          inspect: "Read the new edge's test markers on the target, whether the import crosses areas, whether the use is type-only or runtime, and whether other areas already reach the same fixture.",
+          focus: "Judge whether runtime code turns another area's private test seam into a dependency, not whether test utilities are ever shared.",
+          decision_boundary: [
+            "A new runtime import of another area's fixture factory used on an executed path is strong evidence of a promoted test seam.",
+            "Type-only imports, same-area test utilities, and published testkits with their own consumers carry less weight.",
+            "A fixture already consumed across areas describes an established pattern, not a lone new reach.",
+            "Test sources are not a public surface; cross-area value reuse makes them one silently.",
+            "If the edge is not new, the target is not a test source, or no area is crossed, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Runtime code newly depends on another context's test or fixture sources across areas",
+            remedy: "Promote the shared piece to a real runtime module both contexts may depend on, or stop reaching across contexts",
+          },
+          false: {
+            what: "The import is type-only, stays within one area, targets a published testkit, or follows an established cross-area pattern",
+          },
+        },
+      },
+      message: "This runtime module newly depends on another context's test sources.",
+    },
+    "jev/no-twin-gateway-emergence": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change wrap an external package that another context already gateways, creating a second anticorruption layer for the same outside world?",
+          inspect: "Read the new external edge, the existing gateway in another area, how established that gateway is, and whether reusing it was one edge away.",
+          focus: "Judge whether the change duplicates gateway responsibility for one external dependency across contexts, not whether external packages are ever wrapped.",
+          decision_boundary: [
+            "A new direct wrap of a dependency an established gateway with several consumers already fronts, when reuse was one edge away, is strong evidence of a twin gateway.",
+            "A first wrap with no existing gateway, or an existing one-off with no consumers, leaves nothing to twin.",
+            "Two wraps serving disjoint capability slices evidenced by disjoint used symbols are separate gateways, not twins.",
+            "An incidental import is not a gateway; look for a domain-named surface with real consumers.",
+            "If no other-area gateway exists or the edge is not new, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new wrap duplicates an established gateway for the same external dependency in another context",
+            remedy: "Reuse the existing gateway instead of wrapping the dependency again",
+          },
+          false: {
+            what: "No other-area gateway exists, the existing use is incidental, or the wraps serve disjoint capabilities",
+          },
+        },
+      },
+      message: "This change wraps an external package another context already gateways.",
+    },
+    "jev/no-unwrapped-service-edge": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change call an external service host never before seen in the repo without going through the established client wrapper, adding an unmediated outbound edge?",
+          inspect: "Read the novel host in the added lines, the outbound-call evidence at the site, the repo's established wrappers and whether the change uses one, and any retry or observability markers nearby.",
+          focus: "Judge whether the new outbound edge bypasses mediation the repo already owns, not whether HTTP calls are ever risky.",
+          decision_boundary: [
+            "A brand-new external host called ad hoc with no timeout, retry, or tracing, while an established wrapper with wide use sits unused, is strong evidence of an unmediated edge.",
+            "A host already used elsewhere, a call routed through the wrapper, or a repo with no wrapper to conform to carries less weight.",
+            "Retry and telemetry markers at the call site weaken the claim even when the wrapper is bypassed.",
+            "Local and example hosts are not external service edges.",
+            "If the host is not novel or no outbound call exists in the added lines, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A novel external host is called without the repo's established client wrapper or reliability markers",
+            remedy: "Route the call through the established client wrapper, or establish one wrapper for the new host with retry and observability",
+          },
+          false: {
+            what: "The host is already used, the call uses the wrapper, no wrapper exists to conform to, or no outbound call was added",
+          },
+        },
+      },
+      message: "This change calls a new external service host outside the established client wrapper.",
+    },
   },
 };

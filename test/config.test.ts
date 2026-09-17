@@ -218,6 +218,11 @@ describe("loadConfig", () => {
       "jev/no-single-caller-exported-helper",
       "jev/no-string-duplicated-enumeration",
       "jev/no-convergent-twin-types",
+      "jev/no-shared-kernel-new-consumer",
+      "jev/no-direction-reversing-edge",
+      "jev/no-cross-context-test-reach",
+      "jev/no-twin-gateway-emergence",
+      "jev/no-unwrapped-service-edge",
     ]);
   });
 
