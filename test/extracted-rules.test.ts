@@ -31,6 +31,10 @@ const extractedRules = [
   ["jev/no-falsy-absent-conflation", "function"],
   ["jev/no-unanchored-domain-check", "function"],
   ["jev/no-contract-signature-drift", "function"],
+  ["jev/no-unwieldy-signature", "function"],
+  ["jev/no-inappropriate-intimacy", "function"],
+  ["jev/no-anemic-type", "abstraction"],
+  ["jev/no-temporary-field", "abstraction"],
 ] as const;
 
 describe("extracted review rules", () => {

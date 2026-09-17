@@ -22,6 +22,18 @@ describe("extractCandidates", () => {
     expect(candidates[1]?.source).toContain("function normalizeUser");
   });
 
+  it("emits classes as abstraction candidates", () => {
+    const source = `export class Order {
+      total(): number {
+        return 0;
+      }
+    }`;
+    const candidates = extractCandidates("src/order.ts", source);
+
+    expect(candidates.map(({ kind }) => kind)).toEqual(["abstraction", "function"]);
+    expect(candidates[0]?.source).toContain("class Order");
+  });
+
   it("keeps only candidates touched by changed lines", async () => {
     const source = await readFile(fixtureUrl, "utf8");
     const candidates = extractCandidates("src/sloppy.ts", source);

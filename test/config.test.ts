@@ -67,6 +67,10 @@ describe("loadConfig", () => {
       "jev/no-load-bearing-async",
       "jev/no-untrusted-sink-input",
       "jev/no-unreleased-subscription",
+      "jev/no-unwieldy-signature",
+      "jev/no-inappropriate-intimacy",
+      "jev/no-anemic-type",
+      "jev/no-temporary-field",
     ]);
   });
 

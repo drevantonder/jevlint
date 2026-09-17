@@ -1503,5 +1503,114 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This subscription has no release tied to its owner's lifetime.",
     },
+
+    "jev/no-unwieldy-signature": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Must a new caller read the implementation to use this signature correctly?",
+          inspect: "Count the positional slots each caller must fill correctly, including undefined placeholders and boolean flags, and compare them with the declared parameters, their types, defaults, overloads, and which slots the body actually uses.",
+          focus: "Judge the contract a new caller faces: how many positions must be counted, how many flags carry meaning only by position, and how many slots exist only to be skipped or ignored.",
+          decision_boundary: [
+            "Undefined placeholders passed for middle slots are strong evidence the caller counts positions to reach later arguments.",
+            "Positional boolean flags whose true and false meanings live only in the implementation force every caller to read it, regardless of parameter names.",
+            "Parameters never referenced in the body are dead slots that expand the contract without meaning.",
+            "Existing callers that supply every slot show the code compiles, not that a new caller could do so without reading the implementation.",
+            "A short signature whose callers pass named variables in declared order with no placeholders and no dead slots is usable as declared; answer no for it.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The signature forces callers to memorize positions, supply placeholders, or guess boolean meanings that the declaration does not explain",
+            remedy: "Introduce an options object, name the modes, or split the operation so each signature reads as its own contract",
+          },
+          false: {
+            what: "Callers use the signature as declared, optional behavior is grouped explicitly, or the evidence does not show caller confusion",
+          },
+        },
+      },
+      message: "Callers cannot use this signature correctly without reading the implementation.",
+    },
+    "jev/no-inappropriate-intimacy": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function depend on another module's internals in ways that module's interface does not advertise?",
+          inspect: "Compare each member-access chain rooted at an imported binding with the owner module's exported members, the import paths used, and how other importers of the same module reach it.",
+          focus: "Judge how the function reaches foreign state: through advertised entry points or by digging into unexported structure, private-marked members, or barrel-bypassing paths.",
+          decision_boundary: [
+            "Repeated access into underscore-prefixed or unexported members where the owner exports an accessor nobody calls is strong evidence of intimacy with internals.",
+            "Deep relative imports that bypass a barrel to reach interior files suggest the interface was routed around, not used.",
+            "Assertions applied specifically to reach further into a foreign value show the boundary resisting the access.",
+            "Deep access into members the owner exports and documents as shared plumbing is ordinary collaboration, even when the chain is long.",
+            "One member access alone is never enough. If the evidence does not establish the accessed structure as interior, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reaches past the other module's advertised interface into interior or private-marked structure",
+            remedy: "Use the owner's public operations, or promote the needed interior access into an advertised interface",
+          },
+          false: {
+            what: "The function uses exported entry points, follows documented shared plumbing, or the interior character of the access is not established",
+          },
+        },
+      },
+      message: "This function depends on another module's internals past its advertised interface.",
+    },
+    "jev/no-anemic-type": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this type's behavior live entirely in its clients, so every change to what it means must be made elsewhere?",
+          inspect: "Compare the type's own fields and logic-bearing methods with the external functions that read its fields, branch on its members, and call its accessors across the repository.",
+          focus: "Judge from the owner's side whether behavior that belongs with the data never moved in, as shown by clients operating on bare fields.",
+          decision_boundary: [
+            "Public fields with no logic-bearing methods and pricing, validation, or discount branching on those fields in several other modules are strong evidence the behavior lives in clients.",
+            "Getters and setters alone, or methods that only assign or return fields, do not constitute behavior.",
+            "Plain data carriers at a serialization or transport boundary are expected to be read elsewhere; score only the residual domain-behavior question.",
+            "Field reads alone are never enough. If the evidence does not show domain decisions made outside the type, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The type exposes bare fields while domain decisions about its meaning are implemented across its clients",
+            remedy: "Move the client-side decisions onto the type as named behavior, or narrow the type to the boundary it actually serves",
+          },
+          false: {
+            what: "The type carries its own behavior, serves as a boundary carrier, or the evidence does not show externalized domain decisions",
+          },
+        },
+      },
+      message: "This type's behavior lives in its clients rather than in the type itself.",
+    },
+    "jev/no-temporary-field": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this field hold a value during only part of the object's lifetime, forcing readers to reconstruct when it is meaningful?",
+          inspect: "Compare where each field is assigned with where it is read: constructor versus method writes, the methods that read it, presence guards before use, and which methods external callers invoke.",
+          focus: "Judge lifetime scoping inside the class: whether the type declares a field as always present that is empty until some method runs.",
+          decision_boundary: [
+            "A field assigned in one method, read in a different method, and absent from the constructor is strong evidence of a partial-lifetime value.",
+            "Optional or undefined-able declarations with presence guards before use confirm readers must handle the field's absence.",
+            "Callers invoking the reading method without the writing method show the lifetime confusion reaching real use.",
+            "A lazily computed cache guarded by a single accessor that recomputes on absence is an established pattern, not a temporary field.",
+            "One late assignment alone is never enough. If reads always follow writes through one accessor, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The field is meaningful only between particular method calls, so correct use depends on an unenforced order",
+            remedy: "Pass the value as a parameter, compute it on demand behind one accessor, or split the lifecycle into separate types",
+          },
+          false: {
+            what: "The field is assigned at construction, recomputed safely on absence, or the evidence does not establish a partial lifetime",
+          },
+        },
+      },
+      message: "This field is meaningful during only part of the object's lifetime.",
+
+    },
   },
 };

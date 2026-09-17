@@ -2,6 +2,7 @@ import type { JsonValue } from "@typesafe-ai/sdk";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAccidentalSerializationEvidence } from "./accidental-serialization.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
+import { buildAnemicTypeEvidence } from "./anemic-type.js";
 import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
@@ -23,6 +24,7 @@ import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
+import { buildInappropriateIntimacyEvidence } from "./inappropriate-intimacy.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLoadBearingAsyncEvidence } from "./load-bearing-async.js";
@@ -41,6 +43,7 @@ import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
+import { buildTemporaryFieldEvidence } from "./temporary-field.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
@@ -53,6 +56,7 @@ import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-
 import { buildUnreleasedSubscriptionEvidence } from "./unreleased-subscription.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 import { buildUntrustedSinkInputEvidence } from "./untrusted-sink-input.js";
+import { buildUnwieldySignatureEvidence } from "./unwieldy-signature.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -285,6 +289,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-unreleased-subscription") {
     return { handled: true, evidence: buildUnreleasedSubscriptionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unwieldy-signature") {
+    return { handled: true, evidence: buildUnwieldySignatureEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-inappropriate-intimacy") {
+    return { handled: true, evidence: buildInappropriateIntimacyEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-anemic-type") {
+    return { handled: true, evidence: buildAnemicTypeEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-temporary-field") {
+    return { handled: true, evidence: buildTemporaryFieldEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
