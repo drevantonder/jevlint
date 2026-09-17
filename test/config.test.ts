@@ -214,6 +214,10 @@ describe("loadConfig", () => {
       "jev/no-barrel-wide-reexport",
       "jev/no-utility-module-grab-bag",
       "jev/no-duplicate-module-role",
+      "jev/no-clone-and-tweak-sibling",
+      "jev/no-single-caller-exported-helper",
+      "jev/no-string-duplicated-enumeration",
+      "jev/no-convergent-twin-types",
     ]);
   });
 

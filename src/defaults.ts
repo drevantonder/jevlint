@@ -5425,5 +5425,109 @@ export const defaultConfig: JevLintConfig = {
       message: "This added file duplicates the responsibility already owned by an existing module.",
 
     },
+    "jev/no-clone-and-tweak-sibling": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this added function duplicate a same-module sibling with only small edits, where one parameterized function would serve both callers?",
+          inspect: "Compare the function and its closest sibling: shared tokens and statement shapes, parameter lists, literals that differ, and the caller list of each in the supplied evidence.",
+          focus: "Judge whether the differences are parameter-sized tweaks that one function with an option or branch could absorb, not whether the two merely share a topic.",
+          decision_boundary: [
+            "Near-identical bodies that differ by one branch, literal, or extra parameter are strong evidence of a clone that should be parameterized.",
+            "Shared guard clauses, imports, or generic scaffolding with otherwise different bodies weaken the claim.",
+            "Siblings with distinct callers exercising distinct contracts may justify separate functions even when their shapes overlap.",
+            "Token or shape overlap alone is not proof. If the differences change the contract rather than tweak it, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function restates a sibling with parameter-sized edits while both callers could share one parameterized implementation",
+            remedy: "Parameterize the original function with the varying branch, literal, or option instead of keeping a separate copy",
+          },
+          false: {
+            what: "The sibling differs in contract, serves a distinct role, or shares only generic scaffolding with the candidate",
+          },
+        },
+      },
+      message: "This function duplicates a same-module sibling with only small edits.",
+    },
+    "jev/no-single-caller-exported-helper": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this exported helper serve exactly one repository caller and belong living with that caller instead of as a public export?",
+          inspect: "Use the single caller, whether it lives in the same file or imports the helper, and whether any public entry point re-exports the helper in the supplied evidence.",
+          focus: "Judge whether the export promises reuse the repository never demonstrates, not whether the helper itself is well written.",
+          decision_boundary: [
+            "An exported helper with one caller in the same module and no re-export through a public entry point is strong evidence of premature publicity.",
+            "Re-export through the package index or a barrel answers the question negatively even with a single current caller.",
+            "A caller in another module that imports the helper shows at least cross-module intent, which weakens the claim.",
+            "One caller is not enough on its own. If the helper is part of a public entry point, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An exported helper with exactly one caller that no public entry point re-exports",
+            remedy: "Move the helper beside its caller or unexport it until a second consumer demonstrates reuse",
+          },
+          false: {
+            what: "The helper is re-exported as public API, serves several callers, or shows genuine cross-module reuse",
+          },
+        },
+      },
+      message: "This exported helper serves exactly one caller and is not public API.",
+    },
+    "jev/no-string-duplicated-enumeration": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change restate a literal value set already owned by another module instead of reusing the canonical type?",
+          inspect: "Compare the literals introduced in the changed lines with the owning module's union or enum members, the overlap between them, and whether the changed file imports the owner in the supplied evidence.",
+          focus: "Judge whether the change duplicates a domain value set that already has a canonical home, not whether individual literals coincide by chance.",
+          decision_boundary: [
+            "Several changed-line literals matching a union owned elsewhere while the changed file does not import the owner is strong evidence of restatement.",
+            "A boundary parser that maps wire strings into the owned union once answers the question negatively.",
+            "One or two coincidental literals, config keys, or display strings are not a duplicated enumeration.",
+            "Literal overlap alone is not proof. If no other module owns the set as a type, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The change restates a literal set that another module already owns as a union or enum without importing it",
+            remedy: "Import the canonical type and parse or narrow the changed values into it at the boundary",
+          },
+          false: {
+            what: "The literals are coincidental, belong to configuration or display copy, map into the owned type once, or have no canonical owner",
+          },
+        },
+      },
+      message: "This change restates a literal value set already owned by another module.",
+    },
+    "jev/no-convergent-twin-types": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this type duplicate a field shape already owned by another module, so the two copies must be kept in agreement by hand?",
+          inspect: "Compare the property lists of the candidate and its closest twin, the shared properties, and the importer footprints of each in the supplied evidence.",
+          focus: "Judge whether the two shapes describe the same domain value and should be one shared type, not whether small records ever coincide.",
+          decision_boundary: [
+            "Near-identical multi-field shapes in different modules with overlapping consumers are strong evidence of twins that should converge.",
+            "Coincidental two-field shapes such as id and name answer the question negatively.",
+            "Twins that evolve independently toward different required fields weaken the claim even when they still overlap.",
+            "Property overlap alone is not proof. If the shapes describe different domain values, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The type restates a field shape owned by another module while consumers of both overlap",
+            remedy: "Share one canonical type between the modules instead of maintaining two copies by hand",
+          },
+          false: {
+            what: "The overlap is coincidental, the shapes describe different domain values, or each shape evolves under its own owner",
+          },
+        },
+      },
+      message: "This type duplicates a field shape already owned by another module.",
+    },
   },
 };

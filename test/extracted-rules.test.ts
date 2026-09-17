@@ -178,6 +178,10 @@ const extractedRules = [
   ["jev/no-barrel-wide-reexport", "change"],
   ["jev/no-utility-module-grab-bag", "change"],
   ["jev/no-duplicate-module-role", "change"],
+  ["jev/no-clone-and-tweak-sibling", "function"],
+  ["jev/no-single-caller-exported-helper", "function"],
+  ["jev/no-string-duplicated-enumeration", "change"],
+  ["jev/no-convergent-twin-types", "abstraction"],
 ] as const;
 
 describe("extracted review rules", () => {
