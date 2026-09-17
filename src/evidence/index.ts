@@ -8,6 +8,7 @@ import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-boolean
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
+import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -18,7 +19,10 @@ import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
+import { buildMessageChainEvidence } from "./message-chain.js";
+import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
+import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
@@ -27,6 +31,7 @@ import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
+import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 
@@ -161,6 +166,24 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildHiddenPartialFailureEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-duplicated-logic") {
+    return { handled: true, evidence: buildDuplicatedLogicEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-type-code-dispatch") {
+    return { handled: true, evidence: buildTypeCodeDispatchEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mode-flag-parameter") {
+    return { handled: true, evidence: buildModeFlagParameterEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-message-chain") {
+    return { handled: true, evidence: buildMessageChainEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mixed-abstraction-levels") {
+    return {
+      handled: true,
+      evidence: buildMixedAbstractionLevelsEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };
