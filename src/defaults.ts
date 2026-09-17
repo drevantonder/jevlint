@@ -31,6 +31,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function mutates caller-owned input without making that behavior clear.",
     },
+    "jev/no-query-side-effect": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this value-returning function conceal a material command behind an API that presents itself as a query?",
+          inspect: "Compare the function name and return paths with each extracted side effect, its resolved target module, and the repository callers in the supplied evidence.",
+          focus: "Judge whether callers seeking information would be surprised that the call also changes domain or persistent state.",
+          decision_boundary: [
+            "A get, find, check, calculate, or similarly query-shaped API that reserves, consumes, marks, publishes, or otherwise changes domain state is strong evidence of a concealed command.",
+            "Commands such as create, reserve, update, or consume may return useful values without pretending to be queries.",
+            "Logging, metrics, tracing, and behavior-preserving cache population are operational side effects, not command-query mixing when they do not change the domain result.",
+            "An ignored call or assignment is only a structural candidate; use its target and context to establish a material state change.",
+            "If the target behavior or the API's query contract is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The API promises information while also performing a caller-relevant state change that callers cannot infer from its contract",
+            remedy: "Separate the query from the command or rename the operation so the state change is explicit",
+          },
+          false: {
+            what: "The function is a clearly named command, remains observational apart from telemetry or caching, has no material state change, or lacks enough evidence to classify the effect",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This query-shaped API also performs a hidden state-changing command.",
+    },
     "jev/no-narrating-comment": {
       scope: "comment",
       question: {

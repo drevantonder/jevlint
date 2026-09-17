@@ -17,14 +17,19 @@ const STATE_MODEL_PRIORITY = new Map<string, number>([
   ["jev/no-unconstrained-state-string", 95],
 ]);
 
-const API_CONTRACT_PRIORITY = new Map<string, number>([
+const INPUT_MUTATION_PRIORITY = new Map<string, number>([
   ["jev/no-hidden-input-mutation", 90],
+]);
+
+const API_SIDE_EFFECT_PRIORITY = new Map<string, number>([
+  ["jev/no-query-side-effect", 95],
 ]);
 
 const RULE_FAMILIES = [
   ACCIDENTAL_COMPLEXITY_PRIORITY,
   STATE_MODEL_PRIORITY,
-  API_CONTRACT_PRIORITY,
+  INPUT_MUTATION_PRIORITY,
+  API_SIDE_EFFECT_PRIORITY,
 ];
 
 function overlaps(left: Diagnostic, right: Diagnostic): boolean {

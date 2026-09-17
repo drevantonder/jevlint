@@ -15,6 +15,7 @@ export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
+export { buildQuerySideEffectEvidence } from "./evidence/query-side-effect.js";
 export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";
 export { buildUnconstrainedStateStringEvidence } from "./evidence/unconstrained-state-string.js";
 export { TypeSafeEvaluator } from "./typesafe-evaluator.js";

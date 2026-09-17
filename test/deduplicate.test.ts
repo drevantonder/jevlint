@@ -82,12 +82,14 @@ describe("diagnostic deduplication", () => {
   it("keeps independent principle families on the same function", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-input-mutation", 5, 12),
+      diagnostic("jev/no-query-side-effect", 5, 12),
       diagnostic("jev/no-generic-magic", 5, 12),
     ]);
 
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
       "jev/no-generic-magic",
       "jev/no-hidden-input-mutation",
+      "jev/no-query-side-effect",
     ]);
   });
 });
