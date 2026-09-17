@@ -138,6 +138,7 @@ import { buildUnlocalizedUserStringEvidence } from "./unlocalized-user-string.js
 import { buildConsoleResidueEvidence } from "./console-residue.js";
 import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js";
 import { buildBespokeCryptoConstructionEvidence } from "./bespoke-crypto-construction.js";
+import { buildBooleanFanoutEvidence } from "./boolean-fanout.js";
 import { buildDrilledPropEvidence } from "./drilled-prop.js";
 import { buildDuplicatedStyleObjectEvidence } from "./duplicated-style-object.js";
 import { buildHandRolledSchemaCheckEvidence } from "./hand-rolled-schema-check.js";
@@ -145,8 +146,11 @@ import { buildHandRolledRetryLoopEvidence } from "./hand-rolled-retry-loop.js";
 import { buildHandRolledConcurrencyLimitEvidence } from "./hand-rolled-concurrency-limit.js";
 import { buildHandRolledDebounceEvidence } from "./hand-rolled-debounce.js";
 import { buildHandRolledCsvSplitEvidence } from "./hand-rolled-csv-split.js";
+import { buildKnobMultiplicityEvidence } from "./knob-multiplicity.js";
+import { buildParallelEnumerationsEvidence } from "./parallel-enumerations.js";
 import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
+import { buildSynonymVocabularyEvidence } from "./synonym-vocabulary.js";
 import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
 import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
 import { buildUnmeasuredPerformanceMachineryEvidence } from "./unmeasured-performance-machinery.js";
@@ -1245,6 +1249,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-overloaded-boolean-return") {
     return { handled: true, evidence: buildOverloadedBooleanReturnEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-parallel-enumerations") {
+    return { handled: true, evidence: buildParallelEnumerationsEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-synonym-vocabulary") {
+    return { handled: true, evidence: buildSynonymVocabularyEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-knob-multiplicity") {
+    return { handled: true, evidence: buildKnobMultiplicityEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-boolean-fanout") {
+    return { handled: true, evidence: buildBooleanFanoutEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

@@ -236,6 +236,10 @@ describe("loadConfig", () => {
       "jev/no-lopsided-error-handling",
       "jev/no-repeated-predicate",
       "jev/no-overloaded-boolean-return",
+      "jev/no-parallel-enumerations",
+      "jev/no-synonym-vocabulary",
+      "jev/no-knob-multiplicity",
+      "jev/no-boolean-fanout",
     ]);
   });
 
