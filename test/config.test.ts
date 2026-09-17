@@ -158,6 +158,11 @@ describe("loadConfig", () => {
       "jev/no-unclosed-handle",
       "jev/no-bespoke-crypto-construction",
       "jev/no-duplicated-style-object",
+      "jev/no-hand-rolled-schema-check",
+      "jev/no-hand-rolled-retry-loop",
+      "jev/no-hand-rolled-concurrency-limit",
+      "jev/no-hand-rolled-debounce",
+      "jev/no-hand-rolled-csv-split",
     ]);
   });
 

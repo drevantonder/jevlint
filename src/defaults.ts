@@ -3942,5 +3942,135 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-hand-rolled-schema-check": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this validator reimplement a schema capability an installed dependency already owns, with no demonstrated need for its differences?",
+          inspect: "Compare the typeof checks, required-field loops, and error accumulation with the owned validator, its sibling importers, the custom error shape, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local copy is gratuitous beside an owned validator, not whether validation exists.",
+          decision_boundary: [
+            "Multi-field object validation with error lists in a repo where siblings import the installed validator is strong evidence of a gratuitous copy.",
+            "A single-field check at one call site answers the question negatively.",
+            "A custom error shape pinned by an API contract weakens the claim when callers depend on that shape.",
+            "If no validator dependency is installed, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reimplements schema validation the repo already pays for without a demonstrated semantic gap",
+            remedy: "Express the schema with the installed validator and remove the hand-rolled copy",
+          },
+          false: {
+            what: "The check is trivially small, carries a pinned contract the validator cannot express, or no validator is installed",
+          },
+        },
+      },
+      message: "This validator reimplements a schema capability an installed dependency already owns.",
+    },
+    "jev/no-hand-rolled-retry-loop": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this retry loop reimplement an installed retry dependency with no demonstrated need for its differences?",
+          inspect: "Compare the loop, delay, attempt counting, and jitter signals with the owned retry dependency, its sibling importers, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local loop is gratuitous beside an owned retry capability.",
+          decision_boundary: [
+            "A backoff loop with jitter beside an installed retry dependency the siblings use is strong evidence of a gratuitous copy.",
+            "A single call site with a short loop and trimmed semantics answers the question negatively.",
+            "Per-attempt side effects the dependency API cannot thread weaken the claim.",
+            "If no retry dependency is installed, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reimplements retry machinery the repo already pays for without a demonstrated semantic gap",
+            remedy: "Use the installed retry dependency and remove the hand-rolled loop",
+          },
+          false: {
+            what: "The loop is minimal with trimmed semantics, carries side effects the dependency cannot model, or no retry dependency is installed",
+          },
+        },
+      },
+      message: "This retry loop reimplements an installed retry dependency.",
+    },
+    "jev/no-hand-rolled-concurrency-limit": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this limiter reimplement an installed concurrency dependency with no demonstrated need for its differences?",
+          inspect: "Compare the active counter, waiting queue, and acquire-release signals with the owned limiter dependency, its sibling importers, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local limiter is gratuitous beside an owned width-control capability.",
+          decision_boundary: [
+            "A counter-queue limiter while the manifest holds a limiter used elsewhere is strong evidence of a gratuitous copy.",
+            "Release semantics tied to a domain resource with health checks the dependency cannot model answer the question negatively.",
+            "A plain counter without a waiting queue is not a limiter by itself.",
+            "If no limiter dependency is installed, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reimplements width control the repo already pays for without a demonstrated semantic gap",
+            remedy: "Use the installed concurrency limiter and remove the hand-rolled copy",
+          },
+          false: {
+            what: "The control models domain resource semantics the dependency lacks, or no limiter is installed",
+          },
+        },
+      },
+      message: "This limiter reimplements an installed concurrency dependency.",
+    },
+    "jev/no-hand-rolled-debounce": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this timing wrapper reimplement debounce semantics an installed dependency already owns, with generality its callers do not exercise?",
+          inspect: "Compare the timer-reset shape and leading, trailing, max-wait, cancel, and flush options with the owned dependency, the caller count, and the exercised options in the supplied evidence.",
+          focus: "Judge whether the local wrapper is gratuitous beside an owned debounce capability.",
+          decision_boundary: [
+            "A full leading, trailing, and max-wait wrapper with one call site using defaults beside an installed dependency is strong evidence of a gratuitous copy.",
+            "A short inline timer at a single call site answers the question negatively.",
+            "Timer identity semantics the dependency cannot provide weaken the claim.",
+            "If no debounce-capable dependency is installed, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reimplements debounce capability the repo already pays for without a demonstrated semantic gap",
+            remedy: "Use the installed debounce dependency and remove the hand-rolled wrapper",
+          },
+          false: {
+            what: "The timer is a minimal inline form, carries identity semantics the dependency lacks, or no debounce dependency is installed",
+          },
+        },
+      },
+      message: "This timing wrapper reimplements debounce an installed dependency already owns.",
+    },
+    "jev/no-hand-rolled-csv-split": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this row splitter reimplement an installed CSV dependency with no demonstrated flat-shape safety?",
+          inspect: "Compare the row split, cell split, and header-index mapping with the owned CSV dependency, its sibling importers, quote handling, and the input provenance in the supplied evidence.",
+          focus: "Judge whether naive splitting is gratuitous beside an owned parser.",
+          decision_boundary: [
+            "Naive splitting of user-supplied content beside an installed parser is strong evidence of a gratuitous copy.",
+            "A provably flat machine-generated shape with a test pinning no quotes at a single call site answers the question negatively.",
+            "Quote handling in the local code weakens the claim toward a deliberate tradeoff.",
+            "If no CSV dependency is installed, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reimplements CSV parsing the repo already pays for without demonstrated input safety",
+            remedy: "Parse with the installed CSV dependency and remove the hand-rolled splitter",
+          },
+          false: {
+            what: "The input is provably flat with pinned tests, or no CSV dependency is installed",
+          },
+        },
+      },
+      message: "This row splitter reimplements an installed CSV dependency.",
+    },
   },
 };
