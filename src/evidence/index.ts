@@ -136,6 +136,12 @@ import { buildUnlabeledInteractiveElementEvidence } from "./unlabeled-interactiv
 import { buildUnlocalizedUserStringEvidence } from "./unlocalized-user-string.js";
 import { buildConsoleResidueEvidence } from "./console-residue.js";
 import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js";
+import { buildBespokeCryptoConstructionEvidence } from "./bespoke-crypto-construction.js";
+import { buildDrilledPropEvidence } from "./drilled-prop.js";
+import { buildDuplicatedStyleObjectEvidence } from "./duplicated-style-object.js";
+import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
+import { buildStaleCommentEvidence } from "./stale-comment.js";
+import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
 import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
 
 export type RuleEvidenceResult =
@@ -753,6 +759,24 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildUnverifiedClaimEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-drilled-prop") {
+    return { handled: true, evidence: buildDrilledPropEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-stale-comment") {
+    return { handled: true, evidence: buildStaleCommentEvidence(candidate, projectFiles, changes) };
+  }
+  if (ruleId === "jev/no-paraphrased-sibling-logic") {
+    return { handled: true, evidence: buildParaphrasedSiblingLogicEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unclosed-handle") {
+    return { handled: true, evidence: buildUnclosedHandleEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-bespoke-crypto-construction") {
+    return { handled: true, evidence: buildBespokeCryptoConstructionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-duplicated-style-object") {
+    return { handled: true, evidence: buildDuplicatedStyleObjectEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
