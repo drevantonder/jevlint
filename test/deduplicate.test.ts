@@ -79,6 +79,15 @@ describe("diagnostic deduplication", () => {
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-complexity-displacement"]);
   });
 
+  it("keeps a specific branch smell instead of the broad mixed-responsibility symptom", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-mixed-responsibilities", 4, 20),
+      diagnostic("jev/no-ad-hoc-branching", 4, 20),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-ad-hoc-branching"]);
+  });
+
   it("prefers a hidden command over its generic I/O symptom", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-io", 5, 12),

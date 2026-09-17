@@ -10,6 +10,7 @@ import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
+import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
@@ -46,6 +47,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-ad-hoc-branching") {
     return { handled: true, evidence: buildAdHocBranchingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mixed-responsibilities") {
+    return { handled: true, evidence: buildMixedResponsibilitiesEvidence(candidate, projectFiles) };
   }
   if (ruleId === "jev/no-needless-abstraction") {
     return { handled: true, evidence: buildNeedlessAbstractionEvidence(candidate, projectFiles) };

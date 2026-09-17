@@ -258,6 +258,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function appears to accumulate unrelated special-case policies.",
     },
+    "jev/no-mixed-responsibilities": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function itself own unrelated responsibilities that would change for different business reasons?",
+          inspect: "Use the function, imported collaborator calls, collaborator module ownership, and callers in the supplied repository evidence.",
+          focus: "Judge whether the work belongs to one coherent outcome, not how many modules or calls the function uses.",
+          decision_boundary: [
+            "Work that produces unrelated business outcomes, such as saving a profile while preparing a finance report and cleaning sessions, is strong evidence of mixed responsibilities.",
+            "An application service may coordinate inventory, payment, shipping, and persistence as one order-fulfillment responsibility.",
+            "A controller or adapter may parse boundary input, invoke one use case, and translate its result without mixing responsibilities.",
+            "Logging, metrics, transactions, and cleanup tied to the main operation do not alone create another responsibility.",
+            "A broad name or several collaborators is not proof. If the relationship between the operations is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function owns separable work with independent purposes and reasons to change, rather than coordinating one named workflow",
+            remedy: "Move each unrelated outcome to its natural owner and keep orchestration only where one use case requires it",
+          },
+          false: {
+            what: "Every operation advances one use case, implements one boundary translation, or supports the main operation with cross-cutting behavior",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This function combines responsibilities with different reasons to change.",
+    },
     "jev/no-correlated-state-booleans": {
       scope: "abstraction",
       question: {
