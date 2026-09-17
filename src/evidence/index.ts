@@ -175,6 +175,10 @@ import { buildHandRolledDeepCloneEvidence } from "./hand-rolled-deep-clone.js";
 import { buildHandRolledSetOpsEvidence } from "./hand-rolled-set-ops.js";
 import { buildHandRolledFlattenEvidence } from "./hand-rolled-flatten.js";
 import { buildHandRolledDeepEqualEvidence } from "./hand-rolled-deep-equal.js";
+import { buildNestedConditionalExpressionEvidence } from "./nested-conditional-expression.js";
+import { buildUnexplainedBehavioralLiteralEvidence } from "./unexplained-behavioral-literal.js";
+import { buildShadowedMeaningEvidence } from "./shadowed-meaning.js";
+import { buildOversizedWorkingSetEvidence } from "./oversized-working-set.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -962,6 +966,30 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-csv-split") {
     return { handled: true, evidence: buildHandRolledCsvSplitEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-nested-conditional-expression") {
+    return {
+      handled: true,
+      evidence: buildNestedConditionalExpressionEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-unexplained-behavioral-literal") {
+    return {
+      handled: true,
+      evidence: buildUnexplainedBehavioralLiteralEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-shadowed-meaning") {
+    return {
+      handled: true,
+      evidence: buildShadowedMeaningEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-oversized-working-set") {
+    return {
+      handled: true,
+      evidence: buildOversizedWorkingSetEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

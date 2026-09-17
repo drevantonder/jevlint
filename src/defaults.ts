@@ -4789,6 +4789,111 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This row splitter reimplements an installed CSV dependency.",
+    },
+
+    "jev/no-nested-conditional-expression": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function's decisive logic hide inside nested conditional expressions that force readers to simulate the evaluator?",
+          inspect: "Compare each conditional and logical site with its return or JSX position, nesting depth, chain length, changed-line overlap, and the named-boolean bindings in the supplied evidence.",
+          focus: "Judge whether a reader must mentally evaluate nested branches to follow the decision, not whether any conditional appears.",
+          decision_boundary: [
+            "Conditional expressions nested inside one another in a return or render position are strong evidence of hidden decisive logic.",
+            "A single conditional over well-named boolean bindings answers the question negatively.",
+            "Long logical chains in return positions corroborate the claim when no intermediate name explains each step.",
+            "If the evidence shows no conditional expression in a decisive position, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Decisive branching is packed into nested conditional expressions or long unnamed logical chains in a return or render position",
+            remedy: "Name each intermediate condition and flatten the decision into early returns or a lookup",
+          },
+          false: {
+            what: "The decision reads through named booleans, flat guards, or conditionals outside decisive positions",
+          },
+        },
+      },
+      message: "This function's decisive logic hides inside nested conditional expressions.",
+    },
+    "jev/no-unexplained-behavioral-literal": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function steer behavior with literals that no name in scope explains?",
+          inspect: "Compare each steering literal with its comparison, equality, or arithmetic position, the other-side binding name, and the named constants in the supplied evidence.",
+          focus: "Judge whether a reader can tell what each behavior-steering value means without guessing, not whether any literal appears.",
+          decision_boundary: [
+            "Bare numbers or strings in threshold comparisons or scaling arithmetic with no named constant are strong evidence of unexplained steering.",
+            "Loop index arithmetic and values bound to named constants answer the question negatively.",
+            "A literal compared against a well-named binding weakens the claim when the binding carries the meaning.",
+            "If the evidence shows no behavior-steering literal, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Thresholds, scales, or discriminants steer behavior as bare literals no name explains",
+            remedy: "Bind each steering value to a named constant that states its meaning and unit",
+          },
+          false: {
+            what: "The literals are named, incidental arithmetic, or absent from steering positions",
+          },
+        },
+      },
+      message: "This function steers behavior with literals that no name in scope explains.",
+    },
+    "jev/no-shadowed-meaning": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function reuse a visible outer name for a different meaning, so readers carry the wrong assumption into the inner scope?",
+          inspect: "Compare each shadowing pair's inner role with the outer import, module, or enclosing binding, including both type texts in the supplied evidence.",
+          focus: "Judge whether the same name denotes different things across the boundary, not whether any redeclaration appears.",
+          decision_boundary: [
+            "A parameter or local sharing an imported or module-level name with a different type is strong evidence of a shadowed meaning.",
+            "Conventional catch bindings and same-meaning refinements answer the question negatively.",
+            "An inner binding whose type text matches the outer one weakens the claim even when the declaration repeats.",
+            "If the evidence shows no shadowing pair, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An inner binding reuses an outer name for a different meaning a reader would confuse",
+            remedy: "Rename the inner binding so each name denotes one thing in every visible scope",
+          },
+          false: {
+            what: "The repeated name keeps the same meaning, follows convention, or no shadowing occurs",
+          },
+        },
+      },
+      message: "This function reuses a visible outer name for a different meaning.",
+    },
+    "jev/no-oversized-working-set": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function force readers to track more live values than its outcome requires?",
+          inspect: "Compare the total binding inventory with the maximum concurrently live values, the longest feed chain, and each binding's use count in the supplied evidence.",
+          focus: "Judge whether interleaved values overload working memory, not whether the function is long.",
+          decision_boundary: [
+            "Many simultaneously live values with no feed chain between them are strong evidence of an oversized working set.",
+            "A long single-pipeline transform where each value feeds the next answers the question negatively.",
+            "Parameters and locals each used once in order weaken the claim even when the inventory is large.",
+            "If the evidence shows only a handful of tracked values, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Interleaved live values exceed what the outcome's data flow requires readers to hold",
+            remedy: "Split the function along its data flows or thread values through a pipeline so each step needs few live names",
+          },
+          false: {
+            what: "The values form one pipeline, stay few, or the inventory does not establish interleaved tracking",
+          },
+        },
+      },
+      message: "This function forces readers to track more live values than its outcome requires.",
 
     },
   },

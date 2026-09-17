@@ -154,6 +154,10 @@ const extractedRules = [
   ["jev/no-hand-rolled-concurrency-limit", "function"],
   ["jev/no-hand-rolled-debounce", "function"],
   ["jev/no-hand-rolled-csv-split", "function"],
+  ["jev/no-nested-conditional-expression", "function"],
+  ["jev/no-unexplained-behavioral-literal", "function"],
+  ["jev/no-shadowed-meaning", "function"],
+  ["jev/no-oversized-working-set", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

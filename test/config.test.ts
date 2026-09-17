@@ -190,6 +190,10 @@ describe("loadConfig", () => {
       "jev/no-hand-rolled-concurrency-limit",
       "jev/no-hand-rolled-debounce",
       "jev/no-hand-rolled-csv-split",
+      "jev/no-nested-conditional-expression",
+      "jev/no-unexplained-behavioral-literal",
+      "jev/no-shadowed-meaning",
+      "jev/no-oversized-working-set",
     ]);
   });
 
