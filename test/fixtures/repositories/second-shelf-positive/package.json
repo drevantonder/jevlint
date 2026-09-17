@@ -1,0 +1,8 @@
+{
+  "name": "second-shelf-positive",
+  "version": "1.0.0",
+  "dependencies": {
+    "dayjs": "^1.11.0",
+    "date-fns": "^4.1.0"
+  }
+}

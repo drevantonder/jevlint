@@ -1,0 +1,7 @@
+{
+  "name": "phantom-negative",
+  "version": "1.0.0",
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  }
+}

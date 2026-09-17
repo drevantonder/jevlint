@@ -4100,5 +4100,167 @@ export const defaultConfig: JevLintConfig = {
       message: "This new flag gates behavior with no named owner, tracked ticket, or expiry note.",
 
     },
+    "jev/no-superseded-api-use": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this call use a member the owning module marks superseded while sibling code already uses the successor?",
+          inspect: "Compare each member access on an imported binding with the deprecation note on that member in the resolved owner module and whether siblings invoke the named successor in the supplied evidence.",
+          focus: "Judge whether the new code adopts the idiom the repository is leaving, not whether the member still works.",
+          decision_boundary: [
+            "A member carrying an explicit deprecation note naming a successor, while siblings call that successor on the same owner, is strong evidence of a stale idiom.",
+            "A member deprecated without a named successor, or with no sibling precedent for any successor, is a weaker signal.",
+            "Member accesses whose owner cannot be resolved, or with no deprecation note in the owner, do not establish supersession.",
+            "Calls to the successor itself, or to members the owner never deprecates, answer the question negatively.",
+            "If no deprecation note or successor use is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function calls a member the owner marks superseded while the repository already uses the successor",
+            remedy: "Call the successor member the owner names and siblings already use",
+          },
+          false: {
+            what: "The members carry no deprecation note, name no successor, or the repository shows no successor precedent",
+          },
+        },
+      },
+      message: "This call uses an API the owning module marks superseded.",
+    },
+    "jev/no-phantom-package-import": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this import name a package no manifest or workspace in the repository declares, so resolution can only fail?",
+          inspect: "Compare each bare import specifier with the nearest manifest dependencies, lockfile entries, path aliases, and sibling imports of neighboring real packages in the supplied evidence.",
+          focus: "Judge whether the specifier resolves anywhere in the repository, not whether the name sounds plausible.",
+          decision_boundary: [
+            "A bare specifier absent from every manifest and lockfile, with no alias mapping, is strong evidence of a hallucinated package.",
+            "A specifier close in spelling to a real package siblings import widely is a likely typo rather than a real dependency.",
+            "A monorepo-local specifier resolved by a path alias the resolver only partially expands weakens the claim.",
+            "Relative imports, Node builtins, and manifest-declared packages answer the question negatively.",
+            "If the manifest cannot be found or the specifier resolves through an alias, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The import names a bare package nothing in the repository declares, maps, or locks",
+            remedy: "Declare the real package in the manifest or correct the specifier to the intended module",
+          },
+          false: {
+            what: "The specifier is relative, builtin, declared, locked, or resolved through a workspace alias",
+          },
+        },
+      },
+      message: "This import names a package no manifest in the repository declares.",
+    },
+    "jev/no-interaction-pinning-test": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do this test's decisive assertions pin the subject's internal interactions rather than its observable outcome?",
+          inspect: "Compare the interaction assertions against call counts, argument shapes, and invocation order with the outcome assertions on return values and observable state, and whether the asserted interaction belongs to the subject's public contract in the supplied evidence.",
+          focus: "Judge the assertion target, not the mocking: legitimate doubles with over-pinned interaction assertions still pin the implementation.",
+          decision_boundary: [
+            "Call-order or call-count assertions on spies of internal helpers, with no outcome assertion, are strong evidence of pinning.",
+            "Interaction assertions alongside outcome assertions on a contract that genuinely promises the interaction, such as exactly-once delivery, are deliberate.",
+            "Spies on collaborators at the system boundary used to observe an outcome weaken the claim.",
+            "Outcome assertions on return values, exported state, or rendered output answer the question negatively.",
+            "If no assertion establishes an interaction target distinct from the observable outcome, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test's decisive assertions pin internal call counts, arguments, or order while no assertion checks the observable outcome",
+            remedy: "Assert the observable outcome and keep interaction assertions only for interactions the contract promises",
+          },
+          false: {
+            what: "Outcome assertions carry the test, or the pinned interaction is part of the subject's promised contract",
+          },
+        },
+      },
+      message: "This test pins internal interactions instead of the observable outcome.",
+    },
+    "jev/no-single-use-dependency": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change add a dependency whose entire use is one trivial call site the platform or existing shelf already covers?",
+          inspect: "Compare each added manifest entry with its import-site count across the repository, the distinct members used, and whether a platform equivalent or existing helper covers the same need in the supplied evidence.",
+          focus: "Judge the capability gain against the install and audit cost, never dependency-ness in isolation.",
+          decision_boundary: [
+            "A new dependency with exactly one call site for a one-liner the platform provides is strong evidence of a trivial need.",
+            "A growing call-site count, several distinct members used, or no platform equivalent weakens the claim.",
+            "An added dependency with no import sites at all is unused rather than trivially used.",
+            "A manifest change that adds no dependencies answers the question negatively.",
+            "If the use sites or the platform comparison cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The change adds a dependency used once for a capability the platform or shelf already provides",
+            remedy: "Use the platform equivalent or existing helper and drop the added dependency",
+          },
+          false: {
+            what: "The dependency serves several sites, distinct members, or a capability nothing on the shelf provides",
+          },
+        },
+      },
+      message: "This change adds a dependency for a single trivial call site.",
+    },
+    "jev/no-second-shelf-dependency": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this import provide a capability the repository's manifest and module norms already cover with a different library?",
+          inspect: "Compare the imported package's capability with the manifest entries and sibling imports covering the same capability in the supplied evidence.",
+          focus: "Judge whether one repository now pays two conventions for one job, not whether the new library works.",
+          decision_boundary: [
+            "Imports of a new date, HTTP, schema, logging, or identity library in a module whose siblings import the incumbent for the same operations are strong evidence of shelf duplication.",
+            "A genuinely uncovered sub-capability the incumbent lacks, noted in the evidence, weakens the claim.",
+            "A single library per capability, or an import outside any labeled capability, answers the question negatively.",
+            "Migration diffs that move every site to the new library are consolidation, not duplication.",
+            "If no second library covers the same capability, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The import adds a second library for a capability the manifest and siblings already cover with another",
+            remedy: "Use the incumbent library or migrate every site to the new one in a single change",
+          },
+          false: {
+            what: "The capability is uncovered, the import consolidates every site, or only one library serves the capability",
+          },
+        },
+      },
+      message: "This import adds a second library for a capability the shelf already covers.",
+    },
+    "jev/no-repeated-test-preamble": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test's setup block repeat fixture construction the module already owns in one shared helper or hook?",
+          inspect: "Compare the normalized fingerprint of the test's leading setup statements with sibling tests sharing it, and whether a factory or beforeEach hook already performs the same construction and some siblings adopt it in the supplied evidence.",
+          focus: "Judge whether fixture evolution must now be replayed per test, not whether the setup reads as thorough.",
+          decision_boundary: [
+            "Several tests sharing a long setup fingerprint beside an adopted factory or hook is strong evidence of a repeated preamble.",
+            "Setups that differ per test in the exercised dimension are deliberate per-test arrangement, not repetition.",
+            "A shared helper nobody adopts, or no sibling sharing the fingerprint, weakens the claim to a local choice.",
+            "A test with no leading fixture construction answers the question negatively.",
+            "If the setups differ in what they exercise or no helper owns the construction, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test repeats fixture construction siblings share while the module owns a factory or hook for it",
+            remedy: "Build the fixture through the shared factory or hook instead of reconstructing it per test",
+          },
+          false: {
+            what: "Each setup exercises a distinct dimension, no shared helper owns the construction, or the setup is unique",
+          },
+        },
+      },
+      message: "This test repeats fixture setup the module already owns once.",
+    },
   },
 };
