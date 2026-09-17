@@ -831,6 +831,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This error translation discards failure information needed by its caller.",
     },
+    "jev/no-unsafe-retry": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this retry repeat an operation without enough policy to make another attempt safe for the shown failure and effect?",
+          inspect: "Use the extracted loop or retry helper, catch guards, stop conditions, delays, idempotency signals, dependency contracts, and callers in the supplied evidence.",
+          focus: "Judge retry safety as a whole; do not flag a retry merely because one conventional feature is absent.",
+          decision_boundary: [
+            "Repeating a non-idempotent effect for every exception without an idempotency mechanism or failure classification is strong evidence of an unsafe retry.",
+            "A credible policy identifies retryable failures, bounds attempts, controls timing when needed, and prevents duplicate side effects.",
+            "Attempt count, delay length, or catch count alone never establishes safety or danger.",
+            "A small immediate retry of an idempotent local read can be safe without backoff or elaborate classification.",
+            "A retry helper may own policy outside this function; if its contract is unavailable or the operation's effect is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The shown operation can be repeated after the wrong failures, indefinitely or too aggressively, or with duplicate side effects and no compensating safety mechanism",
+            remedy: "Define retry eligibility, termination, timing, and idempotency at one explicit policy boundary",
+          },
+          false: {
+            what: "The retry is safe for the operation, delegates to a credible policy, is a bounded idempotent exception, or lacks enough evidence to judge",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This retry does not show a safe policy for repeating the operation.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

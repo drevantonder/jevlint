@@ -40,6 +40,7 @@ describe("loadConfig", () => {
       "jev/no-domain-policy-in-adapter",
       "jev/no-swallowed-error",
       "jev/no-lossy-error-translation",
+      "jev/no-unsafe-retry",
       "jev/no-feature-envy",
     ]);
   });

@@ -27,6 +27,7 @@ import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js"
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
+import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -151,6 +152,9 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildLossyErrorTranslationEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-unsafe-retry") {
+    return { handled: true, evidence: buildUnsafeRetryEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

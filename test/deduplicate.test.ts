@@ -171,6 +171,15 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("prefers unsafe retry over a swallowed retry symptom", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-swallowed-error", 4, 12),
+      diagnostic("jev/no-unsafe-retry", 4, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-unsafe-retry"]);
+  });
+
   it("keeps findings from different principle families", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-ad-hoc-branching", 4, 12),

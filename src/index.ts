@@ -32,5 +32,6 @@ export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-gener
 export { buildSwallowedErrorEvidence } from "./evidence/swallowed-error.js";
 export { buildTransportCoupledDomainEvidence } from "./evidence/transport-coupled-domain.js";
 export { buildUnconstrainedStateStringEvidence } from "./evidence/unconstrained-state-string.js";
+export { buildUnsafeRetryEvidence } from "./evidence/unsafe-retry.js";
 export { TypeSafeEvaluator } from "./typesafe-evaluator.js";
 export type * from "./types.js";
