@@ -3942,5 +3942,110 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-parallel-enumerations": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Do two literal sets in this codebase have to agree with each other while nothing derives one from the other?",
+          inspect: "Compare the owning literal set with its corresponding sibling set, their shared and differing members, and any mapping function in the supplied evidence.",
+          focus: "Judge whether parallel vocabularies must be kept in sync by hand, not whether the two sets merely overlap.",
+          decision_boundary: [
+            "Corresponding sets with a shared stem that evolved independently, where members were added to one side without the other, are strong evidence of manual sync burden.",
+            "One set derived from the other through keyof, a mapped type, indexed access, or codegen answers the question negatively.",
+            "Sets that are intentionally different projections with a documented mapping function between them answer the question negatively.",
+            "Name correspondence alone is never enough. If no sibling set shares members with the candidate, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Two corresponding literal sets enumerate the same concept independently, so every change must be replayed by hand",
+            remedy: "Derive one set from the other with keyof, a mapped type, or codegen, or collapse them into one source of truth",
+          },
+          false: {
+            what: "The sets are independent concepts, one derives from the other, a documented mapping owns the difference, or no corresponding sibling exists",
+          },
+        },
+      },
+      message: "Two literal sets must agree manually instead of deriving from one source.",
+    },
+    "jev/no-synonym-vocabulary": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this module use three or more verbs for one operation concept, forcing readers to learn false distinctions?",
+          inspect: "Compare the verbs applied to each shared entity stem, their function sources, signatures, and effects in the supplied evidence.",
+          focus: "Judge multiplicity per concept, not whether any single name is clear on its own.",
+          decision_boundary: [
+            "Three or more verbs on one entity stem with interchangeable signatures and effects are strong evidence of synonym sprawl.",
+            "Verbs that mark real distinctions evidenced by contracts, such as network fetch versus cache lookup, answer the question negatively.",
+            "Verbs attached to different entities, and vocabulary dictated by an external framework convention, answer the question negatively.",
+            "Two verbs for one concept are pairing, not sprawl. If no entity carries three distinct verbs, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One operation concept is spelled with several interchangeable verbs in one module",
+            remedy: "Settle on one verb per concept and rename the outliers, keeping distinct verbs only where contracts genuinely differ",
+          },
+          false: {
+            what: "Each verb marks a real contractual distinction, the verbs attach to different concepts, or no concept carries three verbs",
+          },
+        },
+      },
+      message: "One module uses several verbs for one operation concept.",
+    },
+    "jev/no-knob-multiplicity": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Is one operational concept governed by three or more distinct control mechanisms with no stated precedence?",
+          inspect: "Compare the control mechanisms per concept stem, their repository sites, and any ordering code in the supplied evidence.",
+          focus: "Judge mechanism count per concept, not total configuration volume.",
+          decision_boundary: [
+            "Three or more mechanisms for one stem, such as env var plus CLI flag plus config key, with contradictory values resolving by accident of read order, are strong evidence of knob sprawl.",
+            "An explicit, exercised precedence chain that orders the mechanisms answers the question negatively.",
+            "Mechanisms serving different audiences at different layers, such as deploy-time versus request-time, answer the question negatively.",
+            "Two mechanisms are conventional pairing, not multiplicity. If fewer than three distinct mechanisms govern the concept, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One concept answers to several independent control mechanisms whose conflicts resolve by accident",
+            remedy: "Keep one mechanism per concept, or state and exercise an explicit precedence order among them",
+          },
+          false: {
+            what: "The concept has at most two mechanisms, precedence is explicit and exercised, or the mechanisms serve distinct layered audiences",
+          },
+        },
+      },
+      message: "One operational concept is governed by several control mechanisms with no stated precedence.",
+    },
+    "jev/no-boolean-fanout": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Do three or more booleans sharing one stem enumerate the states of a single discriminant that is never named?",
+          inspect: "Use the boolean cluster, its shared stem, the call sites setting several members, mutual-exclusion logic, and typed usages in the supplied evidence.",
+          focus: "Judge whether the cluster is one enum-shaped choice missing its name, not whether correlated booleans risk contradiction.",
+          decision_boundary: [
+            "Same-stem booleans where call sites set exactly one each, or runtime checks enforce mutual exclusion, are strong evidence of an unnamed discriminant.",
+            "Booleans that call sites freely combine, with no exclusion assumption anywhere, answer the question negatively.",
+            "Genuinely independent flags that merely share a prefix, with no shared choice behind them, answer the question negatively.",
+            "A nearby tagged union already naming the discriminant answers the question negatively.",
+            "Fewer than three same-stem booleans are never enough. If no cluster reaches width three, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An enum-shaped boolean cluster encodes one choice that the type never names, forcing exclusion by convention",
+            remedy: "Replace the boolean cluster with a named discriminant such as a union or enum",
+          },
+          false: {
+            what: "The booleans combine freely as independent dimensions, a tagged union already names the choice, or no cluster reaches width three",
+          },
+        },
+      },
+      message: "Several same-stem booleans enumerate states of an unnamed discriminant.",
+    },
   },
 };

@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- One hundred forty-seven bundled Jev rules
+- One hundred fifty-one bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -39,6 +39,10 @@ The bundled Jev rules judge:
 - needless abstractions
 - generic reflective machinery for fixed operations
 - configuration disproportionate to observed use
+- literal sets in separate modules that must agree without a shared source
+- modules using several verbs for one operation concept
+- operational concepts governed by several control mechanisms with no stated precedence
+- boolean groups that enumerate the states of an unnamed discriminant
 - avoidable sequential orchestration
 - runtime inputs hidden inside domain or application functions
 - initialization order hidden behind mutable module state
