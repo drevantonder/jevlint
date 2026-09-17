@@ -196,6 +196,10 @@ const extractedRules = [
   ["jev/no-hollow-delegation-chain", "function"],
   ["jev/no-transitive-plumbing", "function"],
   ["jev/no-distrustful-type-guard", "function"],
+  ["jev/no-divergent-inverses", "function"],
+  ["jev/no-lopsided-error-handling", "function"],
+  ["jev/no-repeated-predicate", "function"],
+  ["jev/no-overloaded-boolean-return", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

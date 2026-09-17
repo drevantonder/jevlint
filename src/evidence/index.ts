@@ -213,6 +213,10 @@ import { buildDoubleNegationEvidence } from "./double-negation.js";
 import { buildHollowDelegationChainEvidence } from "./hollow-delegation-chain.js";
 import { buildTransitivePlumbingEvidence } from "./transitive-plumbing.js";
 import { buildDistrustfulTypeGuardEvidence } from "./distrustful-type-guard.js";
+import { buildDivergentInversesEvidence } from "./divergent-inverses.js";
+import { buildLopsidedErrorHandlingEvidence } from "./lopsided-error-handling.js";
+import { buildRepeatedPredicateEvidence } from "./repeated-predicate.js";
+import { buildOverloadedBooleanReturnEvidence } from "./overloaded-boolean-return.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1229,6 +1233,18 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildDistrustfulTypeGuardEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-divergent-inverses") {
+    return { handled: true, evidence: buildDivergentInversesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-lopsided-error-handling") {
+    return { handled: true, evidence: buildLopsidedErrorHandlingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-repeated-predicate") {
+    return { handled: true, evidence: buildRepeatedPredicateEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-overloaded-boolean-return") {
+    return { handled: true, evidence: buildOverloadedBooleanReturnEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

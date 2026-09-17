@@ -232,6 +232,10 @@ describe("loadConfig", () => {
       "jev/no-hollow-delegation-chain",
       "jev/no-transitive-plumbing",
       "jev/no-distrustful-type-guard",
+      "jev/no-divergent-inverses",
+      "jev/no-lopsided-error-handling",
+      "jev/no-repeated-predicate",
+      "jev/no-overloaded-boolean-return",
     ]);
   });
 

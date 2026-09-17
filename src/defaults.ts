@@ -5898,6 +5898,115 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This guard re-checks what the declared type already guarantees.",
+    },
+
+    "jev/no-divergent-inverses": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function and its named inverse cover different sets of cases, so a round trip can silently lose information?",
+          inspect: "Compare the fields, keys, and variants handled on each side of the pair, the writer-only and reader-only sets, and whether any asymmetry is documented or domain-mandated in the supplied evidence.",
+          focus: "Judge whether a value passing through both functions in sequence can come back with user-relevant data missing.",
+          decision_boundary: [
+            "A writer that emits fields carrying user data which the reader ignores is strong evidence of divergent inverses.",
+            "A one-field difference where the extra field is a documented cache hint recomputed on read is weak evidence on its own.",
+            "Pairs that are intentionally lossy and documented, or asymmetries required by the domain, answer the question negatively.",
+            "A single function with no identifiable inverse in the module is insufficient; the pair must exist to compare coverage.",
+            "If the evidence does not establish that the uncovered cases carry information a round trip must preserve, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function and its named inverse handle different case sets, so round-tripping a value drops information the reader never restores",
+            remedy: "Extend the reader to cover the missing cases or narrow the writer to the documented round-trip contract",
+          },
+          false: {
+            what: "Both sides cover the same cases, the difference is documented or domain-mandated, or no inverse pair exists to compare",
+          },
+        },
+      },
+      message: "This function and its named inverse cover different cases, so a round trip can lose information.",
+    },
+    "jev/no-lopsided-error-handling": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function guard some same-kind operations against failure while leaving their siblings bare?",
+          inspect: "Compare the guarded and unguarded operations within each same-kind group, whether one outer handler covers the whole body uniformly, and the callee contracts visible in the supplied evidence.",
+          focus: "Judge whether parallel operations receive parallel failure treatment, or some siblings are left exposed without reason.",
+          decision_boundary: [
+            "Several same-service operations where most sit inside handlers and one sibling runs bare with no outer coverage is strong evidence of lopsided handling.",
+            "One bare operation whose callee is marked non-throwing beside guarded throwing calls is weak evidence on its own.",
+            "A single outer handler covering the whole body uniformly is symmetric handling, not lopsided.",
+            "Operations that are provably infallible in context do not need guards and do not create asymmetry.",
+            "If the evidence does not show same-kind operations with genuinely different failure exposure, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Same-kind fallible operations in one body receive different failure treatment, leaving some siblings exposed",
+            remedy: "Extend the existing guard to the bare siblings or add an outer handler that covers the group uniformly",
+          },
+          false: {
+            what: "All same-kind operations share one handler, the bare operations cannot fail, or no comparable group exists",
+          },
+        },
+      },
+      message: "This function guards some same-kind operations while leaving their siblings bare.",
+    },
+    "jev/no-repeated-predicate": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function test one identical predicate two or more times instead of testing it once and naming the outcome?",
+          inspect: "Compare the repeated test expressions, their positions, whether any occurrence binds the result to a name, and whether intervening awaits or mutations sit between the tests in the supplied evidence.",
+          focus: "Judge whether the function re-proves a fact it already established instead of naming it once and reusing the name.",
+          decision_boundary: [
+            "One predicate tested several times with no intervening mutation and never bound to a name is strong evidence of a repeated predicate.",
+            "Two tests separated by an await that can plausibly change the underlying state are weak evidence on their own.",
+            "Re-testing after code that mutates the predicate's inputs is legitimate revalidation, not repetition.",
+            "One test bound to a name and reused through that name is the elegant shape and answers the question negatively.",
+            "If the evidence does not show the same predicate evaluated more than once without a reason, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The same predicate is evaluated multiple times without binding the outcome, missing a single named test",
+            remedy: "Evaluate the predicate once, bind the result to a descriptive name, and reuse it",
+          },
+          false: {
+            what: "Each test follows a state change, the outcome is already named and reused, or no predicate repeats",
+          },
+        },
+      },
+      message: "This function tests one predicate repeatedly instead of naming the outcome once.",
+    },
+    "jev/no-overloaded-boolean-return": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do callers read this function's boolean result under two or more distinct meanings?",
+          inspect: "Compare the conditions behind each boolean return point with how each call site branches on the result and what each branch consequence assumes in the supplied evidence.",
+          focus: "Judge whether one boolean carries several meanings that callers must disambiguate with extra state.",
+          decision_boundary: [
+            "Boolean returns from semantically distinct conditions, with call sites acting on different readings and one caller consulting extra state to tell which, is strong evidence of an overloaded return.",
+            "Call sites that share one reading of the result while differing only in follow-up actions are weak evidence on their own.",
+            "A genuine predicate over one property, however widely called, answers the question negatively.",
+            "A single boolean return point with no distinct conditions is insufficient; multiple readings must be shown.",
+            "If the evidence does not show callers assigning different meanings to the same result, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One boolean result means different things on different paths, forcing callers to disambiguate with extra state",
+            remedy: "Split the function per meaning or return a descriptive value that names the outcome",
+          },
+          false: {
+            what: "All call sites share one reading of a single-property predicate, or no distinct meanings are shown",
+          },
+        },
+      },
+      message: "This function's boolean result carries more than one meaning across its callers.",
 
     },
   },
