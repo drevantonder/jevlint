@@ -14,7 +14,7 @@ This first slice supports:
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
 - Text and JSON diagnostics
-- Thirty-one bundled Jev rules
+- Thirty-two bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules flag:
@@ -49,6 +49,7 @@ The bundled Jev rules flag:
 - swallowed failures that leave caller-visible success or ordinary absence
 - error translations that discard failure identity, cause, or actionable context
 - retries that repeat failures or side effects without a safe policy
+- batch operations that hide failed or omitted items behind apparent completion
 - feature envy
 
 The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, extract sentinel return paths, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, explicit result types, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, intentional absence semantics, telemetry, and cache population remain valid.

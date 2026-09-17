@@ -860,6 +860,36 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This retry does not show a safe policy for repeating the operation.",
     },
+    "jev/no-hidden-partial-failure": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this batch allow some items to fail and then present an outcome that hides those failed or omitted items from a caller that relies on completion?",
+          inspect: "Compare the extracted batch mechanism, settled-status handling or per-item catches, function outcome, dependency role, and observed caller behavior in the supplied evidence.",
+          focus: "Judge whether partial failure remains visible at the contract boundary, not whether the implementation uses allSettled or catches per item.",
+          decision_boundary: [
+            "Returning only fulfilled values while a caller marks the batch complete is strong evidence of hidden partial failure.",
+            "Returning or reporting both successes and failures preserves the batch outcome even when processing continues.",
+            "Logging failed items does not preserve failure for a caller that must decide whether the batch completed.",
+            "Optional enrichment may safely fall back while retaining every primary item; such a failure does not make the primary batch partial.",
+            "Refreshes of derived caches, indexes, hints, or analytics are credible best-effort work when failure leaves the primary records valid.",
+            "Catch-and-continue batch processing may be intentionally best effort; if the contract and caller consequence are unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function can omit or fail work while its return value or subsequent caller behavior represents the batch as complete or otherwise conceals which items failed",
+            remedy: "Expose failed items or an explicit partial outcome and require callers to handle it",
+          },
+          false: {
+            what: "Failures remain explicit, every primary item retains a valid fallback, the work is credibly best effort, or the evidence cannot establish a misleading completion signal",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This batch hides partial failure from its caller.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

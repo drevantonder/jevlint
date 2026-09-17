@@ -11,6 +11,7 @@ import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.j
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
@@ -155,6 +156,12 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-unsafe-retry") {
     return { handled: true, evidence: buildUnsafeRetryEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hidden-partial-failure") {
+    return {
+      handled: true,
+      evidence: buildHiddenPartialFailureEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

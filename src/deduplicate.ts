@@ -32,6 +32,7 @@ const EXPLICIT_EFFECTS_PRIORITY = new Map<string, number>([
 
 const FAILURE_INTEGRITY_PRIORITY = new Map<string, number>([
   ["jev/no-unsafe-retry", 100],
+  ["jev/no-hidden-partial-failure", 95],
   ["jev/no-lossy-error-translation", 90],
   ["jev/no-swallowed-error", 80],
 ]);

@@ -41,6 +41,7 @@ describe("loadConfig", () => {
       "jev/no-swallowed-error",
       "jev/no-lossy-error-translation",
       "jev/no-unsafe-retry",
+      "jev/no-hidden-partial-failure",
       "jev/no-feature-envy",
     ]);
   });
