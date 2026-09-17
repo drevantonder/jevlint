@@ -144,6 +144,11 @@ const extractedRules = [
   ["jev/no-side-effecting-conditional-expression", "function"],
   ["jev/no-unexplained-complex-condition", "function"],
   ["jev/no-clever-expression", "function"],
+  ["jev/no-nondeterministic-test-input", "function"],
+  ["jev/no-untestable-singleton-grab", "function"],
+  ["jev/no-giant-test-arrange", "function"],
+  ["jev/no-private-internals-assertion", "function"],
+  ["jev/no-flaky-order-assertion", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

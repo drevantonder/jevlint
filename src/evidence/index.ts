@@ -165,6 +165,11 @@ import { buildRareCaseFirstEvidence } from "./rare-case-first.js";
 import { buildSideEffectingConditionalEvidence } from "./side-effecting-conditional-expression.js";
 import { buildUnexplainedComplexConditionEvidence } from "./unexplained-complex-condition.js";
 import { buildCleverExpressionEvidence } from "./clever-expression.js";
+import { buildNondeterministicTestInputEvidence } from "./nondeterministic-test-input.js";
+import { buildUntestableSingletonGrabEvidence } from "./untestable-singleton-grab.js";
+import { buildGiantTestArrangeEvidence } from "./giant-test-arrange.js";
+import { buildPrivateInternalsAssertionEvidence } from "./private-internals-assertion.js";
+import { buildFlakyOrderAssertionEvidence } from "./flaky-order-assertion.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -919,6 +924,36 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-clever-expression") {
     return { handled: true, evidence: buildCleverExpressionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-nondeterministic-test-input") {
+    return {
+      handled: true,
+      evidence: buildNondeterministicTestInputEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-untestable-singleton-grab") {
+    return {
+      handled: true,
+      evidence: buildUntestableSingletonGrabEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-giant-test-arrange") {
+    return {
+      handled: true,
+      evidence: buildGiantTestArrangeEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-private-internals-assertion") {
+    return {
+      handled: true,
+      evidence: buildPrivateInternalsAssertionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-flaky-order-assertion") {
+    return {
+      handled: true,
+      evidence: buildFlakyOrderAssertionEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

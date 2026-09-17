@@ -180,6 +180,11 @@ describe("loadConfig", () => {
       "jev/no-side-effecting-conditional-expression",
       "jev/no-unexplained-complex-condition",
       "jev/no-clever-expression",
+      "jev/no-nondeterministic-test-input",
+      "jev/no-untestable-singleton-grab",
+      "jev/no-giant-test-arrange",
+      "jev/no-private-internals-assertion",
+      "jev/no-flaky-order-assertion",
     ]);
   });
 
