@@ -5768,5 +5768,59 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test asserts an order over concurrent work that nothing synchronizes.",
     },
+    "jev/no-hidden-collaborator-read": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function let an imported binding's state or receiver state change its result, decision, or effect while that input is absent from its parameters?",
+          inspect: "Compare the function parameters with each extracted collaborator read, its ownership, the imported targets, the stable constants set aside before judgment, any writers observed in other modules, and the repository callers in the supplied evidence.",
+          focus: "Judge whether a caller can see or supply the deciding input from the signature, not whether the collaborator is documented or the read looks convenient.",
+          decision_boundary: [
+            "A domain result or policy branch decided by imported mutable state, such as a flags set or config object another module can change, is strong evidence of a hidden collaborator read.",
+            "Calling an imported function as a visible step, such as format(order.total), is collaboration through the contract rather than a hidden input.",
+            "Reads of literal-valued constants with no writer anywhere in the repository are set aside before judgment; they do not establish a hidden input.",
+            "A read that never reaches the result, decision, or effect answers the question negatively even when the import is mutable.",
+            "If the evidence cannot establish that collaborator state decides behavior, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Imported or receiver state the parameters do not show decides the function's result, policy choice, or effect",
+            remedy: "Accept the deciding state as a parameter so callers can see, supply, and substitute it",
+          },
+          false: {
+            what: "The collaborator is used as a visible call step, the read is a stable constant, or no hidden state decides behavior",
+          },
+        },
+      },
+      message: "This function reads collaborator state its parameters do not disclose.",
+    },
+    "jev/no-mixed-calculation-and-interaction": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function interleave deterministic calculation with environmental interaction so the calculation cannot be exercised or reasoned about without the environment?",
+          inspect: "Compare each extracted interaction with each extracted calculation, the interaction-result names, whether the calculation consumes them or the interaction consumes calculated values, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the calculation could be lifted behind a parameter while the interaction stays at the boundary, not whether the function has one business purpose.",
+          decision_boundary: [
+            "A formula, branch, or loop over values sitting beside a file, network, clock, or randomness read that callers cannot substitute is strong evidence of mixing.",
+            "A thin adapter that performs the interaction with no calculation half answers the question negatively; there is nothing to separate.",
+            "A pure calculation that consumes an already-supplied value answers negatively even when the value originated from I/O elsewhere.",
+            "One narrow pipeline where the interaction result flows straight through a single transform with no separable pure half weakens the claim.",
+            "If the evidence cannot establish both an interaction and a separable calculation, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Deterministic calculation is embedded with environmental interaction so tests and readers must bring the environment to reach the logic",
+            remedy: "Move the interaction to the boundary, pass its result in as a parameter, and keep the calculation pure",
+          },
+          false: {
+            what: "The function is a thin interaction adapter, a pure calculation, or a single narrow pipeline with no separable pure half",
+          },
+        },
+      },
+      message: "This function mixes calculation with environmental interaction.",
+    },
   },
 };

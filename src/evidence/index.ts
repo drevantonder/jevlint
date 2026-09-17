@@ -27,6 +27,7 @@ import { buildForeignMutationEvidence } from "./foreign-mutation.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
+import { buildHiddenCollaboratorReadEvidence } from "./hidden-collaborator-read.js";
 import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
 import { buildBreakingExportEvidence } from "./breaking-export-reshape.js";
@@ -63,6 +64,7 @@ import { buildMissingShutdownDrainEvidence } from "./missing-shutdown-drain.js";
 import { buildLaunderedAbsenceEvidence } from "./laundered-absence.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
+import { buildMixedCalculationAndInteractionEvidence } from "./mixed-calculation-and-interaction.js";
 import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
 import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
@@ -348,6 +350,12 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-foreign-mutation") {
     return { handled: true, evidence: buildForeignMutationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hidden-collaborator-read") {
+    return { handled: true, evidence: buildHiddenCollaboratorReadEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mixed-calculation-and-interaction") {
+    return { handled: true, evidence: buildMixedCalculationAndInteractionEvidence(candidate, projectFiles) };
   }
   if (ruleId === "jev/no-temporal-call-coupling") {
     return { handled: true, evidence: buildTemporalCallCouplingEvidence(candidate, projectFiles) };

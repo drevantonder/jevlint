@@ -227,6 +227,8 @@ describe("loadConfig", () => {
       "jev/no-giant-test-arrange",
       "jev/no-private-internals-assertion",
       "jev/no-flaky-order-assertion",
+      "jev/no-hidden-collaborator-read",
+      "jev/no-mixed-calculation-and-interaction",
     ]);
   });
 

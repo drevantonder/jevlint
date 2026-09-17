@@ -57,6 +57,8 @@ const extractedRules = [
   ["jev/no-unenforced-warning-comment", "comment"],
   ["jev/no-table-shaped-conditional", "function"],
   ["jev/no-sequential-step-soup", "function"],
+  ["jev/no-hidden-collaborator-read", "function"],
+  ["jev/no-mixed-calculation-and-interaction", "function"],
   ["jev/no-mirrored-derived-state", "function"],
   ["jev/no-construction-in-use", "function"],
   ["jev/no-retry-storm-shape", "function"],
