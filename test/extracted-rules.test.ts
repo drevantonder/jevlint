@@ -16,6 +16,10 @@ const extractedRules = [
   ["jev/no-mode-flag-parameter", "function"],
   ["jev/no-message-chain", "function"],
   ["jev/no-mixed-abstraction-levels", "function"],
+  ["jev/no-unbounded-wait", "function"],
+  ["jev/no-detached-async-work", "function"],
+  ["jev/no-shared-mutable-module-state", "abstraction"],
+  ["jev/no-type-checker-escape", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

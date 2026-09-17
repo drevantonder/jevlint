@@ -52,6 +52,10 @@ describe("loadConfig", () => {
       "jev/no-temporal-call-coupling",
       "jev/no-shotgun-change",
       "jev/no-undocumented-contract",
+      "jev/no-unbounded-wait",
+      "jev/no-detached-async-work",
+      "jev/no-shared-mutable-module-state",
+      "jev/no-type-checker-escape",
     ]);
   });
 

@@ -6,6 +6,7 @@ import { buildComplexityDisplacementEvidence } from "./complexity-displacement.j
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
+import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
 import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
@@ -29,12 +30,15 @@ import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
+import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
+import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
+import { buildUnboundedWaitEvidence } from "./unbounded-wait.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
@@ -204,6 +208,21 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildMixedAbstractionLevelsEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-unbounded-wait") {
+    return { handled: true, evidence: buildUnboundedWaitEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-detached-async-work") {
+    return { handled: true, evidence: buildDetachedAsyncWorkEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-shared-mutable-module-state") {
+    return {
+      handled: true,
+      evidence: buildSharedMutableModuleStateEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-type-checker-escape") {
+    return { handled: true, evidence: buildTypeCheckerEscapeEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

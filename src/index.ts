@@ -28,6 +28,7 @@ export { buildComplexityDisplacementEvidence } from "./evidence/complexity-displ
 export { buildConditionallyValidStateEvidence } from "./evidence/conditionally-valid-state.js";
 export { buildCorrelatedStateBooleansEvidence } from "./evidence/correlated-state-booleans.js";
 export { buildDataClumpEvidence } from "./evidence/data-clump.js";
+export { buildDetachedAsyncWorkEvidence } from "./evidence/detached-async-work.js";
 export { buildDisproportionateConfigurationEvidence } from "./evidence/disproportionate-configuration.js";
 export { buildDomainPolicyInAdapterEvidence } from "./evidence/domain-policy-in-adapter.js";
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
@@ -46,10 +47,10 @@ export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper
 export { buildPersistenceModelLeakEvidence } from "./evidence/persistence-model-leak.js";
 export { buildQuerySideEffectEvidence } from "./evidence/query-side-effect.js";
 export { buildScatteredPolicyEvidence } from "./evidence/scattered-policy.js";
+export { buildSharedMutableModuleStateEvidence } from "./evidence/shared-mutable-module-state.js";
 export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";
 export { buildSwallowedErrorEvidence } from "./evidence/swallowed-error.js";
 export { buildTransportCoupledDomainEvidence } from "./evidence/transport-coupled-domain.js";
+export { buildTypeCheckerEscapeEvidence } from "./evidence/type-checker-escape.js";
+export { buildUnboundedWaitEvidence } from "./evidence/unbounded-wait.js";
 export { buildUnconstrainedStateStringEvidence } from "./evidence/unconstrained-state-string.js";
-export { buildUnsafeRetryEvidence } from "./evidence/unsafe-retry.js";
-export { TypeSafeEvaluator } from "./typesafe-evaluator.js";
-export type * from "./types.js";
