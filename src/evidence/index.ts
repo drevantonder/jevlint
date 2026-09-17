@@ -118,6 +118,9 @@ import { buildOffsetPaginationDriftEvidence } from "./offset-pagination-drift.js
 import { buildUnitScaleMismatchEvidence } from "./unit-scale-mismatch.js";
 import { buildTruncatingNumericParseEvidence } from "./truncating-numeric-parse.js";
 import { buildLocaleDateSerializationEvidence } from "./locale-date-serialization.js";
+import { buildDisabledTlsVerificationEvidence } from "./disabled-tls-verification.js";
+import { buildDynamicCodeExecutionEvidence } from "./dynamic-code-execution.js";
+import { buildLocaleBlindOrderingEvidence } from "./locale-blind-ordering.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -653,6 +656,15 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-weak-crypto-primitive") {
     return { handled: true, evidence: buildWeakCryptoPrimitiveEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-disabled-tls-verification") {
+    return { handled: true, evidence: buildDisabledTlsVerificationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-dynamic-code-execution") {
+    return { handled: true, evidence: buildDynamicCodeExecutionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-locale-blind-ordering") {
+    return { handled: true, evidence: buildLocaleBlindOrderingEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
