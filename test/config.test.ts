@@ -256,6 +256,11 @@ describe("loadConfig", () => {
       "jev/no-cryptic-abbreviation",
       "jev/no-negative-boolean-name",
       "jev/no-unitless-quantity",
+      "jev/no-layer-skipping-call",
+      "jev/no-chatty-interface",
+      "jev/no-partitioned-fat-interface",
+      "jev/no-dev-dependency-runtime-leak",
+      "jev/no-cross-module-call-order",
     ]);
   });
 

@@ -220,6 +220,11 @@ const extractedRules = [
   ["jev/no-cryptic-abbreviation", "function"],
   ["jev/no-negative-boolean-name", "function"],
   ["jev/no-unitless-quantity", "function"],
+  ["jev/no-layer-skipping-call", "function"],
+  ["jev/no-chatty-interface", "function"],
+  ["jev/no-partitioned-fat-interface", "abstraction"],
+  ["jev/no-dev-dependency-runtime-leak", "function"],
+  ["jev/no-cross-module-call-order", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
