@@ -284,6 +284,9 @@ describe("loadConfig", () => {
       "jev/no-variant-partitioned-helper",
       "jev/no-coincidental-similarity",
       "jev/no-entangled-mechanical-change",
+      "jev/no-predicate-name-deception",
+      "jev/no-confusion-confessing-comment",
+      "jev/no-unexplained-suppression",
       // END GENERATED: rule-keys
     ]);
   });

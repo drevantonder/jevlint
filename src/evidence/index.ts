@@ -33,6 +33,7 @@ import { buildComplexityDisplacementEvidence } from "./complexity-displacement.j
 import { buildConcreteStableModuleEvidence } from "./concrete-stable-module.js";
 import { buildConcurrentSharedMutationEvidence } from "./concurrent-shared-mutation.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
+import { buildConfusionConfessingCommentEvidence } from "./confusion-confessing-comment.js";
 import { buildConsoleResidueEvidence } from "./console-residue.js";
 import { buildConstructionInUseEvidence } from "./construction-in-use.js";
 import { buildContextHomonymTypeEvidence } from "./context-homonym-type.js";
@@ -146,6 +147,7 @@ import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js"
 import { buildMockEverythingEvidence } from "./mock-everything.js";
 import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
+import { buildMysteriousNameEvidence } from "./mysterious-name.js";
 import { buildMysteryLiteralArgumentEvidence } from "./mystery-literal-argument.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildNegativeBooleanNameEvidence } from "./negative-boolean-name.js";
@@ -172,6 +174,7 @@ import { buildPhantomMemberAccessEvidence } from "./phantom-member-access.js";
 import { buildPhantomPackageImportEvidence } from "./phantom-package-import.js";
 import { buildPositionalExtensionDriftEvidence } from "./positional-extension-drift.js";
 import { buildPreGateSideEffectEvidence } from "./pre-gate-side-effect.js";
+import { buildPredicateNameDeceptionEvidence } from "./predicate-name-deception.js";
 import { buildPredictableTokenEvidence } from "./predictable-token.js";
 import { buildPrivateInternalsAssertionEvidence } from "./private-internals-assertion.js";
 import { buildPromiseCombinatorMismatchEvidence } from "./promise-combinator-mismatch.js";
@@ -239,6 +242,7 @@ import { buildUnenforcedWarningCommentEvidence } from "./unenforced-warning-comm
 import { buildUnexplainedBehavioralLiteralEvidence } from "./unexplained-behavioral-literal.js";
 import { buildUnexplainedComplexConditionEvidence } from "./unexplained-complex-condition.js";
 import { buildUnexplainedDomainThresholdEvidence } from "./unexplained-domain-threshold.js";
+import { buildUnexplainedSuppressionEvidence } from "./unexplained-suppression.js";
 import { buildUnguardedAsyncInitEvidence } from "./unguarded-async-init.js";
 import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-dereference.js";
 import { buildUnitScaleMismatchEvidence } from "./unit-scale-mismatch.js";
@@ -313,6 +317,7 @@ type EvidenceRegistry = {
   "jev/no-concrete-stable-module": EvidenceBuilder;
   "jev/no-concurrent-shared-mutation": EvidenceBuilder;
   "jev/no-conditionally-valid-state": EvidenceBuilder;
+  "jev/no-confusion-confessing-comment": EvidenceBuilder;
   "jev/no-console-residue": EvidenceBuilder;
   "jev/no-construction-in-use": EvidenceBuilder;
   "jev/no-context-homonym-type": EvidenceBuilder;
@@ -426,6 +431,7 @@ type EvidenceRegistry = {
   "jev/no-mock-everything": EvidenceBuilder;
   "jev/no-mode-flag-parameter": EvidenceBuilder;
   "jev/no-mutable-surface-expansion": EvidenceBuilder;
+  "jev/no-mysterious-name": EvidenceBuilder;
   "jev/no-mystery-literal-argument": EvidenceBuilder;
   "jev/no-needless-abstraction": EvidenceBuilder;
   "jev/no-negative-boolean-name": EvidenceBuilder;
@@ -452,6 +458,7 @@ type EvidenceRegistry = {
   "jev/no-phantom-package-import": EvidenceBuilder;
   "jev/no-positional-extension-drift": EvidenceBuilder;
   "jev/no-pre-gate-side-effect": EvidenceBuilder;
+  "jev/no-predicate-name-deception": EvidenceBuilder;
   "jev/no-predictable-token": EvidenceBuilder;
   "jev/no-private-internals-assertion": EvidenceBuilder;
   "jev/no-promise-combinator-mismatch": EvidenceBuilder;
@@ -519,6 +526,7 @@ type EvidenceRegistry = {
   "jev/no-unexplained-behavioral-literal": EvidenceBuilder;
   "jev/no-unexplained-complex-condition": EvidenceBuilder;
   "jev/no-unexplained-domain-threshold": EvidenceBuilder;
+  "jev/no-unexplained-suppression": EvidenceBuilder;
   "jev/no-unguarded-async-init": EvidenceBuilder;
   "jev/no-unguarded-nullable-dereference": EvidenceBuilder;
   "jev/no-unit-scale-mismatch": EvidenceBuilder;
@@ -614,6 +622,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildConcurrentSharedMutationEvidence(candidate, projectFiles),
   "jev/no-conditionally-valid-state": (candidate, projectFiles) =>
     buildConditionallyValidStateEvidence(candidate, projectFiles),
+  "jev/no-confusion-confessing-comment": (candidate, projectFiles) =>
+    buildConfusionConfessingCommentEvidence(candidate, projectFiles),
   "jev/no-console-residue": (candidate, projectFiles) =>
     buildConsoleResidueEvidence(candidate, projectFiles),
   "jev/no-construction-in-use": (candidate, projectFiles) =>
@@ -840,6 +850,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildModeFlagParameterEvidence(candidate, projectFiles),
   "jev/no-mutable-surface-expansion": (candidate, projectFiles, changes) =>
     buildMutableSurfaceExpansionEvidence(candidate, changes, projectFiles),
+  "jev/no-mysterious-name": (candidate, projectFiles) =>
+    buildMysteriousNameEvidence(candidate, projectFiles),
   "jev/no-mystery-literal-argument": (candidate, projectFiles, changes) =>
     buildMysteryLiteralArgumentEvidence(candidate, changes, projectFiles),
   "jev/no-needless-abstraction": (candidate, projectFiles) =>
@@ -892,6 +904,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildPositionalExtensionDriftEvidence(candidate, projectFiles),
   "jev/no-pre-gate-side-effect": (candidate, projectFiles) =>
     buildPreGateSideEffectEvidence(candidate, projectFiles),
+  "jev/no-predicate-name-deception": (candidate, projectFiles) =>
+    buildPredicateNameDeceptionEvidence(candidate, projectFiles),
   "jev/no-predictable-token": (candidate, projectFiles) =>
     buildPredictableTokenEvidence(candidate, projectFiles),
   "jev/no-private-internals-assertion": (candidate, projectFiles) =>
@@ -1026,6 +1040,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildUnexplainedComplexConditionEvidence(candidate, projectFiles),
   "jev/no-unexplained-domain-threshold": (candidate, projectFiles) =>
     buildUnexplainedDomainThresholdEvidence(candidate, projectFiles),
+  "jev/no-unexplained-suppression": (candidate, projectFiles) =>
+    buildUnexplainedSuppressionEvidence(candidate, projectFiles),
   "jev/no-unguarded-async-init": (candidate, projectFiles) =>
     buildUnguardedAsyncInitEvidence(candidate, projectFiles),
   "jev/no-unguarded-nullable-dereference": (candidate, projectFiles) =>
