@@ -78,6 +78,11 @@ const extractedRules = [
   ["jev/no-shallow-convenience-layer", "function"],
   ["jev/no-prototype-in-production", "function"],
   ["jev/no-hidden-loop-exit", "function"],
+  ["jev/no-inconsistent-error-contract", "function"],
+  ["jev/no-breaking-export-reshape", "change"],
+  ["jev/no-positional-extension-drift", "function"],
+  ["jev/no-mixed-absence-convention", "function"],
+  ["jev/no-shared-mutable-default", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

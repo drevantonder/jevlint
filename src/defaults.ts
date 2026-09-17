@@ -2770,5 +2770,140 @@ export const defaultConfig: JevLintConfig = {
       message: "This loop's exit is decided mid-body where the header does not state it.",
 
     },
+    "jev/no-inconsistent-error-contract": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do sibling operations report the same failure class in incompatible ways, so callers cannot handle the failure once?",
+          inspect: "Compare the candidate's failure-reporting style with each sibling's style, return annotation, shared contract type, and caller samples in the supplied evidence.",
+          focus: "Judge cross-sibling handling cost for one failure class, not whether a single translation discards information.",
+          decision_boundary: [
+            "Sibling operations reporting the same absence as throw, null, and an envelope while callers use a different handling style per sibling is strong evidence of an inconsistent contract.",
+            "Styles that differ only where the failure classes genuinely differ, such as absence versus invalid input, preserve a coherent contract.",
+            "A shared Result or error type that every sibling follows weakens the claim even when the spelling looks unfamiliar.",
+            "One consistent convention module-wide with a single adapted legacy exception is not an inconsistent contract.",
+            "If the siblings' failure classes or the callers' handling needs are unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Sibling operations report the same failure class through different channels that force callers to handle each sibling differently",
+            remedy: "Adopt one failure-reporting channel per failure class across sibling operations, ideally behind a shared Result or error type",
+          },
+          false: {
+            what: "The siblings share one reporting channel, differ only across genuinely different failures, follow a shared contract type, or lack enough evidence to establish handling cost",
+          },
+        },
+      },
+      message: "Sibling operations report the same failure in incompatible ways.",
+    },
+    "jev/no-breaking-export-reshape": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change reshape a contract existing consumers rely on, so current callers break without a migration path?",
+          inspect: "Compare each reshaped export's before and after signature, whether a shim or overload preserves the old call, and whether in-repo callers still use the old shape in the supplied evidence.",
+          focus: "Judge breakage of the previous release contract, not disagreement between implementation and declaration.",
+          decision_boundary: [
+            "A removed export or a newly required parameter with in-repo callers still using the old shape and no alias, overload, or deprecation shim is strong evidence of a breaking reshape.",
+            "A reshape accompanied by a same-module alias, overload, or deprecation shim preserving the old call, with updated call sites, preserves the migration path.",
+            "A narrowed annotation that only restates what callers already provide does not break consumers even when the text differs.",
+            "Internal-only exports with no in-repo or external callers carry little breakage cost.",
+            "If caller reach or the availability of a migration path is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The change removes or reshapes a relied-upon export while existing callers still use the old shape and no shim preserves it",
+            remedy: "Keep the old export as an alias or overload, update every caller, and document the migration path",
+          },
+          false: {
+            what: "The old call still works through a shim, every caller moved with the change, or the evidence cannot establish relied-upon breakage",
+          },
+        },
+      },
+      message: "This change reshapes a relied-upon export without a migration path.",
+    },
+    "jev/no-positional-extension-drift": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function grow by positional optional parameters while its neighbors already extend through an options bag, so the module's extension direction is inconsistent?",
+          inspect: "Compare the candidate's trailing optional, defaulted, and boolean parameters with the sibling options-bag conventions, caller placeholder use, and distinct arities in the supplied evidence.",
+          focus: "Judge the cross-sibling growth-direction inconsistency, not the raw size of any one signature.",
+          decision_boundary: [
+            "Several trailing positional optionals beside siblings taking a named options object, with callers passing undefined placeholders, is strong evidence of extension drift.",
+            "A first optional parameter on a module with no options-bag convention anywhere is ordinary growth, not drift.",
+            "A boolean mode flag alone belongs to mode-flag-parameter; drift requires positional growth against a nominal neighbor convention.",
+            "Callers that never pass placeholders and stable arities weaken the claim that two conventions burden callers.",
+            "If the sibling convention or the caller's growth burden is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function extends positionally while same-module siblings extend nominally, forcing callers to learn two growth conventions",
+            remedy: "Route new options through an options bag matching the sibling convention",
+          },
+          false: {
+            what: "The module shares one growth direction, the parameter is the first of its kind, or the evidence cannot establish a competing convention",
+          },
+        },
+      },
+      message: "This function extends positionally while its neighbors extend through an options bag.",
+    },
+    "jev/no-mixed-absence-convention": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do sibling operations spell the same absence differently, so callers checking one convention mishandle the other?",
+          inspect: "Compare the candidate's absence spelling and return annotation with each sibling's spelling, annotation, shared convention type, and caller samples in the supplied evidence.",
+          focus: "Judge production inconsistency across siblings, not whether any one consumer uses truthiness.",
+          decision_boundary: [
+            "Sibling lookups returning null and undefined for identical absence, with callers using one strict check for both, is strong evidence of a mixed convention.",
+            "One convention module-wide with a single legacy exception already adapted at every call site is a contained exception, not a mixed convention.",
+            "A shared Option, Maybe, or Result type that every sibling follows weakens the claim even when spellings look terse.",
+            "Envelope returns such as { ok: false } against bare null for different failure classes may reflect distinct contracts rather than mixed absence.",
+            "If the absence meanings differ across siblings or the caller risk is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Sibling operations produce the same absence in different spellings that a single caller check cannot handle uniformly",
+            remedy: "Adopt one absence spelling per module, declared in return annotations and ideally a shared absence type",
+          },
+          false: {
+            what: "The siblings share one spelling, the exception is contained and adapted, a shared type governs absence, or the evidence cannot establish caller risk",
+          },
+        },
+      },
+      message: "Sibling operations spell the same absence in different ways.",
+    },
+    "jev/no-shared-mutable-default": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this default parameter value created once and mutated per call, so one caller's state leaks into the next call?",
+          inspect: "Compare each defaulted parameter's shared shape with the extracted per-call writes, whether the body clones before writing, and how many callers omit the argument in the supplied evidence.",
+          focus: "Judge leakage through the shared default nobody passed, not mutation of caller-passed inputs.",
+          decision_boundary: [
+            "An object or array default with member writes, pushes, or Object.assign into the parameter, reached by callers that omit the argument, is strong evidence of a leaking default.",
+            "A default that is only read, or cloned via spread, slice, Array.from, or structuredClone before any write, does not leak across calls.",
+            "Callers that always pass the argument leave the shared default unreached, which weakens the claim even when writes exist.",
+            "Primitive defaults and freshly constructed per-call values cannot carry state between calls.",
+            "If the writes cannot reach the default or the omission pattern is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A shared default object is written per call without a defensive copy while callers rely on the default by omitting the argument",
+            remedy: "Clone the default before writing or construct a fresh value per call",
+          },
+          false: {
+            what: "The default is only read, cloned before writing, never reached by omitting callers, or lacks enough evidence to establish leakage",
+          },
+        },
+      },
+      message: "This default value is shared across calls and mutated per call.",
+    },
   },
 };
