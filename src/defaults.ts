@@ -5529,5 +5529,109 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type duplicates a field shape already owned by another module.",
     },
+    "jev/no-change-amplifier-case": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change add one case that sibling code must mirror to stay consistent, while nothing forces the mirror?",
+          inspect: "Compare each added case with the mirror switches and if-chains over the same discriminant or value set, which literals each mirror handles, and whether any mirror carries an exhaustiveness check in the supplied evidence.",
+          focus: "Judge whether the change creates unhandled-case risk elsewhere, not whether the new case itself is correct.",
+          decision_boundary: [
+            "A new union member with several mirrors not handling it and no exhaustiveness check is strong evidence of change amplification.",
+            "A new case under mirrors that fail compilation until handled answers the question negatively.",
+            "An already-scattered multi-file edit belongs to shotgun change, not this rule; this rule scores one new case with missing mirrors.",
+            "If no case is added, or no sibling code branches over the widened set, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One added case leaves sibling switches or chains handling the old set with no check that forces an update",
+            remedy: "Handle the new case at each mirror or add an exhaustiveness check that fails until mirrors are updated",
+          },
+          false: {
+            what: "Mirrors already handle the case, an exhaustiveness check forces the update, or nothing else branches over the set",
+          },
+        },
+      },
+      message: "This change adds a case that sibling code must mirror with nothing forcing the mirror.",
+    },
+    "jev/no-mutable-surface-expansion": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change widen the exported mutable surface that other modules can come to depend on?",
+          inspect: "Compare each added mutable export with its declaration, the importing modules of the touched file, and the coverage in the supplied evidence.",
+          focus: "Judge whether the change exposes new mutation, not whether existing shared state is already coupled.",
+          decision_boundary: [
+            "An added exported let or a setter on an exported class is strong evidence of mutable surface expansion.",
+            "A new frozen constant or a pure function export answers the question negatively.",
+            "Existing shared mutable state belongs to the shared-mutable-module-state family, not this rule; this rule scores the expansion event.",
+            "If no added export exposes mutation, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The change adds an exported binding, field, setter, or mutation method other modules can mutate through",
+            remedy: "Keep the state private or expose it behind a frozen snapshot or an explicit mutation protocol",
+          },
+          false: {
+            what: "New exports are frozen or pure, or no export is added",
+          },
+        },
+      },
+      message: "This change widens the exported mutable surface other modules can depend on.",
+    },
+    "jev/no-subclass-fragility-hook": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this override duplicate its base method's logic with edits instead of reusing it, so the next base-class fix silently misses this copy?",
+          inspect: "Compare the override body with the resolved base method source, the shared-token similarity, the super-call signal, and the sibling overrides in the supplied evidence.",
+          focus: "Judge whether the override copies logic it should inherit, not whether overriding itself is wrong.",
+          decision_boundary: [
+            "An override that repeats nearly all of a long base method with a small tweak and no super call is strong evidence of a fragility hook.",
+            "An override that calls super and then extends the result answers the question negatively.",
+            "A subclass refusing the inherited contract belongs to refused inheritance, not this rule; this rule scores a copy with edits.",
+            "Duplication without an inheritance link belongs to duplicated logic; this rule needs a resolved base method.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The override carries its own edited copy of base logic that future base fixes will miss",
+            remedy: "Call super and keep only the extending behavior in the override",
+          },
+          false: {
+            what: "The override reuses the base through super, adds genuinely new behavior, or has no resolvable base method",
+          },
+        },
+      },
+      message: "This override copies base logic with edits instead of reusing it through super.",
+    },
+    "jev/no-contract-narrowing-after-ship": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change narrow what existing callers may pass while leaving current call sites to break?",
+          inspect: "Compare each narrowing with its before and after excerpts, the owning function, and the observed callers with their argument lists in the supplied evidence.",
+          focus: "Judge whether live callers can still satisfy the narrowed contract, not whether the stricter contract is desirable.",
+          decision_boundary: [
+            "A new required field on a widely called options object with existing callers omitting it is strong evidence of narrowing after ship.",
+            "A narrowing shipped behind a new function while the old one keeps delegating answers the question negatively.",
+            "A new positional parameter belongs to breaking export reshape, not this rule; this rule scores options properties, new rejection guards, and fresh non-null assertions on parameters.",
+            "If no narrowing appears, or every observed caller already satisfies it, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Existing callers pass shapes the narrowed contract now rejects",
+            remedy: "Keep the old contract working alongside the stricter one or migrate the affected call sites in the same change",
+          },
+          false: {
+            what: "Callers already satisfy the contract, the old entry keeps delegating, or no input contract narrows",
+          },
+        },
+      },
+      message: "This change narrows what existing callers may pass while current call sites break.",
+    },
   },
 };

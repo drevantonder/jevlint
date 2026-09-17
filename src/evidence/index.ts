@@ -204,6 +204,10 @@ import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exporte
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
 
+import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
+import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
+import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
+import { buildContractNarrowingEvidence } from "./contract-narrowing-after-ship.js";
 export type RuleEvidenceResult =
   | { handled: false }
   | { handled: true; evidence: JsonValue | undefined };
@@ -1138,5 +1142,29 @@ export function buildRuleEvidence(
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
   }
-  return { handled: false };
+  if (ruleId === "jev/no-change-amplifier-case") {
+    return {
+      handled: true,
+      evidence: buildChangeAmplifierCaseEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-mutable-surface-expansion") {
+    return {
+      handled: true,
+      evidence: buildMutableSurfaceExpansionEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-subclass-fragility-hook") {
+    return {
+      handled: true,
+      evidence: buildSubclassFragilityHookEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-contract-narrowing-after-ship") {
+    return {
+      handled: true,
+      evidence: buildContractNarrowingEvidence(candidate, changes, projectFiles),
+    };
+  }
+return { handled: false };
 }

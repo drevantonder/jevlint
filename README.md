@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- Two hundred seven bundled Jev rules
+- Two hundred eleven bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -213,6 +213,10 @@ The bundled Jev rules judge:
 - exported helpers serving exactly one caller without public re-export
 - changes that restate a literal value set another module already owns as a type
 - types that duplicate a field shape owned by another module
+- changes that add one case sibling code must mirror with nothing forcing the mirror
+- changes that widen the exported mutable surface other modules can depend on
+- overrides that duplicate base logic with edits instead of reusing it through super
+- changes that narrow what existing callers may pass while current call sites break
 
 The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, extract sentinel return paths, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, explicit result types, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, intentional absence semantics, telemetry, and cache population remain valid.
 
