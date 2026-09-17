@@ -136,6 +136,7 @@ import { buildUnlabeledInteractiveElementEvidence } from "./unlabeled-interactiv
 import { buildUnlocalizedUserStringEvidence } from "./unlocalized-user-string.js";
 import { buildConsoleResidueEvidence } from "./console-residue.js";
 import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js";
+import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -745,6 +746,12 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildDeepHappyPathNestingEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unverified-claim") {
+    return {
+      handled: true,
+      evidence: buildUnverifiedClaimEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

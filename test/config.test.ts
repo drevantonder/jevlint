@@ -106,7 +106,7 @@ describe("loadConfig", () => {
       "jev/no-path-traversal-join",
       "jev/no-phantom-member-access",
       "jev/no-laundered-absence",
-      "jev/no-hedging-comment",
+      "jev/no-unverified-claim",
       "jev/no-convention-breaking-addition",
       "jev/no-repeated-handler-preamble",
       "jev/no-non-narrowing-guard",

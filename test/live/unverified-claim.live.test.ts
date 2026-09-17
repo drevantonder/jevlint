@@ -7,7 +7,7 @@ import type { EvaluationRequest, Evaluator, JevLintConfig, ProjectFile } from ".
 
 const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
 const repositories = new URL("../fixtures/repositories/", import.meta.url);
-const RULE = "jev/no-hedging-comment";
+const RULE = "jev/no-unverified-claim";
 
 class RecordingEvaluator implements Evaluator {
   probabilities: number[] = [];
@@ -47,15 +47,32 @@ async function review(name: string, paths: string[]) {
   return { judgments, probabilities: evaluator.probabilities };
 }
 
-liveDescribe("hedging comment calibration", () => {
-  it("separates a doubt-performing hedge from a contract-stating comment", async () => {
-    const positive = await review("hedging-comment-positive", ["src/parse.ts"]);
-    const negative = await review("hedging-comment-negative", ["src/parse.ts"]);
+function max(probabilities: number[]): number {
+  return probabilities.length > 0 ? Math.max(...probabilities) : 0;
+}
 
-    expect(positive.judgments.map(({ ruleId }) => ruleId)).toContain(RULE);
-    expect(positive.probabilities.length).toBeGreaterThan(0);
-    expect(Math.max(...positive.probabilities)).toBeGreaterThan(
-      Math.max(...negative.probabilities, 0),
-    );
+liveDescribe("unverified claim calibration", () => {
+  it("fires hedged and confident unpinned claims above pinned behavior", async () => {
+    const hedged = await review("hedging-comment-positive", ["src/parse.ts"]);
+    const evasion = await review("unverified-claim-evasion-positive", ["src/parse.ts"]);
+    const pinned = await review("unverified-claim-pinned-negative", [
+      "src/fetch.ts",
+      "src/fetch.test.ts",
+    ]);
+    const contract = await review("hedging-comment-negative", ["src/parse.ts"]);
+
+    // Replacement proof: both old hedging fixtures still produce judgments.
+    // The old negative also scores high because its "handled by the caller
+    // contract" clause is itself an unpinned claim about an absent contract.
+    expect(hedged.judgments.map(({ ruleId }) => ruleId)).toContain(RULE);
+    expect(evasion.judgments.map(({ ruleId }) => ruleId)).toContain(RULE);
+    expect(pinned.judgments.map(({ ruleId }) => ruleId)).toContain(RULE);
+    expect(contract.judgments.map(({ ruleId }) => ruleId)).toContain(RULE);
+
+    expect(max(hedged.probabilities)).toBeGreaterThanOrEqual(0.7);
+    expect(max(evasion.probabilities)).toBeGreaterThanOrEqual(0.7);
+    expect(max(pinned.probabilities)).toBeLessThan(0.5);
+    expect(max(hedged.probabilities)).toBeGreaterThan(max(pinned.probabilities));
+    expect(max(evasion.probabilities)).toBeGreaterThan(max(pinned.probabilities));
   });
 });
