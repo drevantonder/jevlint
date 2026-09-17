@@ -26,11 +26,16 @@ const API_SIDE_EFFECT_PRIORITY = new Map<string, number>([
   ["jev/no-hidden-io", 85],
 ]);
 
+const API_RETURN_PRIORITY = new Map<string, number>([
+  ["jev/no-lossy-sentinel-return", 90],
+]);
+
 const RULE_FAMILIES = [
   ACCIDENTAL_COMPLEXITY_PRIORITY,
   STATE_MODEL_PRIORITY,
   INPUT_MUTATION_PRIORITY,
   API_SIDE_EFFECT_PRIORITY,
+  API_RETURN_PRIORITY,
 ];
 
 function overlaps(left: Diagnostic, right: Diagnostic): boolean {

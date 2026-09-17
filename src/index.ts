@@ -14,6 +14,7 @@ export { buildDisproportionateConfigurationEvidence } from "./evidence/dispropor
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
 export { buildHiddenIoEvidence } from "./evidence/hidden-io.js";
+export { buildLossySentinelReturnEvidence } from "./evidence/lossy-sentinel-return.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
 export { buildQuerySideEffectEvidence } from "./evidence/query-side-effect.js";

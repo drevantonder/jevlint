@@ -60,6 +60,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This API hides a material I/O boundary and its cost.",
     },
+    "jev/no-lossy-sentinel-return": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do this function's sentinel return paths collapse distinct outcomes that callers reasonably need to tell apart?",
+          inspect: "Compare every sentinel path and its condition with successful returns, the function's named abstraction, module context, and actual repository callers in the supplied evidence.",
+          focus: "Judge information loss at the API boundary, not whether null, undefined, or -1 appears at all.",
+          decision_boundary: [
+            "Invalid input, unsupported cases, authorization failure, dependency failure, and ordinary absence often require different caller actions; collapsing them into one sentinel is strong evidence of a lossy contract.",
+            "Several paths may intentionally mean one domain outcome, such as no active session covering both missing and expired sessions.",
+            "Conventional absence APIs such as find and index lookup may use a sentinel clearly when no further distinction belongs in their responsibility.",
+            "A discriminated result, specific error, or named status preserves distinctions and is not a sentinel smell.",
+            "Multiple sentinel returns alone are insufficient; if the evidence does not show a caller-relevant distinction, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The same opaque sentinel represents materially different outcomes that require different interpretation, recovery, messaging, or policy",
+            remedy: "Return a discriminated result or use distinct errors or statuses for caller-relevant outcomes",
+          },
+          false: {
+            what: "All sentinel paths intentionally represent one named domain outcome, the distinction does not belong in this API, or caller relevance is not established",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This sentinel return collapses caller-relevant outcomes.",
+    },
     "jev/no-query-side-effect": {
       scope: "function",
       question: {

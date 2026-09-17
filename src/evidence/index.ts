@@ -9,6 +9,7 @@ import { buildDisproportionateConfigurationEvidence } from "./disproportionate-c
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
@@ -30,6 +31,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hidden-io") {
     return { handled: true, evidence: buildHiddenIoEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-lossy-sentinel-return") {
+    return { handled: true, evidence: buildLossySentinelReturnEvidence(candidate, projectFiles) };
   }
   if (ruleId === "jev/no-query-side-effect") {
     return { handled: true, evidence: buildQuerySideEffectEvidence(candidate, projectFiles) };
