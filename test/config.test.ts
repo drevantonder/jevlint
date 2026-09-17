@@ -164,6 +164,11 @@ describe("loadConfig", () => {
       "jev/no-english-only-pluralization",
       "jev/no-duplicate-config-source",
       "jev/no-unowned-feature-flag",
+      "jev/no-import-cycle-tangle",
+      "jev/no-domain-upward-import",
+      "jev/no-barrel-wide-reexport",
+      "jev/no-utility-module-grab-bag",
+      "jev/no-duplicate-module-role",
     ]);
   });
 

@@ -149,6 +149,11 @@ import { buildUnconsumedTelemetryEvidence } from "./unconsumed-telemetry.js";
 import { buildEnglishOnlyPluralizationEvidence } from "./english-only-pluralization.js";
 import { buildDuplicateConfigSourceEvidence } from "./duplicate-config-source.js";
 import { buildUnownedFeatureFlagEvidence } from "./unowned-feature-flag.js";
+import { buildImportCycleTangleEvidence } from "./import-cycle-tangle.js";
+import { buildDomainUpwardImportEvidence } from "./domain-upward-import.js";
+import { buildBarrelWideReexportEvidence } from "./barrel-wide-reexport.js";
+import { buildUtilityModuleGrabBagEvidence } from "./utility-module-grab-bag.js";
+import { buildDuplicateModuleRoleEvidence } from "./duplicate-module-role.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -818,6 +823,36 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnownedFeatureFlagEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-import-cycle-tangle") {
+    return {
+      handled: true,
+      evidence: buildImportCycleTangleEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-domain-upward-import") {
+    return {
+      handled: true,
+      evidence: buildDomainUpwardImportEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-barrel-wide-reexport") {
+    return {
+      handled: true,
+      evidence: buildBarrelWideReexportEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-utility-module-grab-bag") {
+    return {
+      handled: true,
+      evidence: buildUtilityModuleGrabBagEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-duplicate-module-role") {
+    return {
+      handled: true,
+      evidence: buildDuplicateModuleRoleEvidence(candidate, changes, projectFiles),
     };
   }
   return { handled: false };
