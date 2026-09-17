@@ -101,6 +101,17 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("prefers a persistence leak over a pass-through symptom", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-pass-through-wrapper", 5, 8),
+      diagnostic("jev/no-persistence-model-leak", 5, 8),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-persistence-model-leak",
+    ]);
+  });
+
   it("prefers a hidden command over its generic I/O symptom", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-io", 5, 12),

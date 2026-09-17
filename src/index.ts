@@ -19,6 +19,7 @@ export { buildLossySentinelReturnEvidence } from "./evidence/lossy-sentinel-retu
 export { buildMixedResponsibilitiesEvidence } from "./evidence/mixed-responsibilities.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
+export { buildPersistenceModelLeakEvidence } from "./evidence/persistence-model-leak.js";
 export { buildQuerySideEffectEvidence } from "./evidence/query-side-effect.js";
 export { buildScatteredPolicyEvidence } from "./evidence/scattered-policy.js";
 export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";

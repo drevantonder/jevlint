@@ -32,6 +32,7 @@ describe("loadConfig", () => {
       "jev/no-avoidable-orchestration",
       "jev/no-complexity-displacement",
       "jev/no-transport-coupled-domain",
+      "jev/no-persistence-model-leak",
       "jev/no-feature-envy",
     ]);
   });

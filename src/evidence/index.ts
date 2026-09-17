@@ -14,6 +14,7 @@ import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
+import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
@@ -103,6 +104,12 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildTransportCoupledDomainEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-persistence-model-leak") {
+    return {
+      handled: true,
+      evidence: buildPersistenceModelLeakEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

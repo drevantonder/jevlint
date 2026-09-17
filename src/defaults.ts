@@ -599,6 +599,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "Domain behavior is coupled to transport details.",
     },
+    "jev/no-persistence-model-leak": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function expose a persistence-owned record shape to code that should depend on domain or application meaning instead?",
+          inspect: "Compare the persistence imports, return type and expressions, related persistence modules, and actual consumer source in the supplied evidence.",
+          focus: "Judge ownership of the returned representation and whether consumers now depend on storage columns, ORM lifecycle, or schema details.",
+          decision_boundary: [
+            "Returning an ORM-generated record from an application service to domain consumers that read storage-shaped fields is strong evidence of a leak.",
+            "A repository may use an ORM internally and return a reconstructed domain entity without leaking persistence representation.",
+            "A deliberately owned read model or projection is not a leak merely because a database supplies its data.",
+            "Migration, backup, archival, and persistence administration code may intentionally preserve raw storage records.",
+            "A repository name, database call, or type named Record is not enough when representation ownership is unclear; answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A persistence-layer model crosses its ownership boundary and downstream code relies on its storage-specific shape",
+            remedy: "Map the record to a domain entity or an explicitly owned application read model before returning it",
+          },
+          false: {
+            what: "The function maps to a domain-owned type, returns an intentional projection, supports persistence tooling, or lacks proof that the shape is persistence-owned",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "A persistence-owned model leaks across its boundary.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {
