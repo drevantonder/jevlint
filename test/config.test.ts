@@ -202,6 +202,11 @@ describe("loadConfig", () => {
       "jev/no-utils-grab-bag-growth",
       "jev/no-barrel-bypass",
       "jev/no-skipped-level-import",
+      "jev/no-deep-delegation-chain",
+      "jev/no-stability-inversion",
+      "jev/no-options-style-split",
+      "jev/no-concrete-stable-module",
+      "jev/no-import-use-skew",
       "jev/no-unverified-mock-contract",
       "jev/no-implementation-mirrored-expectation",
       "jev/no-self-authored-exam",
@@ -267,11 +272,6 @@ describe("loadConfig", () => {
       "jev/no-unversioned-envelope-change",
       "jev/no-context-homonym-type",
       "jev/no-wide-fan-in-edit",
-      "jev/no-deep-delegation-chain",
-      "jev/no-stability-inversion",
-      "jev/no-options-style-split",
-      "jev/no-concrete-stable-module",
-      "jev/no-import-use-skew",
     ]);
   });
 
