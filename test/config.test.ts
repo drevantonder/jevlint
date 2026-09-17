@@ -261,6 +261,12 @@ describe("loadConfig", () => {
       "jev/no-partitioned-fat-interface",
       "jev/no-dev-dependency-runtime-leak",
       "jev/no-cross-module-call-order",
+      "jev/no-callback-return-split",
+      "jev/no-reentrant-entry",
+      "jev/no-implementation-type-in-signature",
+      "jev/no-unversioned-envelope-change",
+      "jev/no-context-homonym-type",
+      "jev/no-wide-fan-in-edit",
     ]);
   });
 

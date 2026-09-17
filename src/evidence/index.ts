@@ -242,6 +242,12 @@ import { buildChattyInterfaceEvidence } from "./chatty-interface.js";
 import { buildPartitionedFatInterfaceEvidence } from "./partitioned-fat-interface.js";
 import { buildDevDependencyRuntimeLeakEvidence } from "./dev-dependency-runtime-leak.js";
 import { buildCrossModuleCallOrderEvidence } from "./cross-module-call-order.js";
+import { buildCallbackReturnSplitEvidence } from "./callback-return-split.js";
+import { buildReentrantEntryEvidence } from "./reentrant-entry.js";
+import { buildImplementationTypeInSignatureEvidence } from "./implementation-type-in-signature.js";
+import { buildUnversionedEnvelopeChangeEvidence } from "./unversioned-envelope-change.js";
+import { buildContextHomonymTypeEvidence } from "./context-homonym-type.js";
+import { buildWideFanInEditEvidence } from "./wide-fan-in-edit.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1359,6 +1365,39 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildCrossModuleCallOrderEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-callback-return-split") {
+    return {
+      handled: true,
+      evidence: buildCallbackReturnSplitEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-reentrant-entry") {
+    return { handled: true, evidence: buildReentrantEntryEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-implementation-type-in-signature") {
+    return {
+      handled: true,
+      evidence: buildImplementationTypeInSignatureEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unversioned-envelope-change") {
+    return {
+      handled: true,
+      evidence: buildUnversionedEnvelopeChangeEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-context-homonym-type") {
+    return {
+      handled: true,
+      evidence: buildContextHomonymTypeEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-wide-fan-in-edit") {
+    return {
+      handled: true,
+      evidence: buildWideFanInEditEvidence(candidate, changes, projectFiles),
     };
   }
   return { handled: false };

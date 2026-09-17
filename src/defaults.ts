@@ -6675,6 +6675,169 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "These calls assume an order across a module boundary that nothing enforces.",
+    },
+
+    "jev/no-callback-return-split": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function use a completion style that contradicts the surrounding module surface, forcing clients to hold two conventions?",
+          inspect: "Compare the candidate's completion style with each sibling export's style, the module majority, and which outside importers touch each style in the supplied evidence.",
+          focus: "Judge whether a client of this module must learn both callback and return conventions to use the surface, not whether either style is better in the abstract.",
+          decision_boundary: [
+            "A callback-shaped parameter beside return-styled siblings, with outside importers reaching both styles, is strong evidence of a split surface.",
+            "A module mid-migration with adapter shims, or styles partitioned between internal helpers and the public surface, describes a transition rather than a contradiction.",
+            "A lone export, or a surface where every sibling shares the candidate's style, leaves no convention to contradict.",
+            "Handler-registration parameters for evented APIs are the API's subject matter, not a competing completion convention.",
+            "If the evidence shows no minority style reachable by outside clients, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function completes differently from its module siblings while outside clients reach both styles",
+            remedy: "Align the function with the module's majority completion style or split the surface into explicitly versioned alternatives",
+          },
+          false: {
+            what: "The surface shares one completion style, the split is a documented migration, styles are partitioned by audience, or no outside client reaches the minority style",
+          },
+        },
+      },
+      message: "This function completes differently from its module siblings, splitting the surface convention.",
+    },
+    "jev/no-reentrant-entry": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this exported function likely to run reentrantly against module state it mutates, through both registered-callback and direct-call reachability?",
+          inspect: "Read the mutated module bindings, the direct callers, the registration-shaped call sites, and the guard scan in the supplied evidence.",
+          focus: "Judge whether one activation can plausibly interleave with another against the same unguarded state, not whether shared state merely exists.",
+          decision_boundary: [
+            "Confirmed module-state mutation with both registration-shaped and direct call sites and no guard is strong evidence of reentrant exposure.",
+            "An explicit in-progress flag, lock, depth counter, or disabled switch that the implementation checks is evidence the entry anticipates reentry.",
+            "Registration and direct use that belong to one framework lifecycle, or mutation that only assigns an idempotent value, rarely produce a harmful interleave.",
+            "A single reachability shape leaves no duality to judge.",
+            "If the evidence does not establish both mutation and dual reachability, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function mutates module state and is reachable both as a registered callback and as a direct call without a reentry guard",
+            remedy: "Guard the entry with an in-progress flag or lock, or separate the callback path from the direct-call path",
+          },
+          false: {
+            what: "The entry is guarded, reachability follows one lifecycle, the mutation is idempotent, or dual reachability is not established",
+          },
+        },
+      },
+      message: "This exported entry mutates module state and is reachable both as a callback and as a direct call.",
+    },
+    "jev/no-implementation-type-in-signature": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this exported signature expose an infrastructure or library implementation type that binds callers to a detail they should not know?",
+          inspect: "Compare each exposed parameter and return type with its origin, whether the target looks infrastructural, nearby domain alternatives, and the real callers in the supplied evidence.",
+          focus: "Judge whether callers must now depend on the implementation detail to use the API, not whether the implementation itself uses the detail internally.",
+          decision_boundary: [
+            "A widely imported export naming a driver, client, or persistence type in its parameters or return, with a domain alternative nearby, is strong evidence of exposure.",
+            "A module whose job is wrapping that library, with the type as its explicit subject matter, is an adapter doing its work rather than a leak.",
+            "Standard builtins, locally declared domain aliases, and single-internal-caller helpers rarely bind an audience to a detail.",
+            "An untyped signature, or one shaped only by local aliases, exposes nothing outside the module.",
+            "If the evidence does not name an implementation type reachable by outside callers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An exported signature names an infrastructure or library type that outside callers must now depend on",
+            remedy: "Introduce a domain-named alias or wrapper type and keep the implementation detail behind the module boundary",
+          },
+          false: {
+            what: "The signature uses builtins or local domain types, the module is the adapter for that detail, or no outside caller reaches the exposure",
+          },
+        },
+      },
+      message: "This exported signature exposes an implementation type that callers should not need to know.",
+    },
+    "jev/no-unversioned-envelope-change": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this changed message or envelope type alter its data contract without a versioning or compatibility affordance while cross-module consumers exist?",
+          inspect: "Read the old-versus-new member diff, the consumer list, and the version field, discriminator, and shim signals in the supplied evidence.",
+          focus: "Judge whether existing consumers can plausibly keep working, distinguishing additive-optional growth from required, removed, or retyped members.",
+          decision_boundary: [
+            "A newly required member, a removal, or a retype with several cross-module consumers and no version or discriminator field is strong evidence of an unversioned break.",
+            "Purely additive-optional growth, a single-module envelope, or a version field or kind discriminator riding along usually keeps old consumers working.",
+            "Explicit migration shims, compatibility aliases, or deprecation markers describe an author managing the transition.",
+            "An unchanged member set, or a change with no cross-module consumers, leaves no contract evolution to judge.",
+            "If the evidence shows no incompatible member change reaching outside consumers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The envelope gains a required member, loses a member, or retypes one while outside consumers exist and no versioning affordance accompanies the change",
+            remedy: "Add the member as optional with a default, carry a version or discriminator field, or ship a migration shim for existing consumers",
+          },
+          false: {
+            what: "The change is additive-optional, versioned, shimmed, confined to one module, or reaches no outside consumers",
+          },
+        },
+      },
+      message: "This envelope alters its data contract without a versioning or compatibility affordance.",
+    },
+    "jev/no-context-homonym-type": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this type share its name with a different-shaped type in another module, so the same word means two things across contexts?",
+          inspect: "Compare the candidate's member set with each same-named declaration's members, the overlap ratios, and the import-confusion signals in the supplied evidence.",
+          focus: "Judge whether a reader or importer can plausibly confuse the two meanings, not whether shared vocabulary is virtuous in the abstract.",
+          decision_boundary: [
+            "One name with disjoint members in modules that import each other, or that meet in a shared client, is strong evidence of a harmful homonym.",
+            "Scoped or qualified usage that keeps the two meanings apart in practice weakens the confusion case.",
+            "Mostly overlapping members describe genuine duplication, which belongs to the duplication rules rather than this one.",
+            "A collision confined to tests, or a name unique across the project, leaves no cross-context confusion to judge.",
+            "If the evidence shows no same-named, differently shaped declaration with a confusion path, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The same type name denotes different member shapes in modules connected by imports or shared clients",
+            remedy: "Rename one of the types to its bounded-context term, or extract the shared meaning into one imported definition",
+          },
+          false: {
+            what: "The name is unique, the shapes genuinely duplicate each other, usage keeps the contexts apart, or the collision is test-only",
+          },
+        },
+      },
+      message: "This type name means different shapes in different modules, inviting cross-context confusion.",
+    },
+    "jev/no-wide-fan-in-edit": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this edit touch a function with wide caller fan-in, so its ripple plausibly extends beyond the visible call sites?",
+          inspect: "Read the caller total and distinct-file count, the export status, and whether the old-versus-new body comparison shows a behavioral change in the supplied evidence.",
+          focus: "Judge whether the edit's observable behavior can reach callers the author may not have considered, not whether a widely used function merely exists.",
+          decision_boundary: [
+            "A behavioral body change to an exported function with callers across many files is strong evidence of wide ripple.",
+            "An edit whose old and new bodies match observably, or callers confined to generated code and tests, rarely ripples beyond the visible sites.",
+            "A narrow caller set, even with a behavioral change, keeps the blast radius inspectable.",
+            "A function with no callers has no ripple to judge.",
+            "If the evidence does not establish both fan-in and a behavioral change, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A behavioral edit lands on a function whose callers span files beyond easy inspection",
+            remedy: "Narrow the function's caller set first, or verify the changed behavior against each caller population",
+          },
+          false: {
+            what: "The edit preserves observable behavior, callers are narrow or generated, or the function has no callers",
+          },
+        },
+      },
+      message: "This edit changes a widely called function, so its ripple extends beyond the visible call sites.",
 
     },
   },
