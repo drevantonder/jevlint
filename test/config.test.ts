@@ -11,6 +11,7 @@ describe("loadConfig", () => {
     const config = await loadConfig({ cwd: directory });
 
     expect(Object.keys(config.rules)).toEqual([
+      // BEGIN GENERATED: rule-keys (src/defaults.ts order; do not edit — run pnpm generate:registry)
       "jev/no-hidden-input-mutation",
       "jev/no-hidden-io",
       "jev/no-lossy-sentinel-return",
@@ -275,6 +276,7 @@ describe("loadConfig", () => {
       "jev/no-unpinned-failure-path",
       "jev/no-incidental-snapshot",
       "jev/no-quarantined-test-coverage",
+      // END GENERATED: rule-keys
     ]);
   });
 
