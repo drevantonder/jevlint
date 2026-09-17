@@ -850,5 +850,112 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This behavior appears to belong with the data it inspects.",
     },
+    "jev/no-foreign-mutation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this change mutate objects it does not own — globals, prototypes, or another module's state — so its effects reach code beyond its visible scope?",
+          inspect: "Compare each extracted mutation, its target ownership, the imported targets, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the mutation reaches state no caller passed in and no caller can anticipate from the signature.",
+          decision_boundary: [
+            "Assignment to a prototype, globalThis, or a member of an imported binding is strong evidence of foreign mutation.",
+            "Mutation of the function's own parameters is caller-visible input mutation, not foreign mutation.",
+            "Mutation of locally declared state is not foreign mutation even when the state outlives the call.",
+            "Test-only global stubbing inside setup hooks may be an intentional seam rather than a hidden effect.",
+            "If the ownership of the mutated root is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function changes globals, prototypes, or another module's state that callers did not supply and cannot infer from the contract",
+            remedy: "Return the change explicitly, accept the target as a parameter, or confine the effect to owned state",
+          },
+          false: {
+            what: "The function mutates only its inputs, locals, or clearly owned state, or the evidence does not establish foreign ownership",
+          },
+        },
+      },
+      message: "This function mutates state it does not own.",
+    },
+    "jev/no-temporal-call-coupling": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Must callers invoke a separate setup operation before this one, in an order the code does not enforce?",
+          inspect: "Compare the shared state, the writer operations that establish it, the guard evidence, the callers of each side, and the reader-alone call sites in the supplied evidence.",
+          focus: "Judge whether a caller can trigger the wrong sequence without any compile-time or runtime complaint.",
+          decision_boundary: [
+            "A reader of module state written only by a separately invoked setup operation is strong evidence of temporal coupling.",
+            "A reader that throws a clear not-initialized error still requires the handshake but makes the failure explicit rather than silent.",
+            "Paired lifecycle commands owned by one orchestrator may state their ordering contract clearly.",
+            "Passing the initialized dependency as a parameter removes the ordering handshake entirely.",
+            "If the writer always runs before the reader at every observed call site, or the ordering evidence is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The operation assumes state established by another operation callers must discover and sequence themselves",
+            remedy: "Pass the initialized dependency explicitly or return an initialized capability callers cannot misuse",
+          },
+          false: {
+            what: "The order is enforced by types, guards, or ownership, or the evidence does not establish an unenforced sequence",
+          },
+        },
+      },
+      message: "This operation assumes a setup call the code does not enforce.",
+    },
+    "jev/no-shotgun-change": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Did this change have to make parallel edits across many modules for a single concept, suggesting the concept has no single home?",
+          inspect: "Compare the per-file hunks, the identifiers edited in parallel across files, the shared dependencies, and the coverage metadata in the supplied evidence.",
+          focus: "Judge whether the diff shows one concept scattered across owners rather than distinct per-file responsibilities.",
+          decision_boundary: [
+            "Near-identical hunks touching the same identifier or member path in several files with no shared owning module touched is strong evidence of shotgun change.",
+            "A rename with its independent call-site updates touches many files but follows one declaration rather than scattering a concept.",
+            "Structurally distinct per-file hunks serving different responsibilities are a broad change, not a scattered concept.",
+            "If the coverage metadata shows omitted files needed for the judgment, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One concept required coordinated parallel edits across modules without a single owning home",
+            remedy: "Move the behavior to one owner so future changes land in a single place",
+          },
+          false: {
+            what: "The files changed for distinct reasons, followed one declaration, or lack enough evidence of a scattered concept",
+          },
+        },
+      },
+      message: "This change scatters one concept across many modules.",
+    },
+    "jev/no-undocumented-contract": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this exported operation's contract — what it expects, guarantees, and what counts as misuse — stated nowhere a caller can find it?",
+          inspect: "Compare the parameter shape and types, return-type presence, documented status, thrown errors, cross-module callers, and misuse-shaped call sites in the supplied evidence.",
+          focus: "Judge whether a caller in another module can use the operation correctly from its contract alone. JSDoc presence is noted in the evidence; score only whether the contract is statable from names and types alone.",
+          decision_boundary: [
+            "An exported operation with several primitive parameters, literal-shaped call sites, or undocumented thrown errors is strong evidence of an unstated contract.",
+            "A self-describing export such as isValidEmail with precise types may state its contract through names alone.",
+            "A module whose sibling exports are documented while this one is not departs from its local norm.",
+            "Internal helpers without cross-module callers need less contract than widely used boundaries.",
+            "If names and types already make expectations, guarantees, and misuse clear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Cross-module callers must guess at expectations, guarantees, or misuse that no contract states",
+            remedy: "Document the expected inputs, guarantees, and misuse conditions at the export boundary",
+          },
+          false: {
+            what: "Names and types already carry the contract, the operation is internal, or the evidence does not establish a gap callers cannot bridge",
+          },
+        },
+      },
+      message: "This exported operation states its contract nowhere callers can find it.",
+    },
   },
 };

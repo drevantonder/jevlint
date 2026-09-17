@@ -43,6 +43,10 @@ describe("loadConfig", () => {
       "jev/no-unsafe-retry",
       "jev/no-hidden-partial-failure",
       "jev/no-feature-envy",
+      "jev/no-foreign-mutation",
+      "jev/no-temporal-call-coupling",
+      "jev/no-shotgun-change",
+      "jev/no-undocumented-contract",
     ]);
   });
 

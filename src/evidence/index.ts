@@ -8,6 +8,7 @@ import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-boolean
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
+import { buildForeignMutationEvidence } from "./foreign-mutation.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -24,10 +25,13 @@ import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
+import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
+import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
+import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 
 export type RuleEvidenceResult =
@@ -162,6 +166,21 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildHiddenPartialFailureEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-foreign-mutation") {
+    return { handled: true, evidence: buildForeignMutationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-temporal-call-coupling") {
+    return { handled: true, evidence: buildTemporalCallCouplingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-shotgun-change") {
+    return {
+      handled: true,
+      evidence: buildShotgunChangeEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-undocumented-contract") {
+    return { handled: true, evidence: buildUndocumentedContractEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

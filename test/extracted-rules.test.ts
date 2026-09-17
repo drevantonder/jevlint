@@ -3,6 +3,11 @@ import { defaultConfig } from "../src/config.js";
 
 const extractedRules = [
   ["jev/no-mysterious-name", "function"],
+  ["jev/no-narrating-comment", "comment"],
+  ["jev/no-foreign-mutation", "function"],
+  ["jev/no-temporal-call-coupling", "function"],
+  ["jev/no-shotgun-change", "change"],
+  ["jev/no-undocumented-contract", "function"],
   ["jev/no-speculative-generality", "function"],
   ["jev/no-ad-hoc-branching", "function"],
   ["jev/no-feature-envy", "function"],
