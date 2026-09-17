@@ -95,6 +95,11 @@ describe("loadConfig", () => {
       "jev/no-sequential-step-soup",
       "jev/no-mirrored-derived-state",
       "jev/no-construction-in-use",
+      "jev/no-retry-storm-shape",
+      "jev/no-unbounded-accumulation",
+      "jev/no-call-in-loop-persistence",
+      "jev/no-unbounded-parallel-fanout",
+      "jev/no-concurrent-shared-mutation",
     ]);
   });
 

@@ -59,6 +59,11 @@ const extractedRules = [
   ["jev/no-sequential-step-soup", "function"],
   ["jev/no-mirrored-derived-state", "function"],
   ["jev/no-construction-in-use", "function"],
+  ["jev/no-retry-storm-shape", "function"],
+  ["jev/no-unbounded-accumulation", "function"],
+  ["jev/no-call-in-loop-persistence", "function"],
+  ["jev/no-unbounded-parallel-fanout", "function"],
+  ["jev/no-concurrent-shared-mutation", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

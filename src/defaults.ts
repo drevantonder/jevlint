@@ -1522,7 +1522,6 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This code disagrees with the contract signature it claims to satisfy.",
     },
-
     "jev/no-accidental-serialization": {
       scope: "function",
       question: {
@@ -2253,6 +2252,143 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This function builds its own concrete collaborators instead of receiving them.",
+    },
+
+    "jev/no-retry-storm-shape": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do these sibling callers retry the same dependency without spread or bounds, so one slow dependency synchronizes their retries into a storm?",
+          inspect: "Use the function's own retry shape and timing, the resolved shared dependency, each sibling retry site with its timing and attempt budget, and the repository callers in the supplied evidence.",
+          focus: "Judge the aggregate stampede risk across callers, not whether one retry site looks safe alone.",
+          decision_boundary: [
+            "Several sibling call sites retrying one shared dependency immediately or with identical fixed delays and no attempt budget is strong evidence of a retry storm shape.",
+            "Sibling sites with exponential backoff, jitter, or a shared retry budget spread load even when each site retries.",
+            "jev/no-unsafe-retry scores one retry site repeating failures unsafely; this rule scores synchronized retries across siblings even when each site alone looks bounded.",
+            "A single retry site with no retrying siblings is not a storm shape; answer no.",
+            "If the shared dependency or the sibling retry timing is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Sibling callers retry the same dependency with synchronized timing and no spread or aggregate bound, so a slow dependency multiplies aligned retries",
+            remedy: "Add backoff with jitter, a shared retry budget, or a bulkhead so sibling retries spread instead of stampeding",
+          },
+          false: {
+            what: "Retries are spread by backoff or jitter, bounded by a shared budget, confined to one site, or lack enough evidence of synchronized siblings",
+          },
+        },
+      },
+      message: "These sibling callers retry the same dependency without spread or bounds.",
+    },
+    "jev/no-unbounded-accumulation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this collection grow with input or time and have no eviction or size bound, so a long-lived process exhausts memory?",
+          inspect: "Use the container lifetime, each growth site, the extracted eviction signals, whether growth is keyed by caller input, and the repository callers in the supplied evidence.",
+          focus: "Judge growth without bound in a long-lived container, not whether appends happen at all.",
+          decision_boundary: [
+            "Appends into a module- or closure-lived collection keyed by request input with no delete, TTL, LRU, or length guard on any path is strong evidence of unbounded accumulation.",
+            "A request-scoped collection fully consumed before return is bounded by the request lifetime.",
+            "A documented cache with eviction, TTL, LRU, or an explicit size bound manages growth even when the bound lives beside the growth site.",
+            "jev/no-shared-mutable-module-state scores hidden coupling through shared bindings; this rule scores growth without bound even in a fully documented single-writer cache.",
+            "If the container lifetime or the absence of eviction is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A long-lived collection grows with input or time while no eviction, expiry, or size bound removes entries",
+            remedy: "Bound the collection with eviction, TTL, LRU, or an explicit size policy, or scope it to the request lifetime",
+          },
+          false: {
+            what: "Growth is scoped to a short lifetime, managed by eviction or a size bound, or lacks enough evidence of unbounded lifetime",
+          },
+        },
+      },
+      message: "This collection grows without eviction or size bound.",
+    },
+    "jev/no-call-in-loop-persistence": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this loop perform one persistence round-trip per item, so cost grows with input size where a single set operation would do?",
+          inspect: "Use each loop's awaited persistence call, its resolved ownership and persistence signals, the unused batch entry point, the input-size provenance, and the repository callers in the supplied evidence.",
+          focus: "Judge per-item round-trips against a persistence boundary with a mandatory ownership trail, not loop-await shape alone.",
+          decision_boundary: [
+            "Awaited per-item saves, inserts, or updates through a resolved repository or persistence client over a caller-supplied collection are strong evidence of per-item round-trips.",
+            "An unused batch entry point on the same dependency shows one set operation was available.",
+            "Per-item calls over a tiny closed constant, or through a callee with no batch entry point, carry bounded cost.",
+            "jev/no-avoidable-orchestration scores sequential orchestration in general; this rule requires a resolved persistence boundary and abstains without one.",
+            "jev/no-accidental-serialization scores whether loop awaits are independent; this rule scores the per-item persistence round-trip cost with ownership evidence, and both can hold with different remedies.",
+            "If callee ownership cannot be resolved to a persistence layer, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The loop pays one persistence round-trip per item over an unbounded input while the dependency offers or could offer a set operation",
+            remedy: "Replace per-item round-trips with the dependency's batch entry point or a single set operation",
+          },
+          false: {
+            what: "The loop is bounded, the callee is not a persistence boundary, no batch alternative exists, or ownership evidence is missing",
+          },
+        },
+      },
+      message: "This loop performs one persistence round-trip per item.",
+    },
+    "jev/no-unbounded-parallel-fanout": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this fan-out launch one concurrent unit per input item with no concurrency bound, so a large input exhausts connections, memory, or downstream quota?",
+          inspect: "Use each fan-out's combinator, collection provenance, leg cost, the limiter evidence, the downstream callee identity, and the repository callers in the supplied evidence.",
+          focus: "Judge aggregate width against the input's provenance, not whether one leg looks safe alone.",
+          decision_boundary: [
+            "Promise.all over a caller-supplied collection with an I/O or heavy leg and no limiter import is strong evidence of unbounded fan-out.",
+            "Fan-out over a small closed constant of pure computations carries bounded width.",
+            "A limiter, worker pool, semaphore, or bounded queue makes width explicit even when the input is unbounded.",
+            "jev/no-unbounded-wait scores a single attempt with no deadline; this rule scores aggregate width even when every leg carries a perfect deadline.",
+            "If the collection provenance or the absence of a limiter is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One concurrent unit launches per input item over an unbounded collection with no concurrency bound while legs consume shared resources",
+            remedy: "Bound the fan-out with a limiter, worker pool, or chunked concurrency",
+          },
+          false: {
+            what: "Width is bounded by a closed input, a limiter or pool, trivially cheap legs, or lacks enough evidence of unbounded input",
+          },
+        },
+      },
+      message: "This fan-out launches unbounded concurrent work per input item.",
+    },
+    "jev/no-concurrent-shared-mutation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this binding read, modified, and written back from concurrent callbacks with no coordination, so interleavings silently win or lose updates?",
+          inspect: "Use the scheduling shapes and leg count, each binding's mutations per leg, check-then-act pairs, the coordination signals, and the repository callers in the supplied evidence.",
+          focus: "Judge lost updates between concurrent legs, not missing compensation after them.",
+          decision_boundary: [
+            "Two or more concurrent legs pushing into one closed-over array, or a check-then-act pair across legs with no lock or aggregation, is strong evidence of uncoordinated shared mutation.",
+            "Legs writing disjoint keys merged after settle, or results combined with reduce or Map merge, coordinate the outcome.",
+            "jev/no-implicit-atomicity scores domain all-or-nothing operations lacking a transaction or recovery policy; this rule scores in-memory interleaving where no transaction concept applies.",
+            "jev/no-shared-mutable-module-state scores shared scope across functions; this rule requires concurrent scheduling and scores interleaving, not scope.",
+            "If concurrent scheduling or shared mutation across legs is not established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Concurrent callbacks read, modify, and write back shared state with no lock, atomic, or post-settle coordination, so interleavings lose updates",
+            remedy: "Coordinate the legs with aggregation after settle, disjoint ownership, or an explicit lock or atomic",
+          },
+          false: {
+            what: "Legs own disjoint state, coordinate through aggregation or locking, run sequentially, or lack enough evidence of concurrent interleaving",
+          },
+        },
+      },
+      message: "This shared binding is mutated from concurrent callbacks without coordination.",
 
     },
   },
