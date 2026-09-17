@@ -1360,8 +1360,6 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type-system escape hides an assumption the compiler can no longer check.",
     },
-
-
     "jev/no-unawaited-iteration-work": {
       scope: "function",
       question: {
@@ -2039,6 +2037,115 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This hard-coded secret looks like a live credential.",
+    },
+
+    "jev/no-output-argument": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function deliver its result by writing into a caller-supplied container instead of returning it, forcing call sites to read backwards?",
+          inspect: "Compare the extracted writes into parameters, the presence or absence of value-carrying returns, the allocated-container call sites, and sibling functions in the supplied evidence.",
+          focus: "Judge whether the contract shape reads backwards — allocate a container, call, then read it — not whether the mutation is surprising or undocumented.",
+          decision_boundary: [
+            "A function that pushes into or assigns a passed container with no value-carrying return, called from sites that each allocate a container and read it after, is strong evidence of an inside-out API.",
+            "A function that both returns the result and appends to a passed collection as a documented secondary sink keeps the forward dataflow and scores low.",
+            "A mutating method on the receiver itself states its contract through ownership rather than an output parameter.",
+            "Sibling functions that return the same concept directly show the return-shaped alternative the call sites cannot use here.",
+            "If no write into a parameter is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Callers must supply a container to receive the outcome instead of composing a return value, so the dataflow reads backwards",
+            remedy: "Return the computed result and let callers decide how to hold it",
+          },
+          false: {
+            what: "The function returns its result, mutates only its own receiver, or the evidence does not establish a backwards contract",
+          },
+        },
+      },
+      message: "This function fills a caller-supplied container instead of returning its result.",
+    },
+    "jev/no-contextless-error": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this raised or re-raised error carry no facts about the failure, leaving handlers nothing to tell what happened?",
+          inspect: "Use each extracted throw site, its message argument, interpolation, cause linkage, structured fields, bare-rethrow shape, empty rejections, sibling error sites, and caller handling in the supplied evidence.",
+          focus: "Judge whether the error is born empty — identity preserved end to end yet nothing inside it — not whether a handler discards a rich error.",
+          decision_boundary: [
+            "A throw with no argument, an empty constructor call, a bare rethrow that adds nothing, or a static literal with no interpolated values, cause, or fields is strong evidence of a contextless error.",
+            "A catch that discards the caught error to raise a fresh static message loses both identity and context.",
+            "An interpolated message, a cause linkage, structured fields, or a discriminant type tag already identifies the failure and scores low.",
+            "Sibling error sites for the same failure class that attach context this site omits confirm the gap.",
+            "If the function raises no error, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The raised error carries no message facts, cause, or involved values, so handlers cannot tell what happened",
+            remedy: "Attach the operation, the involved values, and the caught error as cause when re-raising",
+          },
+          false: {
+            what: "The error already identifies the failure through its message, cause, fields, or type, or the function raises nothing",
+          },
+        },
+      },
+      message: "This error carries no facts about the failure for handlers to use.",
+    },
+    "jev/no-unchecked-precondition": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function assume a precondition its callers observably violate, with no assertion or guard stating the assumption?",
+          inspect: "Use each extracted assumption site, its parameter and shape, the guard evidence between entry and use, sibling guards for the same assumption, and caller argument shapes in the supplied evidence.",
+          focus: "Judge whether a missing guard meets a caller that demonstrably triggers the failure, not whether defensive checks are stylistically desirable.",
+          decision_boundary: [
+            "An index into a possibly-empty array, a division by a parameter, or a key access with no length, zero, or presence check anywhere, where callers supply the violating shape, is strong evidence of an unchecked precondition.",
+            "An assertion, guard clause, or narrowing between entry and use states the assumption even when callers stay in bounds.",
+            "Callers that uniformly supply satisfying arguments leave the assumption untriggered and score low.",
+            "Sibling functions that guard the same assumption show the check this function omits.",
+            "If no assumption site is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function assumes a non-empty input, valid divisor, or present key that callers observably violate without any stated guard",
+            remedy: "Assert or guard the precondition at the routine entry so the assumption is proven, not hoped",
+          },
+          false: {
+            what: "A guard or assertion states the assumption, callers satisfy it, or no assumption site is established",
+          },
+        },
+      },
+      message: "This function assumes a precondition it never states or checks.",
+    },
+    "jev/no-unenforced-warning-comment": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Does this comment admit a hazard that no code enforces, leaving the warning as the entire safety mechanism?",
+          inspect: "Compare the matched hazard admission, the enclosing function source, the guard or assertion evidence covering the warned condition, and violating call sites in the supplied evidence.",
+          focus: "Judge whether prose carries a safety obligation code never picks up, not whether the comment is well written.",
+          decision_boundary: [
+            "A must-call-first, assumes, not-safe-for, or caller-must admission beside an enclosing function with no guard, assertion, or type-level enforcement of the warned condition is strong evidence of an unenforced warning.",
+            "A warning beside a matching assertion or guard clause that enforces it leaves no gap and scores low.",
+            "A call site that violates the warned condition while the hazard stays prose-only confirms the warning is the whole mechanism.",
+            "Conceptual hazards such as reentrancy, lifetime, or aliasing that state analysis cannot see still count when the prose admits them and no guard exists.",
+            "If the comment admits no ordering, lifetime, or safety hazard, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The comment admits an ordering, lifetime, or safety hazard that no guard, assertion, or type enforces",
+            remedy: "Enforce the warned condition in code with a guard, assertion, or type the compiler checks",
+          },
+          false: {
+            what: "Code enforces the warned condition, or the comment admits no hazard anyone must obey",
+          },
+        },
+      },
+      message: "This comment warns of a hazard no code enforces.",
 
     },
   },

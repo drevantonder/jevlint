@@ -87,6 +87,10 @@ describe("loadConfig", () => {
       "jev/no-unaccountable-todo",
       "jev/no-adversarial-regex",
       "jev/no-live-credential",
+      "jev/no-output-argument",
+      "jev/no-contextless-error",
+      "jev/no-unchecked-precondition",
+      "jev/no-unenforced-warning-comment",
     ]);
   });
 

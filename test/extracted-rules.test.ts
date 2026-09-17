@@ -51,6 +51,10 @@ const extractedRules = [
   ["jev/no-inverted-authorization-predicate", "function"],
   ["jev/no-hardcoded-config-shadow", "function"],
   ["jev/no-sibling-identifier-swap", "function"],
+  ["jev/no-output-argument", "function"],
+  ["jev/no-contextless-error", "function"],
+  ["jev/no-unchecked-precondition", "function"],
+  ["jev/no-unenforced-warning-comment", "comment"],
 ] as const;
 
 describe("extracted review rules", () => {
