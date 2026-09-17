@@ -1,6 +1,7 @@
 import { sortAbstentions, sortJudgments } from "./analyze.js";
 import type { CacheStatistics } from "./cache.js";
 import type {
+  DisplayOptions,
   EvaluationFailure,
   EvaluationStatistics,
   Judgment,
@@ -9,11 +10,6 @@ import type {
 } from "./types.js";
 
 export const MAX_REPORTED_FAILURES = 20;
-
-export interface DisplayOptions {
-  minScore?: number;
-  limit?: number;
-}
 
 export interface CreateReviewReportInput {
   judgments: Judgment[];
@@ -25,9 +21,9 @@ export interface CreateReviewReportInput {
 }
 
 export function createReviewReport(input: CreateReviewReportInput): ReviewReport {
-  const allJudgments = sortJudgments(input.judgments);
+  const judgments = sortJudgments(input.judgments);
   const minScore = input.display?.minScore ?? 0;
-  const matching = allJudgments.filter(({ probability }) => probability >= minScore);
+  const matching = judgments.filter(({ probability }) => probability >= minScore);
   const displayed = input.display?.limit === undefined
     ? matching
     : matching.slice(0, input.display.limit);
@@ -38,17 +34,20 @@ export function createReviewReport(input: CreateReviewReportInput): ReviewReport
     evaluation: { ...input.statistics },
   };
   if (input.cacheStatistics !== undefined) statistics.cache = { ...input.cacheStatistics };
+  const display: DisplayOptions = { minScore };
+  if (input.display?.limit !== undefined) display.limit = input.display.limit;
 
   return {
     version: 1,
     summary: {
-      evaluated: allJudgments.length,
+      evaluated: judgments.length,
       displayed: displayed.length,
       abstained: abstentions.reduce((total, abstention) => total + abstention.count, 0),
       failed,
       complete: failed === 0,
     },
-    judgments: displayed,
+    judgments,
+    display,
     abstentions,
     failures: {
       total: input.failures.length,
@@ -65,8 +64,16 @@ function location(judgment: Judgment): string {
   return `${judgment.filePath}:${start.line}:${start.column}-${end.line}:${end.column}`;
 }
 
+function visibleJudgments(report: ReviewReport): Judgment[] {
+  const minScore = report.display.minScore ?? 0;
+  const matching = report.judgments.filter(({ probability }) => probability >= minScore);
+  return report.display.limit === undefined
+    ? matching
+    : matching.slice(0, report.display.limit);
+}
+
 export function formatText(report: ReviewReport): string {
-  const judgments = report.judgments.map((judgment) =>
+  const judgments = visibleJudgments(report).map((judgment) =>
     `${judgment.probability.toFixed(3)}  ${location(judgment)}  `
     + `${judgment.candidateKind}  ${judgment.ruleId}  ${judgment.message}`
   );

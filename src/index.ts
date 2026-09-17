@@ -18,7 +18,8 @@ export {
   formatText,
   MAX_REPORTED_FAILURES,
 } from "./format.js";
-export type { CreateReviewReportInput, DisplayOptions } from "./format.js";
+export type { CreateReviewReportInput } from "./format.js";
+export type { DisplayOptions } from "./types.js";
 export { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 export { buildAdHocBranchingEvidence } from "./evidence/ad-hoc-branching.js";
 export { buildAvoidableOrchestrationEvidence } from "./evidence/avoidable-orchestration.js";

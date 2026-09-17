@@ -109,7 +109,7 @@ describe("runCli", () => {
     expect(stderr).toContain("max_tokens_exceeded");
   });
 
-  it("applies display filters after evaluating all judgments", async () => {
+  it("filters text display while JSON keeps every evaluated judgment", async () => {
     const { cwd, path } = await repository(
       "jevlint-cli-filter-",
       "export function wrap(value: string) { return target(value); }\n",
@@ -137,7 +137,27 @@ describe("runCli", () => {
     expect(exitCode).toBe(0);
     expect(report.summary.evaluated).toBeGreaterThan(report.summary.displayed);
     expect(report.summary.displayed).toBe(1);
-    expect(report.judgments).toEqual([expect.objectContaining({ probability: 0.99 })]);
+    expect(report.judgments).toHaveLength(report.summary.evaluated);
+    expect(report.judgments).toContainEqual(expect.objectContaining({ probability: 0.99 }));
+
+    let textStdout = "";
+    const textExitCode = await runCli(
+      ["review", "--min-score", "0.5", "--limit", "1"],
+      {
+        cwd,
+        evaluator: new PassThroughEvaluator(),
+        stdout: (text) => {
+          textStdout += text;
+        },
+        stderr: () => undefined,
+      },
+    );
+    expect(textExitCode).toBe(0);
+    const scoreLines = textStdout.trim().split("\n")
+      .filter((line) => /^\d\.\d{3}  /.test(line));
+    expect(scoreLines).toHaveLength(1);
+    expect(scoreLines[0]).toContain("0.990  changed.ts:1:8");
+    expect(textStdout).toMatch(/\d+ evaluated; 1 displayed; /);
   });
 
   it("keeps diff as an output-identical compatibility alias", async () => {

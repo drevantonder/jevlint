@@ -103,7 +103,7 @@ Every evaluated rule/candidate pair is reported as a judgment with a probability
 2 evaluated; 2 displayed; 0 structurally abstained; 0 failed
 ```
 
-`--min-score` and `--limit` filter only what is displayed; evaluation always covers every candidate, and the JSON report includes every completed judgment regardless of display filters. Candidates that are structurally ineligible for a rule are summarized as abstention counts, never as zero scores.
+`--min-score` and `--limit` filter only the text rendering; the JSON report always contains every completed judgment in its `judgments` array, and `summary.displayed` reports the count the display filter selects, so text and JSON summaries stay identical. Evaluation always covers every candidate. Candidates that are structurally ineligible for a rule are summarized as abstention counts, never as zero scores.
 
 Jev judgments are cached by default in the current worktree's Git metadata. Candidate discovery and repository evidence collection still run every time. Inspect a run, force fresh judgments, or bypass the cache with:
 

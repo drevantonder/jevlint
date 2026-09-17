@@ -14,7 +14,8 @@ import {
   formatText,
   MAX_REPORTED_FAILURES,
 } from "./format.js";
-import type { CreateReviewReportInput, DisplayOptions } from "./format.js";
+import type { CreateReviewReportInput } from "./format.js";
+import type { DisplayOptions } from "./types.js";
 import { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 import { TypeSafeEvaluator } from "./typesafe-evaluator.js";
 import type {

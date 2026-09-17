@@ -140,10 +140,16 @@ export interface ReviewStatistics {
   };
 }
 
+export interface DisplayOptions {
+  minScore?: number;
+  limit?: number;
+}
+
 export interface ReviewReport {
   version: 1;
   summary: ReviewSummary;
   judgments: Judgment[];
+  display: DisplayOptions;
   abstentions: StructuralAbstentionCount[];
   failures: ReviewFailureSummary;
   statistics: ReviewStatistics;

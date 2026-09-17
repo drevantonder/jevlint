@@ -52,7 +52,7 @@ describe("review report formatting", () => {
     );
   });
 
-  it("applies score and count filters only to display counts", () => {
+  it("keeps every judgment in the report and filters only text display", () => {
     const report = createReviewReport({
       judgments,
       abstentions: [{ ruleId: "test/gated", candidateKind: "function", count: 3 }],
@@ -68,7 +68,24 @@ describe("review report formatting", () => {
       failed: 0,
       complete: true,
     });
-    expect(report.judgments.map(({ ruleId }) => ruleId)).toEqual(["test/high", "test/tie-a"]);
+    expect(report.display).toEqual({ minScore: 0.5, limit: 2 });
+    expect(report.judgments.map(({ ruleId }) => ruleId)).toEqual([
+      "test/high",
+      "test/tie-a",
+      "test/tie-b",
+      "test/low",
+    ]);
+    const text = formatText(report);
+    expect(text).toContain(
+      "0.950  src/z.ts:2:1-3:2  function  test/high  test/high proposition",
+    );
+    expect(text).toContain(
+      "0.800  src/a.ts:6:1-7:2  function  test/tie-a  test/tie-a proposition",
+    );
+    expect(text).not.toContain("0.200");
+    expect(text).not.toContain("test/tie-b");
+    expect(text).toContain("4 evaluated; 2 displayed; 3 structurally abstained; 0 failed");
+    expect(JSON.parse(formatJson(report)).judgments).toHaveLength(4);
   });
 
   it("emits a versioned JSON object with evidence, failures, and request statistics", () => {
@@ -102,6 +119,7 @@ describe("review report formatting", () => {
         failed: 1,
         complete: false,
       },
+      display: { minScore: 0 },
       judgments: [judgments[0]],
       abstentions: [{ ruleId: "test/gated", candidateKind: "function", count: 2 }],
       failures: {
