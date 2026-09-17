@@ -236,6 +236,9 @@ const extractedRules = [
   ["jev/no-options-style-split", "module"],
   ["jev/no-concrete-stable-module", "module"],
   ["jev/no-import-use-skew", "module"],
+  ["jev/no-unpinned-failure-path", "function"],
+  ["jev/no-incidental-snapshot", "function"],
+  ["jev/no-quarantined-test-coverage", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

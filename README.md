@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- Two hundred sixty-one bundled Jev rules
+- Two hundred sixty-four bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -192,6 +192,9 @@ The bundled Jev rules judge:
 - imports that add a second library for a capability the shelf already covers
 - tests that repeat fixture setup the module already owns once
 - boundary branches that decide values no test or caller pins
+- error paths whose recovery no test or caller pins
+- snapshots that freeze incidental output instead of contractual behavior
+- disabled tests that leave behavior nothing else covers
 - access decisions enforced only in client or routing code
 - checks and dependent mutations separated by an await on the same resource
 - retries repeating state-changing operations with no idempotency identity

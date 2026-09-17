@@ -272,6 +272,9 @@ describe("loadConfig", () => {
       "jev/no-unversioned-envelope-change",
       "jev/no-context-homonym-type",
       "jev/no-wide-fan-in-edit",
+      "jev/no-unpinned-failure-path",
+      "jev/no-incidental-snapshot",
+      "jev/no-quarantined-test-coverage",
     ]);
   });
 

@@ -253,6 +253,9 @@ import { buildStabilityInversionEvidence } from "./stability-inversion.js";
 import { buildOptionsStyleSplitEvidence } from "./options-style-split.js";
 import { buildConcreteStableModuleEvidence } from "./concrete-stable-module.js";
 import { buildImportUseSkewEvidence } from "./import-use-skew.js";
+import { buildUnpinnedFailurePathEvidence } from "./unpinned-failure-path.js";
+import { buildIncidentalSnapshotEvidence } from "./incidental-snapshot.js";
+import { buildQuarantinedTestCoverageEvidence } from "./quarantined-test-coverage.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1433,6 +1436,24 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildImportUseSkewEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-unpinned-failure-path") {
+    return {
+      handled: true,
+      evidence: buildUnpinnedFailurePathEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-incidental-snapshot") {
+    return {
+      handled: true,
+      evidence: buildIncidentalSnapshotEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-quarantined-test-coverage") {
+    return {
+      handled: true,
+      evidence: buildQuarantinedTestCoverageEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };
