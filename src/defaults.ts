@@ -570,6 +570,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This change appears to move complexity rather than reduce it.",
     },
+    "jev/no-transport-coupled-domain": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function make a domain or application decision depend directly on a transport protocol representation?",
+          inspect: "Use the function's transport parameters and operations, module role, imports, and repository callers in the supplied evidence.",
+          focus: "Judge whether business meaning or policy is coupled to HTTP, RPC, messaging, or framework request and response details that a boundary adapter should translate.",
+          decision_boundary: [
+            "A domain decision that reads headers, route parameters, status codes, or framework request state is strong evidence of transport coupling.",
+            "A controller, route, resolver, webhook receiver, or presenter may legitimately translate transport input and output around a domain operation.",
+            "Protocol-mandated authentication, signature verification, streaming, and response negotiation belong at the transport boundary.",
+            "A transport type in a thin function is not enough when the evidence does not show domain policy or application meaning inside it.",
+            "If the function's ownership or the location of the decision is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Domain or application behavior directly consumes or produces transport-specific state instead of receiving or returning domain-shaped values",
+            remedy: "Translate protocol data in an adapter and keep the decision expressed in domain terms",
+          },
+          false: {
+            what: "The function is a transport adapter, implements a protocol obligation, contains no domain decision, or lacks enough ownership evidence",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "Domain behavior is coupled to transport details.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

@@ -90,6 +90,17 @@ describe("diagnostic deduplication", () => {
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-ad-hoc-branching"]);
   });
 
+  it("prefers a domain boundary cause over branching symptoms", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-ad-hoc-branching", 5, 12),
+      diagnostic("jev/no-transport-coupled-domain", 5, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-transport-coupled-domain",
+    ]);
+  });
+
   it("prefers a hidden command over its generic I/O symptom", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-io", 5, 12),

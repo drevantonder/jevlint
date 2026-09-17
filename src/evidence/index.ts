@@ -17,6 +17,7 @@ import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
+import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 
 export type RuleEvidenceResult =
@@ -96,6 +97,12 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildComplexityDisplacementEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-transport-coupled-domain") {
+    return {
+      handled: true,
+      evidence: buildTransportCoupledDomainEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

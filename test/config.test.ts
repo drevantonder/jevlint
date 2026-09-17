@@ -31,6 +31,7 @@ describe("loadConfig", () => {
       "jev/no-disproportionate-configuration",
       "jev/no-avoidable-orchestration",
       "jev/no-complexity-displacement",
+      "jev/no-transport-coupled-domain",
       "jev/no-feature-envy",
     ]);
   });
