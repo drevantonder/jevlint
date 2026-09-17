@@ -149,6 +149,12 @@ import { buildUnconsumedTelemetryEvidence } from "./unconsumed-telemetry.js";
 import { buildEnglishOnlyPluralizationEvidence } from "./english-only-pluralization.js";
 import { buildDuplicateConfigSourceEvidence } from "./duplicate-config-source.js";
 import { buildUnownedFeatureFlagEvidence } from "./unowned-feature-flag.js";
+import { buildUnpinnedBoundaryBranchEvidence } from "./unpinned-boundary-branch.js";
+import { buildClientOnlyAuthorizationEvidence } from "./client-only-authorization.js";
+import { buildCheckThenActRaceEvidence } from "./check-then-act-race.js";
+import { buildNonIdempotentRetryEvidence } from "./non-idempotent-retry.js";
+import { buildParallelAbstractionEvidence } from "./parallel-abstraction.js";
+import { buildMisplacedErrorBoundaryEvidence } from "./misplaced-error-boundary.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -818,6 +824,42 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnownedFeatureFlagEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unpinned-boundary-branch") {
+    return {
+      handled: true,
+      evidence: buildUnpinnedBoundaryBranchEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-client-only-authorization") {
+    return {
+      handled: true,
+      evidence: buildClientOnlyAuthorizationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-check-then-act-race") {
+    return {
+      handled: true,
+      evidence: buildCheckThenActRaceEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-non-idempotent-retry") {
+    return {
+      handled: true,
+      evidence: buildNonIdempotentRetryEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-parallel-abstraction") {
+    return {
+      handled: true,
+      evidence: buildParallelAbstractionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-misplaced-error-boundary") {
+    return {
+      handled: true,
+      evidence: buildMisplacedErrorBoundaryEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };
