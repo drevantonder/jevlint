@@ -110,6 +110,10 @@ describe("loadConfig", () => {
       "jev/no-convention-breaking-addition",
       "jev/no-repeated-handler-preamble",
       "jev/no-non-narrowing-guard",
+      "jev/no-excess-context-parameter",
+      "jev/no-shallow-convenience-layer",
+      "jev/no-prototype-in-production",
+      "jev/no-hidden-loop-exit",
     ]);
   });
 

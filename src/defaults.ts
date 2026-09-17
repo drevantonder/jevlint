@@ -2659,6 +2659,115 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This guard narrows nothing the flow had not already settled.",
+    },
+
+    "jev/no-excess-context-parameter": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this parameter carry a wider object than the function uses, so every caller assembles context the callee never reads?",
+          inspect: "Compare the parameter's declared or destructured shape with the member paths the body actually reads, whether the parameter is forwarded whole to another callee, and whether sibling functions consume the wider remainder in the supplied evidence.",
+          focus: "Judge whether callers are coupled to a full shape for the sake of one member, not whether the object itself is large.",
+          decision_boundary: [
+            "A parameter read through one member path while its declared type or destructuring exposes many more members is strong evidence of excess context, especially when callers build or fetch the whole object for that one read.",
+            "Forwarding the parameter whole to another callee that expects it justifies the width.",
+            "A parameter whose several members are each read, or that is returned whole for callers to keep using, does not carry excess context.",
+            "Sibling functions taking the same type show the width belongs to the family of callers, which weakens the claim against any one member.",
+            "If the declared shape, the used members, or the caller construction sites are insufficient to judge, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reads a small part of a wide parameter while callers must still supply the whole object, and no forwarding or family use justifies the width",
+            remedy: "Narrow the parameter to the members the function reads, or pass the whole object only where several members are genuinely needed",
+          },
+          false: {
+            what: "The width is used, forwarded whole to a collaborator expecting it, shared across a family of consumers, or not established by the supplied evidence",
+          },
+        },
+      },
+      message: "This parameter carries a wider object than the function uses.",
+    },
+    "jev/no-shallow-convenience-layer": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this layer add an interface over a collaborator without adding meaning, so readers learn two APIs for one capability?",
+          inspect: "Compare the layer's method set with the wrapped collaborator: per-method forwarding, arity and naming changes, branching or policy per method, module ownership, and whether callers also use the collaborator directly in the supplied evidence.",
+          focus: "Judge the layer as a whole: one meaningful method among forwarders changes the reading, and a single forwarder is a per-function question, not a layer question.",
+          decision_boundary: [
+            "Several methods each forwarding one call to the same collaborator with near-identical signatures and no branching, error mapping, defaulting, or policy is strong evidence of a shallow layer.",
+            "A layer whose methods encode retry policy, batching, error mapping, defaults, or insulation across a dependency boundary adds meaning even when individual bodies are short.",
+            "Direct callers of the wrapped collaborator alongside callers of the layer show the insulation leaks and strengthen the claim.",
+            "A domain-owned layer over an external package is a useful boundary even when the forwarding is thin.",
+            "If the collaborator, the method set, or the caller split is insufficient to judge, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The layer mirrors the collaborator one-to-one with no policy, simplification, or insulation, so deleting it would cost readers nothing",
+            remedy: "Remove the layer and have callers use the collaborator directly, or give the layer a policy worth its interface",
+          },
+          false: {
+            what: "The layer encodes policy, simplifies or insulates a boundary, or the supplied method set and ownership do not establish mirroring",
+          },
+        },
+      },
+      message: "This layer mirrors its collaborator without adding meaning.",
+    },
+    "jev/no-prototype-in-production": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this code carry prototype-maturity markers yet serve production callers, so readers cannot tell which corners were never finished?",
+          inspect: "Compare the maturity markers and provisional control flow in the changed span with the actual callers, sibling functions, and module context in the supplied evidence.",
+          focus: "Judge the mismatch between disclaimed maturity and real use, not whether the markers are accountable or tracked.",
+          decision_boundary: [
+            "Prototype, spike, experimental, hack, temporary, or workaround markers on code called from shipped paths or handlers with no hardened sibling is strong evidence of prototype in production.",
+            "An accountable marker with an owner and tracking issue still leaves the maturity mismatch unresolved; accountability alone does not harden the code.",
+            "Markers on code called only from behind a feature flag, a test harness, or an isolated spike with no production callers weaken the claim.",
+            "Literal conditions, empty branches, and hardcoded arms corroborate that the code was never finished.",
+            "If the callers or the production reach of the marked code cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Marked-as-provisional code serves real callers while no finished alternative exists for them to use",
+            remedy: "Finish and harden the code and remove the markers, or route production callers to a hardened implementation",
+          },
+          false: {
+            what: "The markers guard genuinely isolated, flagged, or non-production use, or the supplied callers do not establish production reach",
+          },
+        },
+      },
+      message: "This code carries prototype markers yet serves production callers.",
+    },
+    "jev/no-hidden-loop-exit": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this loop's exit decided mid-body by a conditional break, continue, or return, so readers cannot tell the iteration shape from the loop header?",
+          inspect: "Compare each loop header with its mid-body exits: the guard condition, whether it duplicates the header's own condition or introduces a new predicate, whether the predicate is a named query or an inline compound, and the loop bound shape in the supplied evidence.",
+          focus: "Judge whether the exit hides the iteration contract, not whether the loop contains any branch at all.",
+          decision_boundary: [
+            "An unbounded header such as for(;;) or while(true) with a compound conditional exit buried mid-body is strong evidence of a hidden exit.",
+            "An exit whose condition restates the header's own condition is first-class iteration control, not a hidden exit.",
+            "A single search-and-stop exit in a bounded loop, especially behind a named predicate a reader can look up, weakens the claim.",
+            "Unconditional mid-body exits and exits duplicated across several new predicates each hide the iteration shape in proportion to their distance from the header.",
+            "If the loop bound or the exit guard cannot be established from the supplied evidence, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The loop header misstates the iteration shape because the real exit decision lives mid-body behind a new predicate",
+            remedy: "Make the exit first-class in the loop header or extract the exit predicate into a named query at the loop's level",
+          },
+          false: {
+            what: "The exits restate the header, implement an explicit search-and-stop the header already suggests, or lack enough evidence to establish hiding",
+          },
+        },
+      },
+      message: "This loop's exit is decided mid-body where the header does not state it.",
 
     },
   },

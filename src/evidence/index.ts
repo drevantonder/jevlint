@@ -25,7 +25,9 @@ import { buildForeignMutationEvidence } from "./foreign-mutation.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
+import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildHiddenLoopExitEvidence } from "./hidden-loop-exit.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
@@ -54,6 +56,7 @@ import { buildPathTraversalJoinEvidence } from "./path-traversal-join.js";
 import { buildPreGateSideEffectEvidence } from "./pre-gate-side-effect.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildPhantomMemberAccessEvidence } from "./phantom-member-access.js";
+import { buildPrototypeInProductionEvidence } from "./prototype-in-production.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildRefusedInheritanceEvidence } from "./refused-inheritance.js";
 import { buildRepeatedHandlerPreambleEvidence } from "./repeated-handler-preamble.js";
@@ -61,6 +64,7 @@ import { buildRetryStormEvidence } from "./retry-storm-shape.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSensitiveDataInLogEvidence } from "./sensitive-data-in-log.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
+import { buildShallowConvenienceLayerEvidence } from "./shallow-convenience-layer.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
@@ -500,6 +504,27 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildNonNarrowingGuardEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-excess-context-parameter") {
+    return {
+      handled: true,
+      evidence: buildExcessContextParameterEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-shallow-convenience-layer") {
+    return {
+      handled: true,
+      evidence: buildShallowConvenienceLayerEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-prototype-in-production") {
+    return {
+      handled: true,
+      evidence: buildPrototypeInProductionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-hidden-loop-exit") {
+    return { handled: true, evidence: buildHiddenLoopExitEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
