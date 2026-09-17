@@ -21,7 +21,7 @@ const entryTypeSchema = z.union([
 ]);
 
 const ruleConfigSchema = z.object({
-  scope: z.enum(["comment", "function", "abstraction", "change"]),
+  scope: z.enum(["comment", "function", "abstraction", "change", "module"]),
   question: z.object({
     instructions: entryTypeSchema,
     criteria: z.object({

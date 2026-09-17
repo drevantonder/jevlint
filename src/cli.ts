@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import {
   analyzeChangesWithFailures,
   analyzeFileWithFailures,
+  analyzeModulesWithFailures,
 } from "./analyze.js";
 import { CachedEvaluator } from "./cache.js";
 import type { CacheMode } from "./cache.js";
@@ -198,6 +199,14 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
     abstentions.push(...changeResult.abstentions);
     failures.push(...changeResult.failures);
     addStatistics(statistics, changeResult.statistics);
+    const moduleResult = await analyzeModulesWithFailures(
+      { changes: files, config, projectFiles },
+      evaluator,
+    );
+    judgments.push(...moduleResult.judgments);
+    abstentions.push(...moduleResult.abstentions);
+    failures.push(...moduleResult.failures);
+    addStatistics(statistics, moduleResult.statistics);
 
     const reportInput: CreateReviewReportInput = {
       judgments,

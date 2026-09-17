@@ -1,5 +1,6 @@
 import { parseSync, Visitor } from "oxc-parser";
-import type { Candidate, LineRange } from "./types.js";
+import type { Candidate, LineRange, ProjectFile, SourceFile } from "./types.js";
+import { planModuleCandidates } from "./evidence/module.js";
 
 interface Position {
   line: number;
@@ -97,4 +98,29 @@ export function filterCandidatesByChangedLines(
   return candidates.filter((item) =>
     changedLines.some((range) => item.startLine <= range.end && item.endLine >= range.start),
   );
+}
+
+export const MODULE_CANDIDATE_FILE_CAP = 50;
+
+function moduleCandidate(filePath: string, index: number): Candidate {
+  return {
+    id: `module_${index}`,
+    kind: "module",
+    filePath,
+    source: "",
+    start: 0,
+    end: 0,
+    startLine: 1,
+    startColumn: 1,
+    endLine: 1,
+    endColumn: 1,
+  };
+}
+
+export function extractModuleCandidates(
+  changes: SourceFile[],
+  projectFiles: ProjectFile[],
+): Candidate[] {
+  const plan = planModuleCandidates(changes, projectFiles);
+  return plan.included.map((change, index) => moduleCandidate(change.filePath, index));
 }

@@ -164,6 +164,10 @@ describe("loadConfig", () => {
       "jev/no-english-only-pluralization",
       "jev/no-duplicate-config-source",
       "jev/no-unowned-feature-flag",
+      "jev/no-far-away-test",
+      "jev/no-utils-grab-bag-growth",
+      "jev/no-barrel-bypass",
+      "jev/no-skipped-level-import",
     ]);
   });
 
