@@ -1204,6 +1204,7 @@ export const defaultConfig: JevLintConfig = {
       message: "This type-system escape hides an assumption the compiler can no longer check.",
     },
 
+
     "jev/no-unawaited-iteration-work": {
       scope: "function",
       question: {
@@ -1365,6 +1366,142 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This code disagrees with the contract signature it claims to satisfy.",
+    },
+
+    "jev/no-accidental-serialization": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Are this loop's iterations independent, so awaiting each one inside the loop serializes work that could proceed concurrently?",
+          inspect: "Compare each loop with its awaited calls and arguments, cross-iteration dataflow, callee import sources, ordering signals, and callers in the supplied evidence.",
+          focus: "Judge whether the sequencing is accidental rather than required by data dependence, shared accumulation, ordering guarantees, or rate limits.",
+          decision_boundary: [
+            "Awaiting a remote fetch whose arguments derive from the element alone, with results stored by key and no shared mutation, is strong evidence of accidental serialization.",
+            "A loop that folds each result into a running aggregate consumed in order requires sequencing.",
+            "Result indexing by element alone does not prove independence when a limiter, comment, or shared write signals required order.",
+            "A concurrency limiter or sequencing comment around the same call is evidence the order is deliberate.",
+            "If cross-iteration dependence or the callee's domain is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Independent iterations are awaited one at a time although no dataflow, ordering, or rate-limit constraint requires it",
+            remedy: "Run the independent iterations concurrently and collect their results",
+          },
+          false: {
+            what: "Iterations share state, consume results in order, honor a deliberate limit, or lack enough evidence of independence",
+          },
+        },
+      },
+      message: "This loop serializes independent iterations by awaiting each one.",
+    },
+    "jev/no-discarded-transformation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this array transformation's result discarded, so either the transformation computes something nobody needs or the method choice hides intended side effects?",
+          inspect: "Compare each discarded map, filter, flatMap, or reduce call with its callback purity facts and the function's callers in the supplied evidence.",
+          focus: "Distinguish a lost computation from a side-effecting callback misusing a transformation method as an iterator.",
+          decision_boundary: [
+            "A pure element mapper called as a bare statement with the array never referenced again is strong evidence of a lost computation.",
+            "A callback whose body performs the module's persistence write or mutates outer state is evidence the discarded array is incidental and the method choice is the smell.",
+            "A callback that both computes and mutates needs judgment about which purpose the call site serves.",
+            "Reduce with an accumulator thread is a different shape from a discarded mapping; score only the listed methods with unused results.",
+            "If the callback's effects or the fate of the computed value are unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A transformation computes a value nobody uses, or a transformation method hides an iteration performed only for side effects",
+            remedy: "Use the computed result or replace the transformation with an explicit iteration",
+          },
+          false: {
+            what: "The result is consumed, the method choice fits the iteration purpose, or the evidence does not establish a lost computation",
+          },
+        },
+      },
+      message: "This array transformation discards its result.",
+    },
+    "jev/no-load-bearing-async": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do callers depend on this function's promised return, so the async marker carries API meaning its body alone does not show?",
+          inspect: "Compare the await-less async function with every awaiting call site, then-chain, promise combinator, and plain call in the supplied evidence.",
+          focus: "Judge whether removing the async marker would break consumers that await the result or chain off the promise.",
+          decision_boundary: [
+            "An exported helper awaited at every call site across several modules with catch chains attached is strong evidence the marker is load-bearing.",
+            "A private function whose callers all ignore the return value leaves the marker redundant.",
+            "Feeding the result into Promise.all or Promise.allSettled is evidence callers treat the return as a promise.",
+            "Exported functions may have unobserved external callers; weigh that uncertainty against the shown call sites.",
+            "If no caller evidence shows dependence on the promise, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Callers demonstrably rely on the promised return through awaiting, chaining, or combinators",
+            remedy: "Keep the async marker and its promise contract, or migrate callers before changing the return",
+          },
+          false: {
+            what: "Callers ignore the return value, the marker is redundant, or the evidence does not establish caller dependence",
+          },
+        },
+      },
+      message: "This async marker carries promise meaning its body does not show.",
+    },
+    "jev/no-untrusted-sink-input": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this sink call incorporate input an adversary can influence without parameterization or escaping the evidence can see?",
+          inspect: "Compare each sink call with its interpolated sources traced one hop back, placeholder presence, escape helpers, modeling imports, and caller argument shapes in the supplied evidence.",
+          focus: "Judge whether the interpolated value is adversary-reachable or an internal constant, and whether the sink neutralizes it.",
+          decision_boundary: [
+            "A query interpolating a handler parameter with no placeholder and no escape helper in the module is strong evidence of untrusted sink input.",
+            "Interpolations that resolve to module constants or function-local literals are not adversary-reachable.",
+            "Parameter placeholders, query builders, and escaping imports neutralize interpolation even when the value originates outside.",
+            "A shell option enabled on a command sink raises the consequence of any interpolated value.",
+            "If the source of the interpolated value or the sink's neutralization is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An adversary-reachable value flows into a SQL, command, or DOM sink without visible parameterization or escaping",
+            remedy: "Parameterize the sink input or pass it through an escaping or query-building boundary",
+          },
+          false: {
+            what: "The value is an internal constant, the sink is parameterized or escaped, or the evidence does not establish adversary reachability",
+          },
+        },
+      },
+      message: "This sink call incorporates untrusted input without visible neutralization.",
+    },
+    "jev/no-unreleased-subscription": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this subscription or acquisition have no release tied to its owner's lifetime, so repeated owners accumulate unreleased registrations?",
+          inspect: "Compare each acquisition with the removals present in the same module, effect cleanup returns, owner-lifetime signals, and callers in the supplied evidence.",
+          focus: "Judge whether the missing removal leaks across repeated owners or the registration intentionally lives as long as the process.",
+          decision_boundary: [
+            "An addEventListener inside a per-request handler with no removal anywhere in the module is strong evidence of a leak.",
+            "A module-scope registration at boot with process lifetime and an explicit shutdown hook intentionally outlives its owners.",
+            "An effect cleanup return or matching removal in the same module pairs setup with teardown.",
+            "A single registration call alone is never proof; use owner lifetime and repetition to judge accumulation.",
+            "If the owner's lifetime or repetition is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A repeated owner registers without a matching release, so registrations accumulate over the owner's lifetime",
+            remedy: "Tie the release to the owner's teardown with a matching removal or cleanup return",
+          },
+          false: {
+            what: "Setup and teardown are paired, the registration intentionally shares process lifetime, or the evidence does not establish accumulation",
+          },
+        },
+      },
+      message: "This subscription has no release tied to its owner's lifetime.",
     },
   },
 };

@@ -1,5 +1,6 @@
 import type { JsonValue } from "@typesafe-ai/sdk";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
+import { buildAccidentalSerializationEvidence } from "./accidental-serialization.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
 import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
@@ -10,6 +11,7 @@ import { buildContractSignatureDriftEvidence } from "./contract-signature-drift.
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
+import { buildDiscardedTransformationEvidence } from "./discarded-transformation.js";
 import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
 import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
 import { buildForeignMutationEvidence } from "./foreign-mutation.js";
@@ -23,6 +25,7 @@ import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
+import { buildLoadBearingAsyncEvidence } from "./load-bearing-async.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
@@ -47,7 +50,9 @@ import { buildUnboundedWaitEvidence } from "./unbounded-wait.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
 import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-dereference.js";
+import { buildUnreleasedSubscriptionEvidence } from "./unreleased-subscription.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
+import { buildUntrustedSinkInputEvidence } from "./untrusted-sink-input.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -265,6 +270,21 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildContractSignatureDriftEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-accidental-serialization") {
+    return { handled: true, evidence: buildAccidentalSerializationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-discarded-transformation") {
+    return { handled: true, evidence: buildDiscardedTransformationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-load-bearing-async") {
+    return { handled: true, evidence: buildLoadBearingAsyncEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-untrusted-sink-input") {
+    return { handled: true, evidence: buildUntrustedSinkInputEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unreleased-subscription") {
+    return { handled: true, evidence: buildUnreleasedSubscriptionEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

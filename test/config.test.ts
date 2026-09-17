@@ -62,6 +62,11 @@ describe("loadConfig", () => {
       "jev/no-falsy-absent-conflation",
       "jev/no-unanchored-domain-check",
       "jev/no-contract-signature-drift",
+      "jev/no-accidental-serialization",
+      "jev/no-discarded-transformation",
+      "jev/no-load-bearing-async",
+      "jev/no-untrusted-sink-input",
+      "jev/no-unreleased-subscription",
     ]);
   });
 
