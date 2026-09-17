@@ -100,6 +100,10 @@ describe("loadConfig", () => {
       "jev/no-call-in-loop-persistence",
       "jev/no-unbounded-parallel-fanout",
       "jev/no-concurrent-shared-mutation",
+      "jev/no-sensitive-data-in-log",
+      "jev/no-unsafe-redirect-target",
+      "jev/no-overbroad-origin-trust",
+      "jev/no-path-traversal-join",
     ]);
   });
 

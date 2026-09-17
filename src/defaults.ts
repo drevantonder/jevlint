@@ -2391,5 +2391,111 @@ export const defaultConfig: JevLintConfig = {
       message: "This shared binding is mutated from concurrent callbacks without coordination.",
 
     },
+    "jev/no-sensitive-data-in-log": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this logging or telemetry call record secrets or personal data that outlive the request in log storage?",
+          inspect: "Compare each logged call with the sensitive fields and whole-record spreads it carries, any redaction helper on the path, the logger import source, and the repository callers in the supplied evidence.",
+          focus: "Judge what persists in log storage, not whether logging itself is appropriate. CWE-532 / CWE-200; OWASP Top 10 A09 Security Logging Failures.",
+          decision_boundary: [
+            "Logging a whole request or user record whose resolved shape carries secrets, or logging a secret-named field directly, is strong evidence of sensitive data in log storage.",
+            "An explicit field pick of non-sensitive identifiers, or a redaction helper between the record and the log call, weighs against a leak.",
+            "A structured logger with redaction configuration still leaks when the logged payload bypasses that configuration.",
+            "Deterministic secret-scanning lints may flag the same literal; score the residual risk that the logged value exposes secrets or personal data.",
+            "If the evidence does not establish a secret or personal field reaching stored logs, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The log call persists secrets or personal data beyond the request without redaction",
+            remedy: "Log explicit non-sensitive fields and pass records through a redaction helper before they reach storage",
+          },
+          false: {
+            what: "The logged payload carries no secret or personal data, redaction stands between the record and storage, or the evidence does not establish exposure",
+          },
+        },
+      },
+      message: "This log call records secrets or personal data.",
+    },
+    "jev/no-unsafe-redirect-target": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this navigation target come from caller-controlled input with no allow-check, so the application can be steered to an attacker-chosen destination?",
+          inspect: "Compare each redirect target with its source, whether the value is caller-controlled, any allow-list comparison or same-origin construction, and the repository callers in the supplied evidence.",
+          focus: "Judge steering: whether an attacker can choose the destination, not whether the URL is well-formed. CWE-601; OWASP Top 10 A01 Broken Access Control.",
+          decision_boundary: [
+            "A redirect, location assignment, or router navigation over a request-derived target with no allow-list, origin check, or closed dispatch is strong evidence of open steering.",
+            "An allow-list comparison, same-origin URL construction with an origin check, or dispatch over a closed enum of internal paths confines the destination.",
+            "A constant or module-local target cannot be steered; such cases abstain before reaching judgment.",
+            "If the evidence does not establish caller control of the destination or the absence of confinement, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A caller-controlled value decides the navigation destination without an allow-check confining it",
+            remedy: "Validate the target against an allow-list of internal destinations or construct it same-origin before navigating",
+          },
+          false: {
+            what: "The destination is constant, confined by an allow-check or closed dispatch, or the evidence does not establish attacker steering",
+          },
+        },
+      },
+      message: "This navigation target can be steered to an attacker-chosen destination.",
+    },
+    "jev/no-overbroad-origin-trust": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this cross-origin grant trust any origin rather than a named set, so any site can claim the privilege?",
+          inspect: "Compare each grant with its wildcard or reflective shape, whether credentials ride alongside, any origin comparison before the grant, and the repository callers in the supplied evidence.",
+          focus: "Judge the absence of any check: a wildcard grant has no matcher to anchor. CWE-639 / CWE-942; OWASP Top 10 A01 Broken Access Control.",
+          decision_boundary: [
+            "An Access-Control-Allow-Origin wildcard combined with credentials, a postMessage to any origin carrying a token, or a CORS origin of * or true is strong evidence of overbroad trust.",
+            "A wildcard on a public, unauthenticated asset response with no credential surface is a weaker shape.",
+            "An origin comparison or allow-list membership check before the grant confines the privilege to named origins.",
+            "If the evidence does not establish a wildcard or reflective grant, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The grant extends a credentialed or privileged capability to any origin without a named check",
+            remedy: "Grant the capability only to explicitly listed origins checked before each grant",
+          },
+          false: {
+            what: "The grant is confined to named origins, carries no credentialed surface, or the evidence does not establish overbroad trust",
+          },
+        },
+      },
+      message: "This cross-origin grant trusts any origin.",
+    },
+    "jev/no-path-traversal-join": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this filesystem path incorporate an unvalidated segment that can escape its intended directory?",
+          inspect: "Compare each path join or filesystem call with the caller-supplied segment it carries, any normalize-and-contain or basename confinement between input and use, the import source, and the repository callers in the supplied evidence.",
+          focus: "Judge containment: a well-formed string can still carry ../ and leave the directory. CWE-22; OWASP Top 10 A01 / A03.",
+          decision_boundary: [
+            "A path join or filesystem call over a request-derived segment with no normalize-and-startsWith confinement or basename restriction is strong evidence of traversal risk.",
+            "A normalize-plus-containment comparison or basename confinement between the input and the filesystem use contains the segment.",
+            "Constant or module-local segments cannot traverse; such cases abstain before reaching judgment.",
+            "Deterministic traversal lints may flag the same join; score the residual risk that the segment escapes its directory.",
+            "If the evidence does not establish a caller-supplied segment reaching the filesystem, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A caller-supplied segment reaches the filesystem without confinement to its intended directory",
+            remedy: "Normalize the segment and verify containment within the base directory, or restrict it with basename confinement",
+          },
+          false: {
+            what: "The segment is confined, constant, or the evidence does not establish an unvalidated escape from the directory",
+          },
+        },
+      },
+      message: "This filesystem path can escape its intended directory.",
+    },
   },
 };
