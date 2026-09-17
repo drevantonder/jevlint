@@ -3,6 +3,8 @@ export {
   analyzeChangesWithFailures,
   analyzeFile,
   analyzeFileWithFailures,
+  analyzeModules,
+  analyzeModulesWithFailures,
   EVALUATION_REQUEST_BUDGET_CHARS,
   sortAbstentions,
   sortJudgments,

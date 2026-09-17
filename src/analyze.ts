@@ -1,5 +1,5 @@
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
-import { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
+import { extractCandidates, extractModuleCandidates, filterCandidatesByChangedLines } from "./candidates.js";
 import { buildRuleEvidence } from "./evidence/index.js";
 import type {
   AnalysisResult,
@@ -477,6 +477,36 @@ export async function analyzeChanges(
   evaluator: Evaluator,
 ): Promise<Judgment[]> {
   const result = await analyzeChangesWithFailures(input, evaluator);
+  throwEvaluationFailures(result.failures);
+  return result.judgments;
+}
+
+export async function analyzeModulesWithFailures(
+  input: AnalyzeChangesInput,
+  evaluator: Evaluator,
+): Promise<AnalysisResult> {
+  if (!Object.values(input.config.rules).some(({ scope }) => scope === "module")) {
+    return emptyAnalysis();
+  }
+  const candidates = extractModuleCandidates(input.changes, input.projectFiles);
+  if (candidates.length === 0) return emptyAnalysis();
+  const anchor = candidates[0];
+  if (!anchor) return emptyAnalysis();
+  return analyzeCandidates({
+    filePath: anchor.filePath,
+    source: "",
+    candidates,
+    config: input.config,
+    projectFiles: input.projectFiles,
+    changes: input.changes,
+  }, evaluator);
+}
+
+export async function analyzeModules(
+  input: AnalyzeChangesInput,
+  evaluator: Evaluator,
+): Promise<Judgment[]> {
+  const result = await analyzeModulesWithFailures(input, evaluator);
   throwEvaluationFailures(result.failures);
   return result.judgments;
 }

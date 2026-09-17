@@ -183,6 +183,10 @@ import { buildHandRolledDateFormatEvidence } from "./hand-rolled-date-format.js"
 import { buildHandRolledRelativeTimeEvidence } from "./hand-rolled-relative-time.js";
 import { buildHandRolledNumberFormatEvidence } from "./hand-rolled-number-format.js";
 import { buildHandRolledUrlQueryEvidence } from "./hand-rolled-url-query.js";
+import { buildFarAwayTestEvidence } from "./far-away-test.js";
+import { buildUtilsGrabBagGrowthEvidence } from "./utils-grab-bag-growth.js";
+import { buildBarrelBypassEvidence } from "./barrel-bypass.js";
+import { buildSkippedLevelImportEvidence } from "./skipped-level-import.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1012,6 +1016,30 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-url-query") {
     return { handled: true, evidence: buildHandRolledUrlQueryEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-far-away-test") {
+    return {
+      handled: true,
+      evidence: buildFarAwayTestEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-utils-grab-bag-growth") {
+    return {
+      handled: true,
+      evidence: buildUtilsGrabBagGrowthEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-barrel-bypass") {
+    return {
+      handled: true,
+      evidence: buildBarrelBypassEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-skipped-level-import") {
+    return {
+      handled: true,
+      evidence: buildSkippedLevelImportEvidence(candidate, projectFiles, changes),
+    };
   }
   return { handled: false };
 }

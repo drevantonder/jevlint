@@ -198,6 +198,10 @@ describe("loadConfig", () => {
       "jev/no-hand-rolled-relative-time",
       "jev/no-hand-rolled-number-format",
       "jev/no-hand-rolled-url-query",
+      "jev/no-far-away-test",
+      "jev/no-utils-grab-bag-growth",
+      "jev/no-barrel-bypass",
+      "jev/no-skipped-level-import",
     ]);
   });
 

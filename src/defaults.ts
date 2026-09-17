@@ -4999,6 +4999,115 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This query handling reimplements URLSearchParams without a shape need.",
+    },
+
+    "jev/no-far-away-test": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change's test file live far from its subject although this repo colocates tests with sources?",
+          inspect: "Compare the test file's directory with its subject's directory and the repo's colocated-test counts in the supplied evidence.",
+          focus: "Judge whether the placement departs from the repository's own demonstrated colocation practice, not whether colocation is ideal in general.",
+          decision_boundary: [
+            "A new test landing several directories away from its subject while the repo's own tests sit beside their subjects is strong evidence of a far-away test.",
+            "A test with no identifiable subject, or a subject that itself lives in a shared location, weakens the claim even when the distance is large.",
+            "A repository that already spreads tests across dedicated directories establishes no colocation norm to depart from.",
+            "A single clarifying move, such as placing a cross-cutting integration test with its harness, is not a far-away test.",
+            "If the subject cannot be identified or the colocation counts are thin, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A test added far from its subject in a repository whose own tests demonstrate colocation",
+            remedy: "Place the test beside its subject, or record why this test belongs with its distant harness",
+          },
+          false: {
+            what: "The test sits with its subject, the subject is genuinely shared, or the repo keeps no colocation practice",
+          },
+        },
+      },
+      message: "This test lives far from its subject although this repo colocates tests with sources.",
+    },
+    "jev/no-utils-grab-bag-growth": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Were new unrelated exports added to a miscellaneous utils, helpers, or common module instead of an owned home?",
+          inspect: "Compare the added export names with the host module's existing export domains and importer topics in the supplied evidence.",
+          focus: "Judge whether the addition deepens a grab-bag the repository already demonstrates, not whether small helpers may ever share a file.",
+          decision_boundary: [
+            "A new domain operation landing in a miscellaneous module whose existing exports already span several unrelated domains is strong evidence of grab-bag growth.",
+            "A helper that shares the host's existing vocabulary, or a repo where the miscellaneous module is the documented convention, weakens the claim.",
+            "One more string formatter among string formatters is cohesion, even inside a file named utils.",
+            "Growth that arrives with its own tests and a name tied to the host's existing domains is not grab-bag growth.",
+            "If the added exports share the host's domains or the host shows no grab-bag shape, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Unrelated new exports deepen a miscellaneous module that already spans several domains",
+            remedy: "Give the new exports a home beside the code they serve, or split the host by domain",
+          },
+          false: {
+            what: "The additions share the host's domains, the host is cohesive, or no miscellaneous-module shape is shown",
+          },
+        },
+      },
+      message: "This change adds unrelated exports to a miscellaneous module instead of an owned home.",
+    },
+    "jev/no-barrel-bypass": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does a new import reach deep into a feature's internals although that feature publishes a barrel entry point?",
+          inspect: "Compare the new import's depth with the feature barrel's re-exported symbols and how the repo's other external importers reach the feature.",
+          focus: "Judge whether the consumer bypasses the feature's own published surface, not whether deep imports are ever convenient.",
+          decision_boundary: [
+            "A new deep import for a symbol the barrel already re-exports, while sibling consumers use the barrel, is strong evidence of a bypass.",
+            "A barrel nobody uses, or a symbol the barrel does not offer, leaves no published surface to bypass.",
+            "A deep import that the barrel itself cannot express, such as a type the barrel deliberately hides, is not a bypass.",
+            "Test-only or type-only reach into internals carries less weight than a runtime dependency on them.",
+            "If the barrel offers no path to the symbol or the repo shows no barrel discipline, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new consumer reaches past a feature's barrel for a symbol the barrel already publishes",
+            remedy: "Import through the feature's barrel entry point, or extend the barrel when the symbol belongs on the surface",
+          },
+          false: {
+            what: "The barrel offers no route to the symbol, the barrel is unused repo-wide, or the import already uses the entry point",
+          },
+        },
+      },
+      message: "This import reaches deep into a feature although the feature publishes a barrel entry point.",
+    },
+    "jev/no-skipped-level-import": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does a new import climb multiple directory levels to reach a module that has a nearer sanctioned entry?",
+          inspect: "Read the new import's climb depth, the nearer barrel or alias entry in the supplied evidence, and the repo's typical relative depth.",
+          focus: "Judge whether the climb skips an entry the repository itself provides, not whether relative imports are untidy in the abstract.",
+          decision_boundary: [
+            "A new climb of several levels to a module whose own directory barrel re-exports it is strong evidence of a skipped level.",
+            "A climb with no nearer entry anywhere, and no alias configuration, leaves the importer no sanctioned alternative.",
+            "A repository whose own imports routinely climb is describing its norm, even when an alias would read better.",
+            "A one-level relative reach, or a climb forced by generated output locations, is not a skipped level.",
+            "If no nearer entry exists or the climb is the repo's ordinary shape, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new multi-level climb reaches a module past a nearer barrel or alias entry",
+            remedy: "Import through the nearer barrel entry or the configured path alias",
+          },
+          false: {
+            what: "No nearer entry exists, the climb matches the repo's ordinary shape, or the reach stays within one level",
+          },
+        },
+      },
+      message: "This import climbs multiple directory levels although a nearer entry point exists.",
 
     },
   },

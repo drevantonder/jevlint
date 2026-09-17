@@ -1,6 +1,6 @@
 import type { EntryType, JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
 
-export type CandidateKind = "comment" | "function" | "abstraction" | "change";
+export type CandidateKind = "comment" | "function" | "abstraction" | "change" | "module";
 
 export interface LineRange {
   start: number;

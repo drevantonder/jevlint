@@ -162,6 +162,10 @@ const extractedRules = [
   ["jev/no-hand-rolled-relative-time", "function"],
   ["jev/no-hand-rolled-number-format", "function"],
   ["jev/no-hand-rolled-url-query", "function"],
+  ["jev/no-far-away-test", "module"],
+  ["jev/no-utils-grab-bag-growth", "module"],
+  ["jev/no-barrel-bypass", "module"],
+  ["jev/no-skipped-level-import", "module"],
 ] as const;
 
 describe("extracted review rules", () => {
