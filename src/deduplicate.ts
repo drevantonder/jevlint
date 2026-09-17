@@ -24,6 +24,10 @@ const STATE_MODEL_PRIORITY = new Map<string, number>([
   ["jev/no-unconstrained-state-string", 95],
 ]);
 
+const EXPLICIT_EFFECTS_PRIORITY = new Map<string, number>([
+  ["jev/no-hidden-runtime-input", 95],
+]);
+
 const INPUT_MUTATION_PRIORITY = new Map<string, number>([
   ["jev/no-hidden-input-mutation", 90],
 ]);
@@ -40,6 +44,7 @@ const API_RETURN_PRIORITY = new Map<string, number>([
 const RULE_FAMILIES = [
   ACCIDENTAL_COMPLEXITY_PRIORITY,
   STATE_MODEL_PRIORITY,
+  EXPLICIT_EFFECTS_PRIORITY,
   INPUT_MUTATION_PRIORITY,
   API_SIDE_EFFECT_PRIORITY,
   API_RETURN_PRIORITY,

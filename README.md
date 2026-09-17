@@ -14,7 +14,7 @@ This first slice supports:
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
 - Text and JSON diagnostics
-- Twenty-five bundled Jev rules
+- Twenty-six bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules flag:
@@ -38,6 +38,7 @@ The bundled Jev rules flag:
 - generic reflective machinery for fixed operations
 - configuration disproportionate to observed use
 - avoidable sequential orchestration
+- runtime inputs hidden inside domain or application functions
 - changes that displace rather than reduce complexity
 - domain behavior coupled directly to transport details
 - persistence-owned models leaking into domain or application consumers
@@ -47,7 +48,7 @@ The bundled Jev rules flag:
 
 The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, extract sentinel return paths, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, explicit result types, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, intentional absence semantics, telemetry, and cache population remain valid.
 
-The eleven accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, workflows, variation, policy, and dependency constraints. The scattered-policy rule proves repetition in the current repository; it does not infer historical shotgun change without change-history evidence. The state-modeling rules distinguish correlated lifecycle flags from independent booleans, closed internal states from open strings, and conditionally required payloads from optional metadata or boundary contracts. The four domain-boundary rules separate domain decisions from transport translation, keep persistence-owned records from becoming application or domain contracts, preserve distinct domain identities in project APIs, and keep business policy out of adapters. They preserve legitimate controllers, protocol obligations, domain reconstruction, read models, persistence tooling, ordinary value pairs, protocol representations, and technical adapter decisions. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
+The eleven accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, workflows, variation, policy, and dependency constraints. The hidden-runtime-input rule limits judgment to concrete reads of environment, process, time, randomness, browser, or global state and exempts explicit boundary adapters and providers. The scattered-policy rule proves repetition in the current repository; it does not infer historical shotgun change without change-history evidence. The state-modeling rules distinguish correlated lifecycle flags from independent booleans, closed internal states from open strings, and conditionally required payloads from optional metadata or boundary contracts. The four domain-boundary rules separate domain decisions from transport translation, keep persistence-owned records from becoming application or domain contracts, preserve distinct domain identities in project APIs, and keep business policy out of adapters. They preserve legitimate controllers, protocol obligations, domain reconstruction, read models, persistence tooling, ordinary value pairs, protocol representations, and technical adapter decisions. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
 
 ## Setup
 

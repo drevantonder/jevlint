@@ -541,6 +541,34 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function serializes work without a visible dependency.",
     },
+    "jev/no-hidden-runtime-input": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function hide a material runtime input from callers by reading ambient state inside domain or application behavior?",
+          inspect: "Compare the function's parameters and stated role with each extracted environment, process, time, randomness, browser, or global-state read and its real callers.",
+          focus: "Judge whether the ambient value changes a domain result, policy decision, or effect while remaining absent from the function's contract.",
+          decision_boundary: [
+            "Environment flags, current time, randomness, or host state used inside otherwise deterministic domain behavior are strong evidence of a hidden input.",
+            "Configuration loaders, composition roots, platform adapters, and explicit clock or ID providers exist to read runtime state and do not hide that responsibility.",
+            "A time or random read is not enough by itself when generating that value is an inherent and clearly named responsibility.",
+            "If the function's role or the material effect of the runtime value is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Callers cannot see or supply a runtime value that materially changes the function's domain behavior",
+            remedy: "Read the runtime value at a boundary and pass the resulting dependency or value explicitly",
+          },
+          false: {
+            what: "The runtime read is the declared purpose of a boundary adapter or provider, is caller-controlled, is incidental to an explicit effect, or lacks enough evidence to establish hidden behavior",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This function depends on a runtime input that its contract does not expose.",
+    },
     "jev/no-complexity-displacement": {
       scope: "change",
       question: {
