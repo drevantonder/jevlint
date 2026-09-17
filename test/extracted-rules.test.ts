@@ -239,6 +239,8 @@ const extractedRules = [
   ["jev/no-unpinned-failure-path", "function"],
   ["jev/no-incidental-snapshot", "function"],
   ["jev/no-quarantined-test-coverage", "function"],
+  ["jev/no-flag-shepherded-control-flow", "function"],
+  ["jev/no-inline-lifecycle-phases", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

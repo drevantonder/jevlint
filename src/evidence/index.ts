@@ -212,6 +212,8 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildFlagShepherdedControlFlowEvidence } from "./flag-shepherded-control-flow.js";
+import { buildInlineLifecyclePhasesEvidence } from "./inline-lifecycle-phases.js";
 import { buildNondeterministicTestInputEvidence } from "./nondeterministic-test-input.js";
 import { buildUntestableSingletonGrabEvidence } from "./untestable-singleton-grab.js";
 import { buildGiantTestArrangeEvidence } from "./giant-test-arrange.js";
@@ -1455,6 +1457,12 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildQuarantinedTestCoverageEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-flag-shepherded-control-flow") {
+    return { handled: true, evidence: buildFlagShepherdedControlFlowEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-inline-lifecycle-phases") {
+    return { handled: true, evidence: buildInlineLifecyclePhasesEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
