@@ -208,6 +208,11 @@ import { buildUntestableSingletonGrabEvidence } from "./untestable-singleton-gra
 import { buildGiantTestArrangeEvidence } from "./giant-test-arrange.js";
 import { buildPrivateInternalsAssertionEvidence } from "./private-internals-assertion.js";
 import { buildFlakyOrderAssertionEvidence } from "./flaky-order-assertion.js";
+import { buildRedundantConditionalArmEvidence } from "./redundant-conditional-arm.js";
+import { buildDoubleNegationEvidence } from "./double-negation.js";
+import { buildHollowDelegationChainEvidence } from "./hollow-delegation-chain.js";
+import { buildTransitivePlumbingEvidence } from "./transitive-plumbing.js";
+import { buildDistrustfulTypeGuardEvidence } from "./distrustful-type-guard.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1199,6 +1204,30 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildFlakyOrderAssertionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-redundant-conditional-arm") {
+    return {
+      handled: true,
+      evidence: buildRedundantConditionalArmEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-double-negation") {
+    return { handled: true, evidence: buildDoubleNegationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hollow-delegation-chain") {
+    return {
+      handled: true,
+      evidence: buildHollowDelegationChainEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-transitive-plumbing") {
+    return { handled: true, evidence: buildTransitivePlumbingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-distrustful-type-guard") {
+    return {
+      handled: true,
+      evidence: buildDistrustfulTypeGuardEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

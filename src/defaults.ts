@@ -5768,5 +5768,137 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test asserts an order over concurrent work that nothing synchronizes.",
     },
+
+    "jev/no-redundant-conditional-arm": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this conditional contain an arm whose test adds no decision the remaining arms do not already make?",
+          inspect: "Compare each arm's test with its sibling tests and body fingerprint, the body groups sharing byte-identical bodies, whether the default arm repeats a named arm, and the opaque-test flags plus caller shapes in the supplied evidence.",
+          focus: "Judge logical redundancy given the siblings — subsumed tests or moot distinctions — not whether the branches look busy.",
+          decision_boundary: [
+            "Two or more arms with byte-identical bodies on one discriminant, or a default arm repeating a named arm, is strong evidence of a redundant arm.",
+            "An arm whose test set is subsumed by sibling tests plus the fallthrough path is redundant even when its body differs cosmetically.",
+            "A coherent policy with distinct bodies per distinct test answers the question negatively, however many arms it carries.",
+            "Tests calling opaque predicates whose inclusion relation cannot be established from the AST answer the question negatively.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An arm is logically subsumed by its siblings or distinguished by a test its identical body renders moot",
+            remedy: "Delete the redundant arm and let the general arm decide those inputs",
+          },
+          false: {
+            what: "Each arm decides inputs no sibling decides, or the overlap cannot be established from opaque predicates",
+          },
+        },
+      },
+      message: "This conditional carries an arm its siblings already decide.",
+    },
+    "jev/no-double-negation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this code express a positive concept through two or more stacked negations?",
+          inspect: "Count the negation layers per site, whether the negated name already carries negative polarity, and whether a negative-polarity parameter is inverted across a call edge in the supplied evidence.",
+          focus: "Judge the polarity-expression shape — stacked negations resolving to a positive reading — not whether any single name is clear.",
+          decision_boundary: [
+            "Two negation layers on one expression, an equality against false, or a negative-polarity argument inverted into a positive-polarity parameter is strong evidence of stacked negation.",
+            "A single negation against a negative-domain concept with no positive identifier anywhere in the module answers the question negatively.",
+            "Load-bearing negation such as null narrowing under the project's null convention answers the question negatively.",
+            "If no stacked or polarity-inverted negation reaches the evidence, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Stacked negations resolve to a positive reading the code could state directly",
+            remedy: "Name the positive concept once and use it without the negation layers",
+          },
+          false: {
+            what: "Each negation earns its place against a genuinely negative domain or a load-bearing convention",
+          },
+        },
+      },
+      message: "This code states a positive concept through stacked negations.",
+    },
+    "jev/no-hollow-delegation-chain": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this value cross three or more function hops whose combined effect is observationally close to the identity?",
+          inspect: "Walk the delegation chain hop by hop: per-hop forwarding shape, renames, added defaults, and the end-to-end parameter delta in the supplied evidence.",
+          focus: "Judge the chain jointly — hops that are each individually defensible yet only jointly hollow — not any single hop.",
+          decision_boundary: [
+            "Three or more hops forwarding all arguments unchanged or with pure renaming, with an empty end-to-end semantic delta, is strong evidence of a hollow chain.",
+            "A hop that adds a branch, an effect, a type transformation, or a module-boundary crossing breaks the chain and answers the question negatively.",
+            "A hop adding a default value that repository callers rely on weakens the claim toward a meaningful convenience.",
+            "If the chain cannot be traced through three same-module hops, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Three or more hops forward the value with no branch, effect, or transformation added",
+            remedy: "Collapse the hollow hops so callers reach the hop that does the work",
+          },
+          false: {
+            what: "A hop in the chain adds behavior, crosses a boundary, or the chain is shorter than three hops",
+          },
+        },
+      },
+      message: "This value crosses a delegation chain that adds nothing hop by hop.",
+    },
+    "jev/no-transitive-plumbing": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function receive a value only to forward it unchanged to the next layer, as one link in a chain of three or more?",
+          inspect: "Check that the parameter's only uses are forward-position arguments, count the same-name forward-only signatures establishing the chain depth, and weigh the public-boundary flag plus caller shapes in the supplied evidence.",
+          focus: "Judge depth of unchanged forwarding of a narrow value, not the width of any one signature.",
+          decision_boundary: [
+            "One narrow value threaded byte-identical through three or more signatures, read only at the bottom, is strong evidence of transitive plumbing.",
+            "An intermediate that reads the value for a decision, defaults it, or transforms it breaks the chain and answers the question negatively.",
+            "Public API boundaries whose removal would break callers that should not know the depth answer the question negatively.",
+            "If the value is read anywhere but the chain end, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function is one unread link in a three-or-more-layer forwarding chain for a narrow value",
+            remedy: "Introduce a nearer channel for the value so intermediates stop declaring what only the leaf reads",
+          },
+          false: {
+            what: "The function reads the value, the chain is shorter than three links, or the parameter is a public boundary",
+          },
+        },
+      },
+      message: "This function forwards a value it never reads as one link in a longer chain.",
+    },
+    "jev/no-distrustful-type-guard": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this guard re-check at runtime what the declared static type already guarantees, inside code with no boundary crossing?",
+          inspect: "Compare each guard's excluded case with the annotated parameter type, confirm no any, unknown, or boundary-crossing signal sits between the annotation and the guard, and read the parameter nullability facts in the supplied evidence.",
+          focus: "Judge whether the implementation distrusts its own declared machinery — vacuous in the typed reading yet reachable in the type-blind one.",
+          decision_boundary: [
+            "A typeof, null, or instanceof check excluding a case the annotated parameter type already excludes, with no boundary signal in the function, is strong evidence of a distrustful guard.",
+            "Any boundary crossing — deserialization, network input, environment values, or an any or unknown annotation — answers the question negatively.",
+            "Documented defense-in-depth at that layer answers the question negatively.",
+            "If the guarded-out case is not already excluded by the declared type alone, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The guard re-checks what the parameter's own declared type already guarantees with no boundary in between",
+            remedy: "Remove the vacuous guard and let the declared type carry the contract",
+          },
+          false: {
+            what: "The guard narrows a genuinely open case, or a boundary crossing justifies the runtime check",
+          },
+        },
+      },
+      message: "This guard re-checks what the declared type already guarantees.",
+
+    },
   },
 };

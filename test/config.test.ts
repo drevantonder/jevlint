@@ -227,6 +227,11 @@ describe("loadConfig", () => {
       "jev/no-giant-test-arrange",
       "jev/no-private-internals-assertion",
       "jev/no-flaky-order-assertion",
+      "jev/no-redundant-conditional-arm",
+      "jev/no-double-negation",
+      "jev/no-hollow-delegation-chain",
+      "jev/no-transitive-plumbing",
+      "jev/no-distrustful-type-guard",
     ]);
   });
 
