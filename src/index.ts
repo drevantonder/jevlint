@@ -1,0 +1,17 @@
+export { analyzeChanges, analyzeFile } from "./analyze.js";
+export { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
+export { parseChangedLineRanges } from "./changed-lines.js";
+export { defaultConfig, defineConfig, loadConfig } from "./config.js";
+export { deduplicateDiagnostics } from "./deduplicate.js";
+export { formatJson, formatText } from "./format.js";
+export { collectChangedFiles, collectRepositoryFiles } from "./git.js";
+export { buildAdHocBranchingEvidence } from "./evidence/ad-hoc-branching.js";
+export { buildAvoidableOrchestrationEvidence } from "./evidence/avoidable-orchestration.js";
+export { buildComplexityDisplacementEvidence } from "./evidence/complexity-displacement.js";
+export { buildDisproportionateConfigurationEvidence } from "./evidence/disproportionate-configuration.js";
+export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
+export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
+export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
+export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";
+export { TypeSafeEvaluator } from "./typesafe-evaluator.js";
+export type * from "./types.js";

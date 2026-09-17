@@ -1,0 +1,48 @@
+{
+  "name": "jevlint",
+  "version": "0.1.0",
+  "description": "A Jev-powered semantic linter built on Oxc",
+  "type": "module",
+  "bin": {
+    "jevlint": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit && vitest run",
+    "env:check": "varlock load --agent",
+    "jevlint": "varlock run -- node dist/cli.js",
+    "lint": "oxlint",
+    "test": "vitest run",
+    "test:live": "varlock run --inject vars -- env RUN_LIVE_JEV=1 vitest run test/live",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0",
+    "@varlock/1password-plugin": "^2.0.4",
+    "jiti": "^2.6.1",
+    "oxc-parser": "^0.150.0",
+    "varlock": "^1.19.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.83.0",
+    "@types/node": "^24.10.0",
+    "oxlint": "1.83.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "packageManager": "pnpm@11.3.0"
+}

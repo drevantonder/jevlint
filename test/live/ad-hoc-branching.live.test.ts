@@ -1,0 +1,62 @@
+import { readFile } from "node:fs/promises";
+import { describe, expect, it } from "vitest";
+import { analyzeFile } from "../../src/analyze.js";
+import { defaultConfig } from "../../src/config.js";
+import { TypeSafeEvaluator } from "../../src/typesafe-evaluator.js";
+import type { EvaluationRequest, Evaluator, JevLintConfig, ProjectFile } from "../../src/types.js";
+
+const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
+const repositories = new URL("../fixtures/repositories/", import.meta.url);
+
+class RecordingEvaluator implements Evaluator {
+  readonly probabilities = new Map<string, number>();
+  readonly delegate = new TypeSafeEvaluator();
+  async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
+    const answers = await this.delegate.evaluate(request);
+    const probability = answers.q0;
+    if (probability !== undefined) this.probabilities.set(request.state.file.path, probability);
+    return answers;
+  }
+}
+const evaluator = new RecordingEvaluator();
+
+async function project(name: string, routePath: string): Promise<ProjectFile[]> {
+  return Promise.all([routePath, "src/checkout.ts"].map(async (filePath) => ({
+    filePath,
+    source: await readFile(new URL(`${name}/${filePath}`, repositories), "utf8"),
+  })));
+}
+
+async function lint(projectFiles: ProjectFile[]) {
+  const changed = projectFiles[0];
+  const rule = defaultConfig.rules["jev/no-ad-hoc-branching"];
+  expect(changed).toBeDefined();
+  expect(rule).toBeDefined();
+  if (!changed || !rule) return [];
+  const config: JevLintConfig = { rules: { "jev/no-ad-hoc-branching": rule } };
+  return analyzeFile({
+    filePath: changed.filePath,
+    source: changed.source,
+    changedLines: [{ start: 1, end: changed.source.split("\n").length }],
+    config,
+    projectFiles,
+  }, evaluator);
+}
+
+liveDescribe("ad-hoc branching with structural evidence", () => {
+  it("flags unrelated special cases but keeps a cohesive domain decision", async () => {
+    const [smelly, cohesive] = await Promise.all([
+      project("ad-hoc-branching-smelly", "src/route-order.ts"),
+      project("ad-hoc-branching-cohesive", "src/route-order-by-state.ts"),
+    ]);
+    const [smellyDiagnostics, cohesiveDiagnostics] = await Promise.all([
+      lint(smelly),
+      lint(cohesive),
+    ]);
+
+    expect(evaluator.probabilities.get("src/route-order.ts")).toBeGreaterThanOrEqual(0.85);
+    expect(evaluator.probabilities.get("src/route-order-by-state.ts")).toBeLessThan(0.5);
+    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([1]);
+    expect(cohesiveDiagnostics).toEqual([]);
+  });
+});
