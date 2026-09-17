@@ -23,7 +23,7 @@ describe("contract signature drift evidence", () => {
     expect(owner).toBeDefined();
     if (!owner) return;
     const candidate = extractCandidates(owner.filePath, owner.source)
-      .find(({ source }) => source.includes("return event.title"));
+      .find(({ kind, source }) => kind === "function" && source.includes("return event.title"));
     expect(candidate).toBeDefined();
     if (!candidate) return;
 
