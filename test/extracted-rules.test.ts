@@ -215,6 +215,11 @@ const extractedRules = [
   ["jev/no-verbless-function-name", "function"],
   ["jev/no-misdirecting-error-message", "function"],
   ["jev/no-ambiguous-positional-siblings", "function"],
+  ["jev/no-deceptive-name", "function"],
+  ["jev/no-punned-name", "function"],
+  ["jev/no-cryptic-abbreviation", "function"],
+  ["jev/no-negative-boolean-name", "function"],
+  ["jev/no-unitless-quantity", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

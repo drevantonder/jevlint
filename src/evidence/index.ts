@@ -232,6 +232,11 @@ import { buildHandRolledEventBusEvidence } from "./hand-rolled-event-bus.js";
 import { buildHandRolledFetchWrapperEvidence } from "./hand-rolled-fetch-wrapper.js";
 import { buildFsRecursiveReinventEvidence } from "./fs-recursive-reinvent.js";
 import { buildHandRolledStringHashEvidence } from "./hand-rolled-string-hash.js";
+import { buildDeceptiveNameEvidence } from "./deceptive-name.js";
+import { buildPunnedNameEvidence } from "./punned-name.js";
+import { buildCrypticAbbreviationEvidence } from "./cryptic-abbreviation.js";
+import { buildNegativeBooleanNameEvidence } from "./negative-boolean-name.js";
+import { buildUnitlessQuantityEvidence } from "./unitless-quantity.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1308,6 +1313,21 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-ambiguous-positional-siblings") {
     return { handled: true, evidence: buildAmbiguousPositionalSiblingsEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-deceptive-name") {
+    return { handled: true, evidence: buildDeceptiveNameEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-punned-name") {
+    return { handled: true, evidence: buildPunnedNameEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-cryptic-abbreviation") {
+    return { handled: true, evidence: buildCrypticAbbreviationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-negative-boolean-name") {
+    return { handled: true, evidence: buildNegativeBooleanNameEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unitless-quantity") {
+    return { handled: true, evidence: buildUnitlessQuantityEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
