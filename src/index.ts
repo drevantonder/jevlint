@@ -14,6 +14,7 @@ export { parseChangedLineRanges } from "./changed-lines.js";
 export { defaultConfig, defineConfig, loadConfig } from "./config.js";
 export {
   createReviewReport,
+  DEFAULT_DISPLAY_LIMIT,
   formatJson,
   formatText,
   MAX_REPORTED_FAILURES,

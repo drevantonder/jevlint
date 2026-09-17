@@ -94,7 +94,7 @@ pnpm jevlint review --format json
 
 `jevlint diff` remains as a compatibility alias for `jevlint review` with identical score output.
 
-Every evaluated rule/candidate pair is reported as a judgment with a probability, the rule's proposition, the candidate's file and span, its kind, and the bounded evidence behind the score. Text output ranks judgments by descending probability with deterministic tie-breaks and ends with a summary line that distinguishes evaluated judgments from displayed ones:
+Every evaluated rule/candidate pair is reported as a judgment with a probability, the rule's proposition, the candidate's file and span, its kind, and the bounded evidence behind the score. Text output ranks judgments by descending probability with deterministic tie-breaks, shows the top 5 by default, and ends with a summary line; when judgments are hidden by the limit, one hint line after the summary states the remaining count and how to see them:
 
 ```text
 0.920  src/checkout.ts:12:3-12:40  function  jev/no-hidden-io  This API hides a material I/O boundary and its cost.
@@ -103,7 +103,20 @@ Every evaluated rule/candidate pair is reported as a judgment with a probability
 2 evaluated; 2 displayed; 0 structurally abstained; 0 failed
 ```
 
-`--min-score` and `--limit` filter only the text rendering; the JSON report always contains every completed judgment in its `judgments` array, and `summary.displayed` reports the count the display filter selects, so text and JSON summaries stay identical. Evaluation always covers every candidate. Candidates that are structurally ineligible for a rule are summarized as abstention counts, never as zero scores.
+With more than 5 judgments, text output keeps the top 5 and appends a hint line after the summary:
+
+```text
+0.920  src/checkout.ts:12:3-12:40  function  jev/no-hidden-io  This API hides a material I/O boundary and its cost.
+0.610  src/payment.ts:8:1-8:44  function  jev/no-unsafe-retry  Retry repeats the charge without a safe policy.
+0.420  src/totals.ts:14:1-14:52  function  jev/data-clump  Three parameters always travel together.
+0.240  src/cart.ts:5:1-5:22  function  jev/no-narrating-comment  Comment restates nearby code.
+0.180  src/coupon.ts:2:1-2:38  function  jev/needless-abstraction  Wrapper adds no behavior.
+
+9 evaluated; 5 displayed; 0 structurally abstained; 0 failed
+4 more judgments hidden; raise --limit, filter with --min-score, or use --format json for the full report.
+```
+
+`--min-score` filters before `--limit` is applied; `--limit` defaults to 5 for text output and may be raised, lowered, or set to 0. Both filter only the text rendering; the JSON report always contains every completed judgment in its `judgments` array, echoes the display options used, and `summary.displayed` reports the count the display filter selects, so text and JSON summaries stay identical. Evaluation always covers every candidate. Candidates that are structurally ineligible for a rule are summarized as abstention counts, never as zero scores.
 
 Jev judgments are cached by default in the current worktree's Git metadata. Candidate discovery and repository evidence collection still run every time. Inspect a run, force fresh judgments, or bypass the cache with:
 

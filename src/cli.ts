@@ -37,7 +37,7 @@ Options:
   --format <format>  Output text or json
   --config <path>    Use a specific config file
   --min-score <n>    Display scores at or above n (0 to 1)
-  --limit <n>        Display at most n judgments
+  --limit <n>        Display at most n judgments (default 5)
   --no-cache         Bypass the local Jev response cache
   --refresh-cache    Re-evaluate and replace matching cache entries
   --verbose          Report cache hits, misses, and live requests

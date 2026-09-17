@@ -11,6 +11,8 @@ import type {
 
 export const MAX_REPORTED_FAILURES = 20;
 
+export const DEFAULT_DISPLAY_LIMIT = 5;
+
 export interface CreateReviewReportInput {
   judgments: Judgment[];
   abstentions: StructuralAbstentionCount[];
@@ -24,9 +26,8 @@ export function createReviewReport(input: CreateReviewReportInput): ReviewReport
   const judgments = sortJudgments(input.judgments);
   const minScore = input.display?.minScore ?? 0;
   const matching = judgments.filter(({ probability }) => probability >= minScore);
-  const displayed = input.display?.limit === undefined
-    ? matching
-    : matching.slice(0, input.display.limit);
+  const limit = input.display?.limit ?? DEFAULT_DISPLAY_LIMIT;
+  const displayed = matching.slice(0, limit);
   const abstentions = sortAbstentions(input.abstentions);
   const failed = input.failures.reduce((total, failure) => total + failure.questionCount, 0);
   const failureItems = input.failures.slice(0, MAX_REPORTED_FAILURES);
@@ -34,8 +35,7 @@ export function createReviewReport(input: CreateReviewReportInput): ReviewReport
     evaluation: { ...input.statistics },
   };
   if (input.cacheStatistics !== undefined) statistics.cache = { ...input.cacheStatistics };
-  const display: DisplayOptions = { minScore };
-  if (input.display?.limit !== undefined) display.limit = input.display.limit;
+  const display: DisplayOptions = { minScore, limit };
 
   return {
     version: 1,
@@ -64,22 +64,22 @@ function location(judgment: Judgment): string {
   return `${judgment.filePath}:${start.line}:${start.column}-${end.line}:${end.column}`;
 }
 
-function visibleJudgments(report: ReviewReport): Judgment[] {
+export function formatText(report: ReviewReport): string {
   const minScore = report.display.minScore ?? 0;
   const matching = report.judgments.filter(({ probability }) => probability >= minScore);
-  return report.display.limit === undefined
-    ? matching
-    : matching.slice(0, report.display.limit);
-}
-
-export function formatText(report: ReviewReport): string {
-  const judgments = visibleJudgments(report).map((judgment) =>
-    `${judgment.probability.toFixed(3)}  ${location(judgment)}  `
-    + `${judgment.candidateKind}  ${judgment.ruleId}  ${judgment.message}`
-  );
+  const rows = matching
+    .slice(0, report.display.limit ?? DEFAULT_DISPLAY_LIMIT)
+    .map((judgment) =>
+      `${judgment.probability.toFixed(3)}  ${location(judgment)}  `
+      + `${judgment.candidateKind}  ${judgment.ruleId}  ${judgment.message}`
+    );
   const summary = `${report.summary.evaluated} evaluated; ${report.summary.displayed} displayed; `
     + `${report.summary.abstained} structurally abstained; ${report.summary.failed} failed`;
-  return judgments.length === 0 ? summary : `${judgments.join("\n")}\n\n${summary}`;
+  const hidden = matching.length - rows.length;
+  const hint = hidden > 0
+    ? `\n${hidden} more judgments hidden; raise --limit, filter with --min-score, or use --format json for the full report.`
+    : "";
+  return rows.length === 0 ? `${summary}${hint}` : `${rows.join("\n")}\n\n${summary}${hint}`;
 }
 
 export function formatJson(report: ReviewReport): string {
