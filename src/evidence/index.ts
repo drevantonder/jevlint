@@ -165,7 +165,10 @@ import { buildRareCaseFirstEvidence } from "./rare-case-first.js";
 import { buildSideEffectingConditionalEvidence } from "./side-effecting-conditional-expression.js";
 import { buildUnexplainedComplexConditionEvidence } from "./unexplained-complex-condition.js";
 import { buildCleverExpressionEvidence } from "./clever-expression.js";
-
+import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
+import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
+import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
+import { buildContractNarrowingEvidence } from "./contract-narrowing-after-ship.js";
 export type RuleEvidenceResult =
   | { handled: false }
   | { handled: true; evidence: JsonValue | undefined };
@@ -920,5 +923,29 @@ export function buildRuleEvidence(
   if (ruleId === "jev/no-clever-expression") {
     return { handled: true, evidence: buildCleverExpressionEvidence(candidate, projectFiles) };
   }
-  return { handled: false };
+    if (ruleId === "jev/no-change-amplifier-case") {
+    return {
+      handled: true,
+      evidence: buildChangeAmplifierCaseEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-mutable-surface-expansion") {
+    return {
+      handled: true,
+      evidence: buildMutableSurfaceExpansionEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-subclass-fragility-hook") {
+    return {
+      handled: true,
+      evidence: buildSubclassFragilityHookEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-contract-narrowing-after-ship") {
+    return {
+      handled: true,
+      evidence: buildContractNarrowingEvidence(candidate, changes, projectFiles),
+    };
+  }
+return { handled: false };
 }

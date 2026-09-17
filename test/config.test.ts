@@ -180,6 +180,10 @@ describe("loadConfig", () => {
       "jev/no-side-effecting-conditional-expression",
       "jev/no-unexplained-complex-condition",
       "jev/no-clever-expression",
+      "jev/no-change-amplifier-case",
+      "jev/no-mutable-surface-expansion",
+      "jev/no-subclass-fragility-hook",
+      "jev/no-contract-narrowing-after-ship",
     ]);
   });
 
