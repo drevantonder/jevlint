@@ -7349,6 +7349,142 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This suppression disables a check without recording why.",
+    },
+
+    "jev/no-ambient-dependency-grab": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function reach a shared dependency through an ambient accessor instead of receiving it through its parameters, so callers can neither see nor substitute the dependency?",
+          inspect: "Compare each extracted accessor or locator call with the function's parameter list, the resolved target where shown, and the repository callers in the supplied evidence.",
+          focus: "Judge whether a caller can tell from the signature what the function depends on and supply a substitute, not whether shared dependencies exist at all.",
+          decision_boundary: [
+            "A static singleton call such as Db.getInstance, a Config.shared read, or a container get or resolve call inside domain behavior is strong evidence of an ambient grab.",
+            "Reading request-scoped context through a store accessor deep in domain behavior hides the same caller-invisible input.",
+            "A receiver that arrives as a parameter is explicit dependency passing, even when the method called on it resolves something.",
+            "Composition roots, boundary adapters, and test seams exist to resolve dependencies and answer the question negatively.",
+            "Fixed environment, clock, randomness, or browser reads belong to hidden runtime input, and inline construction belongs to construction in use; if the evidence shows only those, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function pulls a shared dependency through a singleton accessor, service locator, or context store while its parameters hide that dependency from callers",
+            remedy: "Accept the dependency as a parameter so callers can see it, substitute it, and control its lifetime",
+          },
+          false: {
+            what: "The dependency arrives through parameters, the function is a composition root or adapter, or the evidence does not establish an ambient accessor",
+          },
+        },
+      },
+      message: "This function grabs a shared dependency through an ambient accessor.",
+    },
+    "jev/no-singly-owned-lazy-shared-state": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function lazily create module-shared state on first use, so the dependency's creation timing, lifetime, and invalidation stay invisible to callers and persist across calls?",
+          inspect: "Use the extracted initialized binding, the guard-then-assign sequence, the reader set beyond the writer, any reset or inspect export, and the observed callers in the supplied evidence.",
+          focus: "Judge whether callers share one invisible lifetime they cannot reset or observe, not whether caching as such is wrong.",
+          decision_boundary: [
+            "An initialized module binding assigned behind a first-use guard inside the only writer, read by other functions, with no reset export is strong evidence of hidden lifetime.",
+            "A documented, explicitly resettable cache owned by one module with invalidation callers answers the question negatively.",
+            "Load-time initialization is configuration, not lazy creation.",
+            "Bindings written from two or more functions belong to shared mutable module state; if the evidence shows a second writer, answer no.",
+            "Uninitialized declarations assigned by a separate initializer belong to hidden initialization order; if the declaration carries no initializer, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function creates shared state on first use behind an initialized declaration while callers inherit a lifetime they cannot see, reset, or invalidate",
+            remedy: "Create the state once at load or composition time, or expose explicit creation and invalidation the callers can control",
+          },
+          false: {
+            what: "The state is created at load time, explicitly resettable, written from several functions, or lacks evidence of cross-call shared lifetime",
+          },
+        },
+      },
+      message: "This function lazily creates state that callers silently share.",
+    },
+    "jev/no-unit-ambiguous-quantity": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this quantity's unit stated nowhere in its name, type, or documentation, so a caller must guess the scale?",
+          inspect: "Compare each extracted numeric parameter, its quantity stem and bare number type, the absence of unit suffixes, brands, or documented units, and the raw literals callers pass in the supplied evidence.",
+          focus: "Judge whether a caller can tell the scale without reading the implementation, not whether numbers appear in the signature.",
+          decision_boundary: [
+            "A duration or size stem such as timeout, duration, or size typed as a bare number with no unit suffix, brand, or documented unit is strong evidence of an ambiguous quantity.",
+            "A unit suffix, branded or nominal type, or documented unit answers the question negatively.",
+            "Unit-free counts and indexes such as count, index, or page are not quantities and answer the question negatively.",
+            "A body that already converts named scales belongs to unit scale mismatch; if the evidence shows a named conversion or scale factor, answer no.",
+            "Raw numeric literals at call sites support the claim but are not required; the signature alone can leave the scale unstated.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A quantity parameter leaves its unit unstated in name, type, and documentation so callers must guess the scale",
+            remedy: "Rename with a unit suffix, brand the type, or document the unit in one line",
+          },
+          false: {
+            what: "The unit is stated in the name, type, or documentation, the parameter is a count or index, or the body already converts named scales",
+          },
+        },
+      },
+      message: "This quantity leaves its unit unstated for callers.",
+    },
+    "jev/no-partially-narrowed-nullable": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this value's type admit two absences while the code narrows only one before use, leaving the other to reach the use unhandled?",
+          inspect: "Compare the extracted union annotation admitting both null and undefined with each narrowing test, which absence member it names, the missing member, and the subsequent uses in the supplied evidence.",
+          focus: "Judge whether one promised absence case still reaches a use, not whether any null or undefined check exists.",
+          decision_boundary: [
+            "A T, null, undefined union or an optional T, null parameter checked only against null and then dereferenced is strong evidence of partial narrowing.",
+            "Narrowing both absences, whether by two checks, a loose equality against null, or a truthiness guard with an early exit, answers the question negatively.",
+            "A type predicate or assertion function covering the union answers the question negatively.",
+            "A nullish coalescing fallback handles both absences and answers the question negatively.",
+            "A single-absence type, or a narrowing test with no subsequent use of the value, is insufficient; if either holds, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The type promises two absences but the code narrows only one while the other still reaches a use",
+            remedy: "Narrow both absences explicitly, adopt a type predicate, or fall back with nullish coalescing before use",
+          },
+          false: {
+            what: "Both absences are narrowed, a predicate or coalescing covers the union, the type admits one absence, or no use follows the narrowing",
+          },
+        },
+      },
+      message: "This value narrows one absence while the other still reaches its use.",
+    },
+    "jev/no-heterogeneous-primitive-callers": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do callers pass differently-stemmed values into this one bare-primitive parameter, so the type accepts what the domain distinguishes?",
+          inspect: "Compare the single bare-primitive parameter with the argument expressions at each repository call site, the distinct domain stems feeding that one slot, and the consumer sources in the supplied evidence.",
+          focus: "Judge whether the callers prove the slot carries distinct domain identities the type erases, not whether primitives appear.",
+          decision_boundary: [
+            "One exported id parameter of type string fed by user-rooted values at some call sites and org-rooted values at others is strong evidence of heterogeneous callers.",
+            "Fewer than two callers, or caller argument stems that agree, answer the question negatively.",
+            "A branded, union, or object parameter type already says what the slot carries and answers the question negatively.",
+            "Two or more same-primitive parameters in one signature belong to interchangeable domain primitives; if the signature carries such a group, answer no.",
+            "Stemming is heuristic; a single shared stem across all callers is never enough, no matter how suggestive the parameter name.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Distinct domain identities flow into one bare-primitive slot from different callers while the type erases the distinction",
+            remedy: "Brand the parameter type per domain role or split the signature so each role has its own slot",
+          },
+          false: {
+            what: "Caller stems agree, callers are too few to compare, the parameter type already distinguishes the domain, or the signature carries a same-primitive group",
+          },
+        },
+      },
+      message: "Distinct domain values flow into this one bare-primitive slot.",
 
     },
   },

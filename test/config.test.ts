@@ -287,6 +287,11 @@ describe("loadConfig", () => {
       "jev/no-predicate-name-deception",
       "jev/no-confusion-confessing-comment",
       "jev/no-unexplained-suppression",
+      "jev/no-ambient-dependency-grab",
+      "jev/no-singly-owned-lazy-shared-state",
+      "jev/no-unit-ambiguous-quantity",
+      "jev/no-partially-narrowed-nullable",
+      "jev/no-heterogeneous-primitive-callers",
       // END GENERATED: rule-keys
     ]);
   });

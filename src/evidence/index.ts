@@ -6,6 +6,7 @@ import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAccidentalSerializationEvidence } from "./accidental-serialization.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
 import { buildAdversarialRegexEvidence } from "./adversarial-regex.js";
+import { buildAmbientDependencyGrabEvidence } from "./ambient-dependency-grab.js";
 import { buildAmbiguousPositionalSiblingsEvidence } from "./ambiguous-positional-siblings.js";
 import { buildAnemicTypeEvidence } from "./anemic-type.js";
 import { buildAssertionFreeTestEvidence } from "./assertion-free-test.js";
@@ -102,6 +103,7 @@ import { buildHandRolledStringHashEvidence } from "./hand-rolled-string-hash.js"
 import { buildHandRolledUrlQueryEvidence } from "./hand-rolled-url-query.js";
 import { buildHandRolledUuidEvidence } from "./hand-rolled-uuid.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
+import { buildHeterogeneousPrimitiveCallersEvidence } from "./heterogeneous-primitive-callers.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -166,6 +168,7 @@ import { buildOversizedWorkingSetEvidence } from "./oversized-working-set.js";
 import { buildParallelAbstractionEvidence } from "./parallel-abstraction.js";
 import { buildParallelEnumerationsEvidence } from "./parallel-enumerations.js";
 import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
+import { buildPartiallyNarrowedNullableEvidence } from "./partially-narrowed-nullable.js";
 import { buildPartitionedFatInterfaceEvidence } from "./partitioned-fat-interface.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPathTraversalJoinEvidence } from "./path-traversal-join.js";
@@ -206,6 +209,7 @@ import { buildSideEffectingConditionalEvidence } from "./side-effecting-conditio
 import { buildSilentQueueDropEvidence } from "./silent-queue-drop.js";
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildSingleUseDependencyEvidence } from "./single-use-dependency.js";
+import { buildSinglyOwnedLazySharedStateEvidence } from "./singly-owned-lazy-shared-state.js";
 import { buildSkippedLevelImportEvidence } from "./skipped-level-import.js";
 import { buildSleepInTestEvidence } from "./sleep-in-test.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
@@ -245,6 +249,7 @@ import { buildUnexplainedDomainThresholdEvidence } from "./unexplained-domain-th
 import { buildUnexplainedSuppressionEvidence } from "./unexplained-suppression.js";
 import { buildUnguardedAsyncInitEvidence } from "./unguarded-async-init.js";
 import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-dereference.js";
+import { buildUnitAmbiguousQuantityEvidence } from "./unit-ambiguous-quantity.js";
 import { buildUnitScaleMismatchEvidence } from "./unit-scale-mismatch.js";
 import { buildUnitlessQuantityEvidence } from "./unitless-quantity.js";
 import { buildUnlabeledInteractiveElementEvidence } from "./unlabeled-interactive-element.js";
@@ -290,6 +295,7 @@ type EvidenceRegistry = {
   "jev/no-accidental-serialization": EvidenceBuilder;
   "jev/no-ad-hoc-branching": EvidenceBuilder;
   "jev/no-adversarial-regex": EvidenceBuilder;
+  "jev/no-ambient-dependency-grab": EvidenceBuilder;
   "jev/no-ambiguous-positional-siblings": EvidenceBuilder;
   "jev/no-anemic-type": EvidenceBuilder;
   "jev/no-assertion-free-test": EvidenceBuilder;
@@ -386,6 +392,7 @@ type EvidenceRegistry = {
   "jev/no-hand-rolled-url-query": EvidenceBuilder;
   "jev/no-hand-rolled-uuid": EvidenceBuilder;
   "jev/no-hardcoded-config-shadow": EvidenceBuilder;
+  "jev/no-heterogeneous-primitive-callers": EvidenceBuilder;
   "jev/no-hidden-initialization-order": EvidenceBuilder;
   "jev/no-hidden-input-mutation": EvidenceBuilder;
   "jev/no-hidden-io": EvidenceBuilder;
@@ -450,6 +457,7 @@ type EvidenceRegistry = {
   "jev/no-parallel-abstraction": EvidenceBuilder;
   "jev/no-parallel-enumerations": EvidenceBuilder;
   "jev/no-paraphrased-sibling-logic": EvidenceBuilder;
+  "jev/no-partially-narrowed-nullable": EvidenceBuilder;
   "jev/no-partitioned-fat-interface": EvidenceBuilder;
   "jev/no-pass-through-wrapper": EvidenceBuilder;
   "jev/no-path-traversal-join": EvidenceBuilder;
@@ -490,6 +498,7 @@ type EvidenceRegistry = {
   "jev/no-silent-queue-drop": EvidenceBuilder;
   "jev/no-single-caller-exported-helper": EvidenceBuilder;
   "jev/no-single-use-dependency": EvidenceBuilder;
+  "jev/no-singly-owned-lazy-shared-state": EvidenceBuilder;
   "jev/no-skipped-level-import": EvidenceBuilder;
   "jev/no-sleep-in-test": EvidenceBuilder;
   "jev/no-speculative-generality": EvidenceBuilder;
@@ -529,6 +538,7 @@ type EvidenceRegistry = {
   "jev/no-unexplained-suppression": EvidenceBuilder;
   "jev/no-unguarded-async-init": EvidenceBuilder;
   "jev/no-unguarded-nullable-dereference": EvidenceBuilder;
+  "jev/no-unit-ambiguous-quantity": EvidenceBuilder;
   "jev/no-unit-scale-mismatch": EvidenceBuilder;
   "jev/no-unitless-quantity": EvidenceBuilder;
   "jev/no-unlabeled-interactive-element": EvidenceBuilder;
@@ -568,6 +578,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildAdHocBranchingEvidence(candidate, projectFiles),
   "jev/no-adversarial-regex": (candidate, projectFiles) =>
     buildAdversarialRegexEvidence(candidate, projectFiles),
+  "jev/no-ambient-dependency-grab": (candidate, projectFiles) =>
+    buildAmbientDependencyGrabEvidence(candidate, projectFiles),
   "jev/no-ambiguous-positional-siblings": (candidate, projectFiles) =>
     buildAmbiguousPositionalSiblingsEvidence(candidate, projectFiles),
   "jev/no-anemic-type": (candidate, projectFiles) =>
@@ -760,6 +772,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildHandRolledUuidEvidence(candidate, projectFiles),
   "jev/no-hardcoded-config-shadow": (candidate, projectFiles) =>
     buildHardcodedConfigShadowEvidence(candidate, projectFiles),
+  "jev/no-heterogeneous-primitive-callers": (candidate, projectFiles) =>
+    buildHeterogeneousPrimitiveCallersEvidence(candidate, projectFiles),
   "jev/no-hidden-initialization-order": (candidate, projectFiles) =>
     buildHiddenInitializationOrderEvidence(candidate, projectFiles),
   "jev/no-hidden-input-mutation": (candidate, projectFiles) =>
@@ -888,6 +902,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildParallelEnumerationsEvidence(candidate, projectFiles),
   "jev/no-paraphrased-sibling-logic": (candidate, projectFiles) =>
     buildParaphrasedSiblingLogicEvidence(candidate, projectFiles),
+  "jev/no-partially-narrowed-nullable": (candidate, projectFiles) =>
+    buildPartiallyNarrowedNullableEvidence(candidate, projectFiles),
   "jev/no-partitioned-fat-interface": (candidate, projectFiles) =>
     buildPartitionedFatInterfaceEvidence(candidate, projectFiles),
   "jev/no-pass-through-wrapper": (candidate, projectFiles) =>
@@ -968,6 +984,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildSingleCallerExportedHelperEvidence(candidate, projectFiles),
   "jev/no-single-use-dependency": (candidate, projectFiles, changes) =>
     buildSingleUseDependencyEvidence(candidate, projectFiles, changes),
+  "jev/no-singly-owned-lazy-shared-state": (candidate, projectFiles) =>
+    buildSinglyOwnedLazySharedStateEvidence(candidate, projectFiles),
   "jev/no-skipped-level-import": (candidate, projectFiles, changes) =>
     buildSkippedLevelImportEvidence(candidate, projectFiles, changes),
   "jev/no-sleep-in-test": (candidate, projectFiles) =>
@@ -1046,6 +1064,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildUnguardedAsyncInitEvidence(candidate, projectFiles),
   "jev/no-unguarded-nullable-dereference": (candidate, projectFiles) =>
     buildUnguardedNullableDereferenceEvidence(candidate, projectFiles),
+  "jev/no-unit-ambiguous-quantity": (candidate, projectFiles) =>
+    buildUnitAmbiguousQuantityEvidence(candidate, projectFiles),
   "jev/no-unit-scale-mismatch": (candidate, projectFiles) =>
     buildUnitScaleMismatchEvidence(candidate, projectFiles),
   "jev/no-unitless-quantity": (candidate, projectFiles) =>
