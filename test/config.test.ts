@@ -137,6 +137,11 @@ describe("loadConfig", () => {
       "jev/no-disabled-tls-verification",
       "jev/no-dynamic-code-execution",
       "jev/no-locale-blind-ordering",
+      "jev/no-cascading-fallback",
+      "jev/no-silent-queue-drop",
+      "jev/no-missing-shutdown-drain",
+      "jev/no-missing-health-signal",
+      "jev/no-deployment-coupled-assumption",
     ]);
   });
 

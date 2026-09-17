@@ -101,6 +101,11 @@ const extractedRules = [
   ["jev/no-disabled-tls-verification", "function"],
   ["jev/no-dynamic-code-execution", "function"],
   ["jev/no-locale-blind-ordering", "function"],
+  ["jev/no-cascading-fallback", "function"],
+  ["jev/no-silent-queue-drop", "function"],
+  ["jev/no-missing-shutdown-drain", "function"],
+  ["jev/no-missing-health-signal", "function"],
+  ["jev/no-deployment-coupled-assumption", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

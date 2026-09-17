@@ -3389,5 +3389,137 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This ordering compares human-visible text without locale awareness.",
     },
+
+    "jev/no-cascading-fallback": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this fallback path depend on the same failing capability it replaces, so the failure cascades instead of degrading?",
+          inspect: "Compare each primary call with the fallback calls in the same handler, their shared import roots, any static or cached return beside the fallback, and the repository callers in the supplied evidence.",
+          focus: "Judge recovery topology: whether the fallback re-enters the same outage, not whether the error is described well.",
+          decision_boundary: [
+            "A catch block querying the same client, host, or pool the primary path just failed on is strong evidence of a cascading fallback.",
+            "A fallback serving a cached, static, or reduced-scope result with no live dependency on the failed capability answers the question negatively.",
+            "A fallback calling a genuinely independent replica or provider weakens the claim even when the call shape looks similar.",
+            "If the primary and fallback capabilities cannot be shown to share a root, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The fallback re-enters the same failing capability, turning one outage into a longer one",
+            remedy: "Degrade to a cached or static result, or fail over to an independent capability with its own failure domain",
+          },
+          false: {
+            what: "The fallback degrades without the failed capability or fails over to an independent one",
+          },
+        },
+      },
+      message: "This fallback depends on the same failing capability it replaces.",
+    },
+    "jev/no-silent-queue-drop": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this producer enqueue work with no handling for a full or unavailable queue, so load-shedding happens by accident?",
+          inspect: "Compare each producer call with whether its pressure signal is awaited, consumed, or guarded, the drain and overflow policy in the module, the queue client source, and the repository callers in the supplied evidence.",
+          focus: "Judge whether a bounded queue can refuse work silently, not whether enqueueing itself is appropriate.",
+          decision_boundary: [
+            "A fire-and-forget publish from a request path onto a bounded queue whose pressure return is never checked is strong evidence of a silent drop.",
+            "An explicit overflow policy beside the call, such as blocking, dropping the oldest with a metric, or waiting for drain, answers the question negatively.",
+            "An unbounded in-memory queue with no high-water policy still drops under memory pressure; name the missing bound when judging it.",
+            "If the queue is unbounded by client semantics and the module bounds it elsewhere, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Enqueued work can be refused or dropped with no signal the producer observes",
+            remedy: "Observe the pressure signal: await it, branch on it, wait for drain, or declare an explicit overflow policy",
+          },
+          false: {
+            what: "Pressure signals are observed, the queue is bounded with a stated policy, or drops cannot occur silently",
+          },
+        },
+      },
+      message: "This producer ignores queue pressure, so work can drop silently.",
+    },
+    "jev/no-missing-shutdown-drain": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this server start accepting work with no graceful shutdown path, so deploys cut in-flight requests mid-handling?",
+          inspect: "Compare each bootstrap call with the close calls, signal handlers, drain waits, and connection tracking in the module, the orchestrator descriptor, sibling drain handlers, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the process can stop without abandoning work it already accepted, not whether startup is ordered well.",
+          decision_boundary: [
+            "A listen call in an orchestrator-managed service with no signal handler, close call, or drain wait in the module is strong evidence of a missing drain.",
+            "A SIGTERM or SIGINT handler that marks unready, waits for tracked connections, then closes answers the question negatively.",
+            "A one-shot script that never accepts external work abstains before reaching judgment; only serving bootstraps qualify.",
+            "Sibling services owning drain handlers show the pattern is available; their absence next to a serving bootstrap strengthens the claim.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The server accepts work it cannot finish draining before the process exits",
+            remedy: "Handle SIGTERM and SIGINT: mark unready, wait for tracked in-flight work, then close the server",
+          },
+          false: {
+            what: "A signal handler drains tracked in-flight work before close, or the process accepts no external work to drain",
+          },
+        },
+      },
+      message: "This server accepts work with no graceful shutdown path.",
+    },
+    "jev/no-missing-health-signal": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this serving entry expose traffic endpoints but no health or readiness signal, so orchestrators cannot tell serving from stuck?",
+          inspect: "Compare the serving surface with the health signals in the module, the readiness gate before serving, the probe path the deployment descriptor expects, sibling health signals, and the repository callers in the supplied evidence.",
+          focus: "Judge the operational contract: a servable probe the orchestrator can call, not prose docs about the service.",
+          decision_boundary: [
+            "Traffic routes plus a bootstrap with async initialization, a descriptor expecting a probe path, and no such route in the module is strong evidence of a missing signal.",
+            "A servable liveness or readiness endpoint, or an exported status function the platform invokes, answers the question negatively.",
+            "A library module with no serving surface abstains before reaching judgment; only serving entries qualify.",
+            "Readiness that depends on async init with no gate strengthens the claim; a gate that holds traffic until init completes weakens it.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Traffic is served with no probe telling the orchestrator whether the process is ready or stuck",
+            remedy: "Serve liveness and readiness endpoints covering async initialization, matching the probe path the platform expects",
+          },
+          false: {
+            what: "A servable health or readiness signal covers the serving surface, or the module serves no traffic",
+          },
+        },
+      },
+      message: "This serving entry exposes traffic but no health or readiness signal.",
+    },
+    "jev/no-deployment-coupled-assumption": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this code assume its deployment environment instead of receiving it, so it breaks outside the machine it was written on?",
+          inspect: "Compare each environment assumption with the config reads in the module, the config sources in the repository, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the environment is baked into behavior, not whether a literal duplicates a config value the repository owns.",
+          decision_boundary: [
+            "A localhost URL, hardcoded port, absolute path, or environment-name branch with no config read for the same value is strong evidence of a coupled assumption.",
+            "A documented local-dev fallback behind a config or environment read answers the question negatively.",
+            "A value the deployment descriptor contradicts deserves suspicion; a value the descriptor confirms is still coupled but less likely to break.",
+            "Test fixtures and local-only scripts may own their environment legitimately; judge whether shipped code carries the assumption.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Host, port, scheme, path, or environment identity is baked into shipped behavior instead of arriving through config",
+            remedy: "Receive the value from the environment or config source, keeping any machine-specific literal as a documented local fallback",
+          },
+          false: {
+            what: "The value arrives through config or the environment, or the literal is a documented fallback that shipped config overrides",
+          },
+        },
+      },
+      message: "This code assumes its deployment environment instead of receiving it.",
+
+    },
   },
 };
