@@ -2,6 +2,12 @@ import { parseSync, Visitor } from "oxc-parser";
 import type { CatchClause, Node, Program, TryStatement } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
+  belongsDirectlyToFunction,
+  containsNode,
+  nestedFunctionRanges,
+} from "./function-scope.js";
+import type { NodeRange } from "./function-scope.js";
+import {
   findDirectFunction,
   findFunctionCallers,
   findRelatedProjectModules,
@@ -42,44 +48,14 @@ export type SwallowedErrorEvidence = {
   };
 };
 
-type Range = {
-  start: number;
-  end: number;
-};
-
-function nestedFunctionRanges(program: Program, owner: FunctionNode): Range[] {
-  const ranges: Range[] = [];
-  const add = (node: FunctionNode): void => {
-    if (
-      node !== owner
-      && node.start >= owner.start
-      && node.end <= owner.end
-    ) ranges.push({ start: node.start, end: node.end });
-  };
-  new Visitor({
-    ArrowFunctionExpression: add,
-    FunctionDeclaration: add,
-    FunctionExpression: add,
-  }).visit(program);
-  return ranges;
-}
-
-function belongsToOwner(node: Range, nested: Range[]): boolean {
-  return !nested.some((range) => range.start <= node.start && range.end >= node.end);
-}
-
 function caughtName(handler: CatchClause, source: string): string | null {
   return handler.param ? source.slice(handler.param.start, handler.param.end) : null;
-}
-
-function contains(outer: Range, inner: Range): boolean {
-  return outer.start <= inner.start && outer.end >= inner.end;
 }
 
 function usesCaughtIdentifier(
   handler: CatchClause,
   program: Program,
-  nested: Range[],
+  nested: NodeRange[],
 ): boolean {
   if (!handler.param || handler.param.type !== "Identifier") return false;
   const name = handler.param.name;
@@ -88,8 +64,8 @@ function usesCaughtIdentifier(
     Identifier(node) {
       if (
         node.name === name
-        && contains(handler.body, node)
-        && belongsToOwner(node, nested)
+        && containsNode(handler.body, node)
+        && belongsDirectlyToFunction(node, nested)
       ) used = true;
     },
   }).visit(program);
@@ -106,7 +82,7 @@ function handlerEvidence(
   source: string,
   owner: FunctionNode,
   program: Program,
-  nested: Range[],
+  nested: NodeRange[],
 ): ErrorHandlerEvidence {
   const throws: string[] = [];
   const returns: string[] = [];
@@ -114,27 +90,27 @@ function handlerEvidence(
   const controlTransfers: string[] = [];
   new Visitor({
     ThrowStatement(node) {
-      if (contains(handler.body, node) && belongsToOwner(node, nested)) {
+      if (containsNode(handler.body, node) && belongsDirectlyToFunction(node, nested)) {
         throws.push(nodeSource(node, source));
       }
     },
     ReturnStatement(node) {
-      if (contains(handler.body, node) && belongsToOwner(node, nested)) {
+      if (containsNode(handler.body, node) && belongsDirectlyToFunction(node, nested)) {
         returns.push(nodeSource(node, source));
       }
     },
     CallExpression(node) {
-      if (contains(handler.body, node) && belongsToOwner(node, nested)) {
+      if (containsNode(handler.body, node) && belongsDirectlyToFunction(node, nested)) {
         calls.push(nodeSource(node, source));
       }
     },
     BreakStatement(node) {
-      if (contains(handler.body, node) && belongsToOwner(node, nested)) {
+      if (containsNode(handler.body, node) && belongsDirectlyToFunction(node, nested)) {
         controlTransfers.push(nodeSource(node, source));
       }
     },
     ContinueStatement(node) {
-      if (contains(handler.body, node) && belongsToOwner(node, nested)) {
+      if (containsNode(handler.body, node) && belongsDirectlyToFunction(node, nested)) {
         controlTransfers.push(nodeSource(node, source));
       }
     },
@@ -174,7 +150,7 @@ export function buildSwallowedErrorEvidence(
         statement.handler
         && statement.start >= fn.start
         && statement.end <= fn.end
-        && belongsToOwner(statement, nested)
+        && belongsDirectlyToFunction(statement, nested)
       ) {
         handlers.push(handlerEvidence(
           statement,

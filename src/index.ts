@@ -20,6 +20,7 @@ export { buildHiddenInitializationOrderEvidence } from "./evidence/hidden-initia
 export { buildHiddenRuntimeInputEvidence } from "./evidence/hidden-runtime-input.js";
 export { buildImplicitAtomicityEvidence } from "./evidence/implicit-atomicity.js";
 export { buildInterchangeableDomainPrimitivesEvidence } from "./evidence/interchangeable-domain-primitives.js";
+export { buildLossyErrorTranslationEvidence } from "./evidence/lossy-error-translation.js";
 export { buildLossySentinelReturnEvidence } from "./evidence/lossy-sentinel-return.js";
 export { buildMixedResponsibilitiesEvidence } from "./evidence/mixed-responsibilities.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";

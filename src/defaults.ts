@@ -802,6 +802,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This handler hides a failure from its caller.",
     },
+    "jev/no-lossy-error-translation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this catch replace a failure with an error that erases distinctions or diagnostic cause needed by the receiving layer?",
+          inspect: "Compare each caught operation and thrown replacement with the imported error contracts and caller handling in the supplied evidence.",
+          focus: "Judge information loss across the boundary, not the mere use of a new error type.",
+          decision_boundary: [
+            "Collapsing actionable failure categories into one generic message without retaining cause or equivalent details is strong evidence of lossy translation.",
+            "A direct rethrow, a replacement with the original cause, or a domain error that retains the needed category and context preserves integrity.",
+            "A deliberate trust-boundary translation may hide sensitive internals or collapse authentication failures to enforce security policy.",
+            "A stable public error contract can be useful even when it omits implementation details.",
+            "If the caller's information needs or the boundary policy are unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The replacement discards failure identity, cause, or actionable context that shown callers or the function contract need",
+            remedy: "Preserve the original cause and retain the failure distinctions required at the boundary",
+          },
+          false: {
+            what: "The translation preserves needed meaning, intentionally sanitizes a trust boundary, directly rethrows, or lacks enough evidence of harmful loss",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This error translation discards failure information needed by its caller.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

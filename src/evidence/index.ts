@@ -15,6 +15,7 @@ import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
+import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
@@ -144,6 +145,12 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-swallowed-error") {
     return { handled: true, evidence: buildSwallowedErrorEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-lossy-error-translation") {
+    return {
+      handled: true,
+      evidence: buildLossyErrorTranslationEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

@@ -160,6 +160,17 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("prefers a specific failure-integrity cause over a generic symptom", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-swallowed-error", 4, 12),
+      diagnostic("jev/no-lossy-error-translation", 4, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-lossy-error-translation",
+    ]);
+  });
+
   it("keeps findings from different principle families", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-ad-hoc-branching", 4, 12),

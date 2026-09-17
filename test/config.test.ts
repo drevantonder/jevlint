@@ -39,6 +39,7 @@ describe("loadConfig", () => {
       "jev/no-interchangeable-domain-primitives",
       "jev/no-domain-policy-in-adapter",
       "jev/no-swallowed-error",
+      "jev/no-lossy-error-translation",
       "jev/no-feature-envy",
     ]);
   });
