@@ -185,6 +185,10 @@ describe("loadConfig", () => {
       "jev/no-hand-rolled-set-ops",
       "jev/no-hand-rolled-flatten",
       "jev/no-hand-rolled-deep-equal",
+      "jev/no-change-stranded-code",
+      "jev/no-impossible-error-branch",
+      "jev/no-retained-superseded-implementation",
+      "jev/no-doubled-pure-helper",
     ]);
   });
 

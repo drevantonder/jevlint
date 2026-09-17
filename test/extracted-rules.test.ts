@@ -149,6 +149,10 @@ const extractedRules = [
   ["jev/no-hand-rolled-set-ops", "function"],
   ["jev/no-hand-rolled-flatten", "function"],
   ["jev/no-hand-rolled-deep-equal", "function"],
+  ["jev/no-change-stranded-code", "change"],
+  ["jev/no-impossible-error-branch", "function"],
+  ["jev/no-retained-superseded-implementation", "function"],
+  ["jev/no-doubled-pure-helper", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

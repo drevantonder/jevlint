@@ -170,6 +170,10 @@ import { buildHandRolledDeepCloneEvidence } from "./hand-rolled-deep-clone.js";
 import { buildHandRolledSetOpsEvidence } from "./hand-rolled-set-ops.js";
 import { buildHandRolledFlattenEvidence } from "./hand-rolled-flatten.js";
 import { buildHandRolledDeepEqualEvidence } from "./hand-rolled-deep-equal.js";
+import { buildChangeStrandedCodeEvidence } from "./change-stranded-code.js";
+import { buildImpossibleErrorBranchEvidence } from "./impossible-error-branch.js";
+import { buildRetainedSupersededImplementationEvidence } from "./retained-superseded-implementation.js";
+import { buildDoubledPureHelperEvidence } from "./doubled-pure-helper.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -939,6 +943,21 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-deep-equal") {
     return { handled: true, evidence: buildHandRolledDeepEqualEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-change-stranded-code") {
+    return { handled: true, evidence: buildChangeStrandedCodeEvidence(candidate, changes, projectFiles) };
+  }
+  if (ruleId === "jev/no-impossible-error-branch") {
+    return { handled: true, evidence: buildImpossibleErrorBranchEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-retained-superseded-implementation") {
+    return {
+      handled: true,
+      evidence: buildRetainedSupersededImplementationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-doubled-pure-helper") {
+    return { handled: true, evidence: buildDoubledPureHelperEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

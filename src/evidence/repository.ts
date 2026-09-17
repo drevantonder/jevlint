@@ -432,6 +432,26 @@ function memberObjectRoot(object: Expression): string | null {
   return null;
 }
 
+export function findNamedFunction(
+  program: Program,
+  name: string,
+): FunctionNode | undefined {
+  let result: FunctionNode | undefined;
+  new Visitor({
+    FunctionDeclaration(node) {
+      if (result === undefined && node.id?.name === name) result = node;
+    },
+    VariableDeclarator(node) {
+      if (result !== undefined || node.id.type !== "Identifier" || node.id.name !== name) return;
+      if (
+        node.init?.type === "ArrowFunctionExpression"
+        || node.init?.type === "FunctionExpression"
+      ) result = node.init;
+    },
+  }).visit(program);
+  return result;
+}
+
 const manifestDependencySection = z.record(z.string(), z.string());
 
 const manifestSchema = z.object({
