@@ -7975,5 +7975,32 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This function leaves declared domain members unhandled with no explicit fallback.",
     },
+    "jev/no-misplaced-coordination": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this entity method perform application coordination that belongs in a coordinating service or use-case owner rather than on the data it operates on?",
+          inspect: "Compare the enclosing type and its own-field reads with each imported collaborator call, the collaborator module ownership and role signals, and the repository callers in the supplied evidence.",
+          focus: "Judge placement of the workflow, not call or collaborator counts; a method can misplace a single foreign step.",
+          decision_boundary: [
+            "Sequencing persistence, network, notification, or other service-owned effects while reading little or none of its own state is strong evidence the workflow belongs with a coordinating owner.",
+            "Delegating one persistence write behind the type's own repository seam answers the question negatively.",
+            "Coordination inside a *Service*, *UseCase*, orchestrator, or other coordinator-home module is the right home and answers negatively.",
+            "A framework-required lifecycle hook answers negatively even when it touches collaborators.",
+            "If the enclosing type or collaborator ownership cannot be established from the evidence, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The method sequences cross-role effects owned by service or infrastructure collaborators instead of operating on its own state",
+            remedy: "Move the sequencing to a coordinating service or use-case owner and keep the type focused on its own state and invariants",
+          },
+          false: {
+            what: "The method operates on its own state, delegates behind its own repository seam, coordinates from a coordinator home, or implements a required lifecycle hook",
+          },
+        },
+      },
+      message: "This entity method performs application coordination that belongs in a coordinating owner.",
+    },
   },
 };

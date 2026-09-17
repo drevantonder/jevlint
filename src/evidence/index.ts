@@ -147,6 +147,7 @@ import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
 import { buildMirroredDerivedStateEvidence } from "./mirrored-derived-state.js";
 import { buildMisdirectingErrorMessageEvidence } from "./misdirecting-error-message.js";
+import { buildMisplacedCoordinationEvidence } from "./misplaced-coordination.js";
 import { buildMisplacedErrorBoundaryEvidence } from "./misplaced-error-boundary.js";
 import { buildMissingHealthSignalEvidence } from "./missing-health-signal.js";
 import { buildMissingShutdownDrainEvidence } from "./missing-shutdown-drain.js";
@@ -454,6 +455,7 @@ type EvidenceRegistry = {
   "jev/no-message-chain": EvidenceBuilder;
   "jev/no-mirrored-derived-state": EvidenceBuilder;
   "jev/no-misdirecting-error-message": EvidenceBuilder;
+  "jev/no-misplaced-coordination": EvidenceBuilder;
   "jev/no-misplaced-error-boundary": EvidenceBuilder;
   "jev/no-missing-health-signal": EvidenceBuilder;
   "jev/no-missing-shutdown-drain": EvidenceBuilder;
@@ -896,6 +898,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildMirroredDerivedStateEvidence(candidate, projectFiles),
   "jev/no-misdirecting-error-message": (candidate, projectFiles) =>
     buildMisdirectingErrorMessageEvidence(candidate, projectFiles),
+  "jev/no-misplaced-coordination": (candidate, projectFiles) =>
+    buildMisplacedCoordinationEvidence(candidate, projectFiles),
   "jev/no-misplaced-error-boundary": (candidate, projectFiles) =>
     buildMisplacedErrorBoundaryEvidence(candidate, projectFiles),
   "jev/no-missing-health-signal": (candidate, projectFiles) =>

@@ -310,6 +310,7 @@ describe("loadConfig", () => {
       "jev/no-cross-service-source-reach",
       "jev/no-same-stem-divergent-role",
       "jev/no-non-exhaustive-domain-handling",
+      "jev/no-misplaced-coordination",
       // END GENERATED: rule-keys
     ]);
   });

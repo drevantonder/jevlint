@@ -148,6 +148,7 @@ const extractedRules = [
   ["jev/no-message-chain", "function"],
   ["jev/no-mirrored-derived-state", "function"],
   ["jev/no-misdirecting-error-message", "function"],
+  ["jev/no-misplaced-coordination", "function"],
   ["jev/no-misplaced-error-boundary", "function"],
   ["jev/no-missing-health-signal", "function"],
   ["jev/no-missing-shutdown-drain", "function"],
