@@ -633,8 +633,8 @@ export const defaultConfig: JevLintConfig = {
       question: {
         instructions: {
           question: "Does this change make one location look simpler mainly by pushing equivalent or greater complexity into callers, wiring, interfaces, or adjacent files?",
-          inspect: "Compare every before/after file and declaration in the supplied change evidence, tracking responsibilities, invariants, branches, concepts, and required knowledge across boundaries.",
-          focus: "Judge the repository-wide cognitive burden after the change, not local line count or whether code moved.",
+          inspect: "Compare the representative before/after files, declarations, and caller changes in the supplied evidence. Use the exact coverage and truncation metadata to identify what was not shown.",
+          focus: "Judge the repository-wide cognitive burden after the change, not local line count or whether code moved. Abstain when omitted evidence could materially change that judgment.",
           decision_boundary: [
             "Replacing direct behavior with callbacks, strategy objects, configuration, or caller wiring that restates the same behavior is strong evidence of displacement.",
             "Moving validation into a domain object or dependency details behind an ownership boundary can reduce complexity by improving cohesion.",

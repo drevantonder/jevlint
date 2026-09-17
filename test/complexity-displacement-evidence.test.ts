@@ -50,17 +50,53 @@ describe("complexity displacement evidence", () => {
             expect.objectContaining({ name: "RegistrationSteps" }),
             expect.objectContaining({ name: "registerUser" }),
           ]),
+          coverage: {
+            before: {
+              totalChars: changes[0]?.oldSource?.length,
+              includedChars: (changes[0]?.oldSource?.length ?? 0) - 1,
+              omittedChars: 1,
+              totalDeclarations: 1,
+              includedDeclarations: 1,
+              omittedDeclarations: 0,
+              truncatedDeclarations: 0,
+            },
+            after: expect.objectContaining({
+              totalChars: changes[0]?.source.length,
+              omittedChars: 3,
+              totalDeclarations: 2,
+              includedDeclarations: 2,
+              omittedDeclarations: 0,
+            }),
+          },
         }),
         expect.objectContaining({
           filePath: "src/signup.ts",
           after: expect.stringContaining("normalizeEmail"),
         }),
       ],
+      coverage: expect.objectContaining({
+        totalFiles: 2,
+        includedFiles: 2,
+        omittedFiles: 0,
+        includedFilePaths: ["src/register-user.ts", "src/signup.ts"],
+        omittedFilePaths: [],
+        unlistedOmittedFiles: 0,
+      }),
       callerChanges: expect.arrayContaining([
         expect.objectContaining({
           functionName: "registerUser",
-          before: [expect.objectContaining({ call: "registerUser(form)" })],
-          after: [expect.objectContaining({ call: expect.stringContaining("registerUser({") })],
+          before: expect.objectContaining({
+            total: 1,
+            included: 1,
+            omitted: 0,
+            callers: [expect.objectContaining({ call: "registerUser(form)" })],
+          }),
+          after: expect.objectContaining({
+            total: 1,
+            included: 1,
+            omitted: 0,
+            callers: [expect.objectContaining({ call: expect.stringContaining("registerUser({") })],
+          }),
         }),
       ]),
     });

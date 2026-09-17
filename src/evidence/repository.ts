@@ -25,6 +25,11 @@ export type FunctionCaller = {
   line: number;
 };
 
+export type FunctionCallersCoverage = {
+  callers: FunctionCaller[];
+  total: number;
+};
+
 export type RelatedProjectModule = {
   filePath: string;
   importedFrom: string;
@@ -238,7 +243,7 @@ function isMatchingCall(
   return false;
 }
 
-export function findFunctionCallers(
+function collectFunctionCallers(
   ownerPath: string,
   functionName: string,
   projectFiles: ProjectFile[],
@@ -269,5 +274,22 @@ export function findFunctionCallers(
       },
     }).visit(parsed.program);
   }
-  return result.slice(0, 20);
+  return result;
+}
+
+export function findFunctionCallers(
+  ownerPath: string,
+  functionName: string,
+  projectFiles: ProjectFile[],
+): FunctionCaller[] {
+  return collectFunctionCallers(ownerPath, functionName, projectFiles).slice(0, 20);
+}
+
+export function findFunctionCallersWithCoverage(
+  ownerPath: string,
+  functionName: string,
+  projectFiles: ProjectFile[],
+): FunctionCallersCoverage {
+  const callers = collectFunctionCallers(ownerPath, functionName, projectFiles);
+  return { callers, total: callers.length };
 }

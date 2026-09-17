@@ -368,14 +368,14 @@ export async function analyzeFile(
   return result.diagnostics;
 }
 
-function changeCandidate(change: SourceFile): Candidate {
+function changeCandidate(change: SourceFile, totalFiles: number): Candidate {
   const startLine = Math.min(...change.changedLines.map(({ start }) => start));
   const endLine = Math.max(...change.changedLines.map(({ end }) => end));
   return {
     id: "change_0",
     kind: "change",
     filePath: change.filePath,
-    source: change.source,
+    source: `Whole change across ${totalFiles} file${totalFiles === 1 ? "" : "s"}. Use the rule-specific before/after evidence and its coverage metadata.`,
     start: 0,
     end: change.source.length,
     startLine,
@@ -397,7 +397,7 @@ export async function analyzeChangesWithFailures(
   return analyzeCandidates({
     filePath: anchor.filePath,
     source: anchor.source,
-    candidates: [changeCandidate(anchor)],
+    candidates: [changeCandidate(anchor, input.changes.length)],
     config: input.config,
     projectFiles: input.projectFiles,
     changes: input.changes,

@@ -1,11 +1,15 @@
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  analyzeChangesWithFailures,
   analyzeFile,
   analyzeFileWithFailures,
   EVALUATION_REQUEST_BUDGET_CHARS,
 } from "../src/analyze.js";
-import type { EvaluationRequest, Evaluator, JevLintConfig } from "../src/types.js";
+import { CachedEvaluator } from "../src/cache.js";
+import type { EvaluationRequest, Evaluator, JevLintConfig, SourceFile } from "../src/types.js";
 
 class RecordingEvaluator implements Evaluator {
   requests: EvaluationRequest[] = [];
@@ -15,7 +19,7 @@ class RecordingEvaluator implements Evaluator {
     return Object.fromEntries(
       Object.entries(request.questions).map(([id, question]) => [
         id,
-        JSON.stringify(question.instructions).includes("forward") ? 0.91 : 0.2,
+        /forward|whole change/.test(JSON.stringify(question.instructions)) ? 0.91 : 0.2,
       ]),
     );
   }
@@ -65,6 +69,23 @@ function functions(count: number, body = "return 1;"): string {
     { length: count },
     (_, index) => `export function function${index}() { ${body} }`,
   ).join("\n");
+}
+
+function forgeSizedChanges(): SourceFile[] {
+  return Array.from({ length: 16 }, (_, fileIndex) => {
+    const declarations = Array.from({ length: 12 }, (_, declarationIndex) => {
+      const payload = "x".repeat(700);
+      return `export function operation${fileIndex}_${declarationIndex}(value: string) { return value + "${payload}"; }`;
+    });
+    const oldSource = declarations.join("\n");
+    const source = oldSource.replaceAll("return value +", "return normalize(value) +");
+    return {
+      filePath: `packages/area-${String(fileIndex).padStart(2, "0")}/src/operations.ts`,
+      oldSource,
+      source,
+      changedLines: [{ start: 1, end: declarations.length }],
+    };
+  });
 }
 
 describe("analyzeFile", () => {
@@ -122,6 +143,82 @@ describe("analyzeFile", () => {
     )).toBe(true);
     expect(result.diagnostics).toHaveLength(0);
     expect(result.failures).toEqual([]);
+  });
+
+  it("bounds and caches a Forge-sized whole-change judgment without splitting it", async () => {
+    const changes = forgeSizedChanges();
+    const live = new RecordingEvaluator();
+    const cacheDirectory = await mkdtemp(join(tmpdir(), "jevlint-whole-change-cache-"));
+    const evaluator = new CachedEvaluator(live, {
+      directory: cacheDirectory,
+      repository: "/forge",
+      identity: {
+        provider: "test-provider",
+        endpoint: "https://example.test",
+        model: "jev-test-1",
+        sdk: "test-sdk@1",
+        evaluator: "test-evaluator-v1",
+      },
+    });
+    const changeConfig: JevLintConfig = {
+      rules: {
+        "jev/no-complexity-displacement": {
+          scope: "change",
+          question: { instructions: "Does the whole change displace complexity?" },
+          threshold: 0.8,
+          severity: "warning",
+          message: "Complexity moved.",
+        },
+      },
+    };
+    const input = {
+      changes,
+      config: changeConfig,
+      projectFiles: changes.map(({ filePath, source }) => ({ filePath, source })),
+    };
+
+    const first = await analyzeChangesWithFailures(input, evaluator);
+    const second = await analyzeChangesWithFailures(input, evaluator);
+
+    expect(live.requests).toHaveLength(1);
+    const serializedSize = JSON.stringify(live.requests[0]).length;
+    expect(serializedSize).toBeLessThan(EVALUATION_REQUEST_BUDGET_CHARS);
+    expect(Object.keys(live.requests[0]?.questions ?? {})).toEqual(["q0"]);
+    expect(live.requests[0]?.state.candidates[0]?.evidence?.["jev/no-complexity-displacement"])
+      .toMatchObject({
+        coverage: {
+          totalFiles: 16,
+          includedFiles: 8,
+          omittedFiles: 8,
+          includedFilePaths: Array.from(
+            { length: 8 },
+            (_, index) => `packages/area-${String(index).padStart(2, "0")}/src/operations.ts`,
+          ),
+          omittedFilePaths: Array.from(
+            { length: 8 },
+            (_, index) => `packages/area-${String(index + 8).padStart(2, "0")}/src/operations.ts`,
+          ),
+          unlistedOmittedFiles: 0,
+          truncatedFiles: Array.from(
+            { length: 8 },
+            (_, index) => `packages/area-${String(index).padStart(2, "0")}/src/operations.ts`,
+          ),
+        },
+      });
+    expect(first).toMatchObject({
+      diagnostics: [expect.objectContaining({ ruleId: "jev/no-complexity-displacement" })],
+      failures: [],
+    });
+    expect(second).toMatchObject({
+      diagnostics: [expect.objectContaining({ ruleId: "jev/no-complexity-displacement" })],
+      failures: [],
+    });
+    expect(evaluator.statistics).toMatchObject({
+      hits: 1,
+      misses: 1,
+      writes: 1,
+      liveRequests: 1,
+    });
   });
 
   it("retains schema and rule identity through batching and recursive splitting", async () => {
