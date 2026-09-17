@@ -38,6 +38,10 @@ import { buildUnguardedAsyncInitEvidence } from "./unguarded-async-init.js";
 import { buildPromiseCombinatorMismatchEvidence } from "./promise-combinator-mismatch.js";
 import { buildOrphanedTimerEvidence } from "./orphaned-timer.js";
 import { buildUnsynchronizedSharedMemoryEvidence } from "./unsynchronized-shared-memory.js";
+import { buildOverloadResolutionAmbiguityEvidence } from "./overload-resolution-ambiguity.js";
+import { buildSyncAsyncSiblingAmbiguityEvidence } from "./sync-async-sibling-ambiguity.js";
+import { buildLeakyInternalExportEvidence } from "./leaky-internal-export.js";
+import { buildWeakCryptoPrimitiveEvidence } from "./weak-crypto-primitive.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
@@ -628,6 +632,27 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildLocaleDateSerializationEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-overload-resolution-ambiguity") {
+    return {
+      handled: true,
+      evidence: buildOverloadResolutionAmbiguityEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-sync-async-sibling-ambiguity") {
+    return {
+      handled: true,
+      evidence: buildSyncAsyncSiblingAmbiguityEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-leaky-internal-export") {
+    return {
+      handled: true,
+      evidence: buildLeakyInternalExportEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-weak-crypto-primitive") {
+    return { handled: true, evidence: buildWeakCryptoPrimitiveEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

@@ -130,6 +130,10 @@ describe("loadConfig", () => {
       "jev/no-unit-scale-mismatch",
       "jev/no-truncating-numeric-parse",
       "jev/no-locale-date-serialization",
+      "jev/no-overload-resolution-ambiguity",
+      "jev/no-sync-async-sibling-ambiguity",
+      "jev/no-leaky-internal-export",
+      "jev/no-weak-crypto-primitive",
     ]);
   });
 
