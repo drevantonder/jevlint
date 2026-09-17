@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- One hundred forty-seven bundled Jev rules
+- One hundred fifty-two bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -166,6 +166,8 @@ The bundled Jev rules judge:
 The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, extract sentinel return paths, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, explicit result types, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, intentional absence semantics, telemetry, and cache population remain valid.
 
 The stability and type-safety rules use extracted wait bounds, promise tracking, module-scope mutation, and escape shapes to distinguish unbounded remote waits from wrapper-bounded calls, lost async work from awaited or guarded work, hidden cross-export coupling from load-time configuration, and unchecked boundary assumptions from guarded narrowing. The golden-comment rules pair iteration primitives with settlement signals, comparison operands with normalization symmetry, nullable origins with guard coverage, truthiness sites with domain types, host comparisons with anchoring evidence, and implementations with their resolved contracts, so Jev judges escaping async work, one-sided normalization, unguarded dereferences, falsy-as-absent checks, superstring host bypasses, and signature drift. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
+
+The name-clarity rules pair identifier text with initializers, types, sibling declarations, and caller values, so Jev judges names that contradict their values, pun across meanings, compress past recognition, negate booleans, or drop units.
 
 ## Setup
 

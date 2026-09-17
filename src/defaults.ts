@@ -3942,5 +3942,131 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-deceptive-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a name in this function assert a property its value contradicts?",
+          inspect: "Compare each flagged identifier with its initializer or type annotation, the establishing operations found in the body, same-name reuses in other files, and repository callers in the supplied evidence.",
+          focus: "Judge whether a reader reasoning from the name alone would start from a false premise about plurality, container shape, boolean type, or an established quality such as sorted or safe.",
+          decision_boundary: [
+            "A plural noun holding a singular value, a list or map word holding a different container, an is or has prefix on a non-boolean, or a sorted or safe claim with no establishing operation are strong evidence of deception.",
+            "Mildly loose collective nouns over genuinely mixed bags answer the question negatively.",
+            "Conventional denylist names such as status are not plural claims.",
+            "If the evidence does not establish what the value actually holds, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An identifier promises plurality, a container shape, a boolean predicate, or an established quality the value or body does not deliver",
+            remedy: "Rename the identifier to state what the value actually is, or change the value to honor the name",
+          },
+          false: {
+            what: "Names match their values, the looseness is conventional, or the evidence does not establish a contradiction",
+          },
+        },
+      },
+      message: "This name asserts a property its value contradicts.",
+    },
+    "jev/no-punned-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function name carry a different meaning in another declaration, so callers import the wrong meaning?",
+          inspect: "Compare the candidate signature with each same-name sibling signature and the repository callers in the supplied evidence.",
+          focus: "Judge whether one name denotes two or more incompatible parameter or return shapes across its uses, where each individual use reads clearly on its own.",
+          decision_boundary: [
+            "Same name with divergent parameter counts, parameter types, or return types used by callers in different files is strong evidence of punning.",
+            "Mild overloads sharing an obvious core idea answer the question negatively.",
+            "Identical shapes under one name are one meaning, not a pun.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One name denotes incompatible shapes across declarations that different callers rely on",
+            remedy: "Give each meaning its own name, or unify the shapes behind one contract",
+          },
+          false: {
+            what: "The sibling shapes share one core idea, or no divergent same-name declaration exists",
+          },
+        },
+      },
+      message: "This name carries different meanings across its declarations.",
+    },
+    "jev/no-cryptic-abbreviation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do abbreviated names in this function compress real words past recognition?",
+          inspect: "Compare each flagged identifier and its suspect segments with the segment counts, the module context, and the expanded terms found nearby in the supplied evidence.",
+          focus: "Judge whether a reader must keep a private decode table because consonant clusters or stacked shortenings replaced words the surrounding module states in full.",
+          decision_boundary: [
+            "Multiple vowel-stripped or stacked-shortened segments with the full terms present in adjacent types, docs, or tests are strong evidence of over-compression.",
+            "One standard domain abbreviation used consistently, with no fuller term nearby, answers the question negatively.",
+            "Ordinary dictionary words, however terse, are not abbreviations.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Identifiers compress real words past recognition while the module states the full terms nearby",
+            remedy: "Expand the abbreviations to the full words the module already uses",
+          },
+          false: {
+            what: "The shortenings are standard domain vocabulary used consistently, or the full terms appear nowhere nearby",
+          },
+        },
+      },
+      message: "These abbreviations compress real words past recognition.",
+    },
+    "jev/no-negative-boolean-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a negated boolean name in this function force double negatives at read sites?",
+          inspect: "Compare each flagged boolean binding with its negated reads and the repository callers in the supplied evidence.",
+          focus: "Judge whether readers must resolve two mental negations, such as a logical not applied to an isNot or disable name, to know which arm runs.",
+          decision_boundary: [
+            "A negated name read under logical not or compared against false at multiple sites, including callers branching on the double negative, is strong evidence.",
+            "One internal negative flag never negated at any read answers the question negatively.",
+            "Positive-form names with a single negation are ordinary boolean use.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A negated boolean name is read under further negation, forcing double negatives",
+            remedy: "Rename the boolean to its positive form and flip the reads",
+          },
+          false: {
+            what: "The negative name is never negated at reads, or the negations shown are ordinary single negations of positive names",
+          },
+        },
+      },
+      message: "This negated boolean name forces double negatives at read sites.",
+    },
+    "jev/no-unitless-quantity": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a numeric value flow through a time, size, angle, or rate position with no unit in its name or type?",
+          inspect: "Compare each flagged quantity with its sink calls, the caller argument values at the same parameter position, and the repository callers in the supplied evidence.",
+          focus: "Judge whether a reader can tell which scale applies, such as milliseconds versus seconds, from the name, the branded type, or the call sites.",
+          decision_boundary: [
+            "A unitless number passed to timer, date, buffer, or duration APIs, or sibling call sites passing differently scaled values to the same parameter, are strong evidence.",
+            "A unitless count in a context where only one scale is physically plausible answers the question negatively.",
+            "Unit suffixes or branded types that name the scale settle the question negatively.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A numeric quantity reaches a scale-sensitive position with no unit naming the scale",
+            remedy: "Add the unit to the name or give the quantity a branded unit type",
+          },
+          false: {
+            what: "The scale is named, branded, or physically unambiguous from context",
+          },
+        },
+      },
+      message: "This numeric quantity flows through a scale-sensitive position with no unit.",
+    },
   },
 };
