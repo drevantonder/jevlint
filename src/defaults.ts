@@ -785,6 +785,7 @@ export const defaultConfig: JevLintConfig = {
             "Logging alone does not preserve the failure for code that must decide what happened.",
             "Rethrowing, returning an explicit failure result, or otherwise making failure distinguishable preserves integrity.",
             "A documented best-effort side effect may fail without invalidating an already completed primary operation.",
+            "When the primary operation completes before labeled telemetry or analytics, returning that primary success does not hide a caller-relevant failure.",
             "A credible fallback for an expected unavailable dependency is not a swallowed error; if the contract or consequence is unclear, answer no.",
           ],
         },
