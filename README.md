@@ -127,6 +127,30 @@ Produce machine-readable output:
 pnpm jevlint review --format json
 ```
 
+Emit GitHub workflow annotations, one per judgment:
+
+```sh
+pnpm jevlint review --format github
+```
+
+Each annotation carries the judgment's file with its line/column span and the
+probability in the message. Annotations cover every judgment; `--min-score`
+and `--limit` only shape the text rendering. Exit behavior is unchanged:
+annotations never mark a run incomplete.
+
+Write per-file artifacts alongside the normal report:
+
+```sh
+pnpm jevlint audit --out-dir ./jevlint-out
+```
+
+`--out-dir` writes one JSON file per evaluated file (`<dir>/<path>.json` with
+that file's judgments and file-scoped abstention counts) as files complete,
+plus `summary.json` with the full report once the run finishes. Stdout still
+carries the normal report, so `--out-dir` composes with `--format` (including
+github), `review`, `audit`, paths, and `--staged`. With `audit --dry-run`,
+only `summary.json` is written, since nothing is evaluated.
+
 Every evaluated rule/candidate pair is reported as a judgment with a probability, the rule's proposition, the candidate's file and span, its kind, and the bounded evidence behind the score. Text output ranks judgments by descending probability with deterministic tie-breaks, shows the top 5 by default, and ends with a summary line; when judgments are hidden by the limit, one hint line after the summary states the remaining count and how to see them:
 
 ```text

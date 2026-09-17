@@ -99,3 +99,24 @@ export function formatText(report: ReviewReport): string {
 export function formatJson(report: ReviewReport): string {
   return JSON.stringify(report, null, 2);
 }
+
+function escapeAnnotationData(text: string): string {
+  return text.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
+}
+
+function escapeAnnotationProperty(text: string): string {
+  return escapeAnnotationData(text).replaceAll(",", "%2C").replaceAll(":", "%3A");
+}
+
+export function formatGithub(report: ReviewReport): string {
+  return report.judgments.map((judgment) => {
+    const start = judgment.span.start;
+    const end = judgment.span.end;
+    const properties = `file=${escapeAnnotationProperty(judgment.filePath)}`
+      + `,line=${start.line},col=${start.column},endLine=${end.line},endColumn=${end.column}`;
+    const message = escapeAnnotationData(
+      `${judgment.probability.toFixed(3)} ${judgment.ruleId} ${judgment.message}`,
+    );
+    return `::notice ${properties}::${message}`;
+  }).join("\n");
+}

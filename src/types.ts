@@ -190,6 +190,17 @@ export interface ReviewReport {
   coverage?: AuditCoverage;
 }
 
+export interface FileReviewArtifact {
+  version: 1;
+  filePath: string;
+  summary: {
+    evaluated: number;
+    abstained: number;
+  };
+  judgments: Judgment[];
+  abstentions: StructuralAbstentionCount[];
+}
+
 export interface SourceFile {
   filePath: string;
   source: string;
