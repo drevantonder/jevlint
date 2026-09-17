@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
+import { stat } from "node:fs/promises";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
+import { z } from "zod";
 import {
   analyzeAuditWithFailures,
   analyzeChangesWithFailures,
@@ -24,18 +27,43 @@ import { TypeSafeEvaluator } from "./typesafe-evaluator.js";
 import type {
   AuditCoverage,
   EvaluationFailure,
+  EvaluationRequest,
   EvaluationStatistics,
   Evaluator,
   Judgment,
   StructuralAbstentionCount,
 } from "./types.js";
+import type { NoulQuestion } from "@typesafe-ai/sdk";
 
-const USAGE = `Usage: jevlint <command> [options]
+type DebugMode = "files" | "timings" | "cache";
+
+type HelpCommand = "general" | "review" | "audit";
+
+const OPTIONS_SHARED = `Shared options:
+  --format <format>  Output text or json
+  --config <path>    Use a specific config file
+  --min-score <n>    Display scores at or above n (0 to 1)
+  --limit <n>        Display at most n judgments (default 5)
+  --no-cache         Bypass the local Jev response cache
+  --refresh-cache    Re-evaluate and replace matching cache entries
+  --no-error-on-unmatched-pattern
+                     Exit 0 with an empty report when PATH scope matches nothing
+  --debug=<mode>     files, timings, cache (comma-separated)
+  --print-config     Print effective config as JSON and exit
+  --help             Show this help
+
+--debug=files prints the resolved scope file list to stderr and exits without
+evaluating. --debug=timings prints a per-rule timing table to stderr after the
+report. --debug=cache prints cache statistics to stderr. Stdout carries only
+the report or config JSON.
+`;
+
+const USAGE_GENERAL = `Usage: jevlint review [PATH]... [options]
+       jevlint audit [PATH]... [options]
 
 Commands:
-  review            Review changed code (the diff) and report probability scores
-  diff              Compatibility alias for review
-  audit             Survey the whole codebase (every source file) and report probability scores
+  review            Review changed code and report probability scores
+  audit             Survey the whole codebase and report probability scores
 
   review scores changed code only: the working-tree or staged diff against
   HEAD. On a clean tree there is nothing changed, so there is nothing to
@@ -44,7 +72,11 @@ Commands:
   you opt into a limit below. Both commands report probabilities only: no
   pass/fail, no thresholds, no bands.
 
-Options for review and diff:
+Review defaults to changed files; audit defaults to the full tree. PATH filters
+scope to files or directories. Unknown paths follow the unmatched-pattern rule:
+an error unless --no-error-on-unmatched-pattern is given.
+
+Options for review:
   --staged           Review staged changes
 Options for audit:
   --max-questions <n>       Stop preparing evaluation questions once n are
@@ -56,16 +88,39 @@ Options for audit:
                             Absent = unlimited.
   --dry-run                 Prepare and count questions without calling Jev;
                             reports coverage and cost with zero live requests
-Shared options:
-  --format <format>  Output text or json
-  --config <path>    Use a specific config file
-  --min-score <n>    Display scores at or above n (0 to 1)
-  --limit <n>        Display at most n judgments (default 5)
-  --no-cache         Bypass the local Jev response cache
-  --refresh-cache    Re-evaluate and replace matching cache entries
-  --verbose          Report cache hits, misses, and live requests
-  --help             Show this help
-`;
+${OPTIONS_SHARED}`;
+
+const USAGE_REVIEW = `Usage: jevlint review [PATH]... [options]
+
+Review changed code and report probability scores. Defaults to changed files;
+PATH filters scope to files or directories. Unknown paths follow the
+unmatched-pattern rule: an error unless --no-error-on-unmatched-pattern
+is given. See also jevlint audit, which surveys the whole codebase.
+
+Options:
+  --staged           Review staged changes
+${OPTIONS_SHARED}`;
+
+const USAGE_AUDIT = `Usage: jevlint audit [PATH]... [options]
+
+Survey the whole codebase and report probability scores. Runs to completion
+by default; every candidate/rule pair is prepared unless you opt into a limit
+below. Defaults to every source file; PATH filters scope to files or
+directories. Unknown paths follow the unmatched-pattern rule: an error unless
+--no-error-on-unmatched-pattern is given. See also jevlint review, which
+scores changed code only.
+
+Options:
+  --max-questions <n>       Stop preparing evaluation questions once n are
+                            prepared; the rest are reported as omitted, in
+                            deterministic priority order (never sampled, never
+                            cut by score). Absent = full run.
+  --evidence-budget-ms <n>  Wall-clock guard on question preparation;
+                            remaining pairs are omitted on expiry.
+                            Absent = unlimited.
+  --dry-run                 Prepare and count questions without calling Jev;
+                            reports coverage and cost with zero live requests
+${OPTIONS_SHARED}`;
 
 interface CliDependencies {
   cwd?: string;
@@ -76,18 +131,25 @@ interface CliDependencies {
 
 interface CliOptions {
   command: "review" | "audit";
+  paths: string[];
   staged: boolean;
   format: "text" | "json";
   configPath?: string;
   minScore: number;
   limit?: number;
   cacheMode: CacheMode;
-  verbose: boolean;
+  noErrorOnUnmatchedPattern: boolean;
+  debug: DebugMode[];
+  printConfig: boolean;
   help: boolean;
   maxQuestions?: number;
   evidenceBudgetMs?: number;
   dryRun: boolean;
 }
+
+type ParsedArgs =
+  | { ok: true; options: CliOptions }
+  | { ok: false; help?: HelpCommand };
 
 function score(value: string): number | undefined {
   const parsed = Number(value);
@@ -104,75 +166,189 @@ function count(value: string, minimum: number): number | undefined {
   return Number.isSafeInteger(parsed) && parsed >= minimum ? parsed : undefined;
 }
 
-function parseArgs(args: string[]): CliOptions | undefined {
+function isDebugMode(value: string): value is DebugMode {
+  return value === "files" || value === "timings" || value === "cache";
+}
+
+function parseDebugModes(raw: string): DebugMode[] | undefined {
+  const modes = raw.split(",").map((mode) => mode.trim()).filter((mode) => mode.length > 0);
+  if (modes.length === 0 || !modes.every(isDebugMode)) return undefined;
+  return [...new Set(modes)];
+}
+
+function parseArgs(args: string[]): ParsedArgs {
+  if (args.length === 0) return { ok: false };
+  if (args[0] === "--help" && args.length === 1) return { ok: false, help: "general" };
   const command = args[0];
-  if (command !== "review" && command !== "diff" && command !== "audit") return undefined;
+  if (command !== "review" && command !== "audit") return { ok: false };
 
   const options: CliOptions = {
-    command: command === "audit" ? "audit" : "review",
+    command,
+    paths: [],
     staged: false,
     format: "text",
     minScore: 0,
     cacheMode: "read-write",
-    verbose: false,
+    noErrorOnUnmatchedPattern: false,
+    debug: [],
+    printConfig: false,
     help: false,
     dryRun: false,
   };
   let cacheModeSet = false;
+  let endOfFlags = false;
   for (let index = 1; index < args.length; index += 1) {
-    const argument = args[index];
-    if (argument === "--staged") {
-      if (options.command === "audit") return undefined;
-      options.staged = true;
-    } else if (argument === "--help") options.help = true;
-    else if (argument === "--verbose") options.verbose = true;
-    else if (argument === "--dry-run") {
-      if (options.command !== "audit") return undefined;
-      options.dryRun = true;
-    } else if (argument === "--no-cache" || argument === "--refresh-cache") {
-      if (cacheModeSet) return undefined;
-      options.cacheMode = argument === "--no-cache" ? "disabled" : "refresh";
-      cacheModeSet = true;
-    } else if (
-      argument === "--format"
-      || argument === "--config"
-      || argument === "--min-score"
-      || argument === "--limit"
-      || argument === "--max-questions"
-      || argument === "--evidence-budget-ms"
-    ) {
-      const value = args[index + 1];
-      if (!value) return undefined;
-      index += 1;
-      if (argument === "--format") {
-        if (value !== "text" && value !== "json") return undefined;
-        options.format = value;
-      } else if (argument === "--config") {
-        options.configPath = value;
-      } else if (argument === "--min-score") {
-        const parsed = score(value);
-        if (parsed === undefined) return undefined;
-        options.minScore = parsed;
-      } else if (argument === "--max-questions") {
-        if (options.command !== "audit") return undefined;
-        const parsed = count(value, 1);
-        if (parsed === undefined) return undefined;
-        options.maxQuestions = parsed;
-      } else if (argument === "--evidence-budget-ms") {
-        if (options.command !== "audit") return undefined;
-        const parsed = count(value, 0);
-        if (parsed === undefined) return undefined;
-        options.evidenceBudgetMs = parsed;
+    const argument = args[index] ?? "";
+    if (!endOfFlags && argument === "--") {
+      endOfFlags = true;
+      continue;
+    }
+    if (!endOfFlags && argument.startsWith("--")) {
+      if (argument === "--staged") {
+        if (options.command === "audit") return { ok: false };
+        options.staged = true;
+      } else if (argument === "--help") options.help = true;
+      else if (argument === "--print-config") options.printConfig = true;
+      else if (argument === "--dry-run") {
+        if (options.command !== "audit") return { ok: false };
+        options.dryRun = true;
+      } else if (argument === "--no-error-on-unmatched-pattern") {
+        options.noErrorOnUnmatchedPattern = true;
+      } else if (argument === "--no-cache" || argument === "--refresh-cache") {
+        if (cacheModeSet) return { ok: false };
+        options.cacheMode = argument === "--no-cache" ? "disabled" : "refresh";
+        cacheModeSet = true;
+      } else if (argument === "--debug" || argument.startsWith("--debug=")) {
+        let raw: string | undefined;
+        if (argument === "--debug") {
+          raw = args[index + 1];
+          if (raw === undefined) return { ok: false };
+          index += 1;
+        } else {
+          raw = argument.slice("--debug=".length);
+        }
+        const modes = parseDebugModes(raw);
+        if (modes === undefined) return { ok: false };
+        for (const mode of modes) {
+          if (!options.debug.includes(mode)) options.debug.push(mode);
+        }
+      } else if (
+        argument === "--format"
+        || argument === "--config"
+        || argument === "--min-score"
+        || argument === "--limit"
+        || argument === "--max-questions"
+        || argument === "--evidence-budget-ms"
+      ) {
+        const value = args[index + 1];
+        if (value === undefined) return { ok: false };
+        index += 1;
+        if (argument === "--format") {
+          if (value !== "text" && value !== "json") return { ok: false };
+          options.format = value;
+        } else if (argument === "--config") {
+          options.configPath = value;
+        } else if (argument === "--min-score") {
+          const parsed = score(value);
+          if (parsed === undefined) return { ok: false };
+          options.minScore = parsed;
+        } else if (argument === "--max-questions") {
+          if (options.command !== "audit") return { ok: false };
+          const parsed = count(value, 1);
+          if (parsed === undefined) return { ok: false };
+          options.maxQuestions = parsed;
+        } else if (argument === "--evidence-budget-ms") {
+          if (options.command !== "audit") return { ok: false };
+          const parsed = count(value, 0);
+          if (parsed === undefined) return { ok: false };
+          options.evidenceBudgetMs = parsed;
+        } else {
+          const parsed = limit(value);
+          if (parsed === undefined) return { ok: false };
+          options.limit = parsed;
+        }
       } else {
-        const parsed = limit(value);
-        if (parsed === undefined) return undefined;
-        options.limit = parsed;
+        return { ok: false };
       }
     } else {
-      return undefined;
+      options.paths.push(argument);
     }
   }
-  return options;
+  if (options.help) return { ok: false, help: command };
+  return { ok: true, options };
+}
+
+function normalizePattern(cwd: string, pattern: string): string | undefined {
+  const trimmed = pattern.trim();
+  if (trimmed === "" || trimmed === ".") return "";
+  const rel = relative(cwd, resolve(cwd, trimmed));
+  if (rel === "") return "";
+  if (rel.startsWith("..") || isAbsolute(rel)) return undefined;
+  return rel.split(sep).join("/");
+}
+
+async function filterByPaths<T extends { filePath: string }>(
+  cwd: string,
+  files: T[],
+  patterns: string[],
+): Promise<T[]> {
+  const matched = new Set<string>();
+  for (const pattern of patterns) {
+    const normalized = normalizePattern(cwd, pattern);
+    if (normalized === undefined) continue;
+    let isDirectory = normalized === "";
+    if (!isDirectory) {
+      try {
+        isDirectory = (await stat(resolve(cwd, normalized))).isDirectory();
+      } catch {
+        continue;
+      }
+    }
+    for (const file of files) {
+      const hit = isDirectory
+        ? normalized === "" || file.filePath === normalized || file.filePath.startsWith(`${normalized}/`)
+        : file.filePath === normalized;
+      if (hit) matched.add(file.filePath);
+    }
+  }
+  return files.filter((file) => matched.has(file.filePath));
+}
+
+const ruleIdHolderSchema = z.object({ ruleId: z.string().min(1) });
+
+function ruleIdFromQuestion(question: NoulQuestion): string {
+  const parsed = ruleIdHolderSchema.safeParse(question.instructions);
+  return parsed.success ? parsed.data.ruleId : "unknown";
+}
+
+interface RuleTiming {
+  questions: number;
+  ms: number;
+}
+
+class TimingEvaluator implements Evaluator {
+  constructor(
+    private readonly delegate: Evaluator,
+    private readonly timings: Map<string, RuleTiming>,
+  ) {}
+
+  async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
+    const entries = Object.entries(request.questions);
+    const start = Date.now();
+    try {
+      return await this.delegate.evaluate(request);
+    } finally {
+      const elapsed = Date.now() - start;
+      const share = entries.length > 0 ? elapsed / entries.length : 0;
+      for (const [, question] of entries) {
+        const ruleId = ruleIdFromQuestion(question);
+        const timing = this.timings.get(ruleId) ?? { questions: 0, ms: 0 };
+        timing.questions += 1;
+        timing.ms += share;
+        this.timings.set(ruleId, timing);
+      }
+    }
+  }
 }
 
 function addStatistics(target: EvaluationStatistics, source: EvaluationStatistics): void {
@@ -219,7 +395,7 @@ function finishRun(
   if (failures.length > MAX_REPORTED_FAILURES) {
     stderr(`jevlint: ${failures.length - MAX_REPORTED_FAILURES} additional evaluation failures omitted.\n`);
   }
-  if (options.verbose) {
+  if (options.debug.includes("cache")) {
     if (cachedEvaluator) {
       const stats = cachedEvaluator.statistics;
       stderr(
@@ -232,6 +408,20 @@ function finishRun(
     }
   }
   return failures.length > 0 ? 2 : 0;
+}
+
+function reportTimings(
+  timings: Map<string, RuleTiming>,
+  stderr: (text: string) => void,
+): void {
+  stderr("jevlint timings:\n");
+  const rows = [...timings.entries()]
+    .sort(([left], [right]) => left.localeCompare(right));
+  for (const [ruleId, timing] of rows) {
+    stderr(
+      `${ruleId}  ${timing.questions} question${timing.questions === 1 ? "" : "s"}  ${Math.round(timing.ms)} ms\n`,
+    );
+  }
 }
 
 const dryRunEvaluator: Evaluator = {
@@ -275,10 +465,27 @@ async function runAudit(
   const configPromise = options.configPath === undefined
     ? loadConfig({ cwd })
     : loadConfig({ cwd, configPath: options.configPath });
-  const [config, projectFiles] = await Promise.all([
+  const [config, allProjectFiles] = await Promise.all([
     configPromise,
     collectRepositoryFiles({ cwd, staged: false }),
   ]);
+  if (options.printConfig) {
+    stdout(`${JSON.stringify(config, null, 2)}\n`);
+    return 0;
+  }
+  const projectFiles = options.paths.length === 0
+    ? allProjectFiles
+    : await filterByPaths(cwd, allProjectFiles, options.paths);
+
+  if (options.debug.includes("files")) {
+    for (const file of projectFiles) stderr(`${file.filePath}\n`);
+    return 0;
+  }
+  if (projectFiles.length === 0 && options.paths.length > 0 && !options.noErrorOnUnmatchedPattern) {
+    stderr("jevlint: no files matched the given paths\n");
+    return 2;
+  }
+
   let cachedEvaluator: CachedEvaluator | undefined;
   let evaluator: Evaluator = dryRunEvaluator;
   if (!options.dryRun) {
@@ -287,6 +494,10 @@ async function runAudit(
     cachedEvaluator = resolved.cachedEvaluator;
   } else if (dependencies.evaluator) {
     evaluator = dependencies.evaluator;
+  }
+  const timings = new Map<string, RuleTiming>();
+  if (options.debug.includes("timings")) {
+    evaluator = new TimingEvaluator(evaluator, timings);
   }
   const auditInput: AnalyzeAuditInput = {
     projectFiles,
@@ -300,7 +511,7 @@ async function runAudit(
     auditInput.evidenceBudgetMs = options.evidenceBudgetMs;
   }
   const result = await analyzeAuditWithFailures(auditInput, evaluator);
-  return finishRun(
+  const exitCode = finishRun(
     {
       judgments: result.judgments,
       abstentions: result.abstentions,
@@ -313,80 +524,128 @@ async function runAudit(
     stdout,
     stderr,
   );
+  if (options.debug.includes("timings")) {
+    reportTimings(timings, stderr);
+  }
+  return exitCode;
+}
+
+async function runReview(
+  cwd: string,
+  options: CliOptions,
+  dependencies: CliDependencies,
+  stdout: (text: string) => void,
+  stderr: (text: string) => void,
+): Promise<number> {
+  const configPromise = options.configPath === undefined
+    ? loadConfig({ cwd })
+    : loadConfig({ cwd, configPath: options.configPath });
+  const [config, changed, projectFiles] = await Promise.all([
+    configPromise,
+    collectChangedFiles({ cwd, staged: options.staged }),
+    collectRepositoryFiles({ cwd, staged: options.staged }),
+  ]);
+  if (options.printConfig) {
+    stdout(`${JSON.stringify(config, null, 2)}\n`);
+    return 0;
+  }
+  const scope = options.paths.length === 0
+    ? changed
+    : await filterByPaths(cwd, changed, options.paths);
+
+  if (options.debug.includes("files")) {
+    for (const file of scope) stderr(`${file.filePath}\n`);
+    return 0;
+  }
+  if (scope.length === 0 && options.paths.length > 0 && !options.noErrorOnUnmatchedPattern) {
+    stderr("jevlint: no files matched the given paths\n");
+    return 2;
+  }
+
+  const { evaluator: resolvedEvaluator, cachedEvaluator } = await resolveEvaluator(cwd, options, dependencies);
+  let evaluator = resolvedEvaluator;
+  const timings = new Map<string, RuleTiming>();
+  if (options.debug.includes("timings")) {
+    evaluator = new TimingEvaluator(evaluator, timings);
+  }
+  const judgments: Judgment[] = [];
+  const abstentions: StructuralAbstentionCount[] = [];
+  const failures: EvaluationFailure[] = [];
+  const statistics: EvaluationStatistics = { requests: 0, questions: 0 };
+
+  for (const file of scope) {
+    const result = await analyzeFileWithFailures(
+      {
+        filePath: file.filePath,
+        source: file.source,
+        changedLines: file.changedLines,
+        config,
+        projectFiles,
+      },
+      evaluator,
+    );
+    judgments.push(...result.judgments);
+    abstentions.push(...result.abstentions);
+    failures.push(...result.failures);
+    addStatistics(statistics, result.statistics);
+  }
+  const changeResult = await analyzeChangesWithFailures(
+    { changes: scope, config, projectFiles },
+    evaluator,
+  );
+  judgments.push(...changeResult.judgments);
+  abstentions.push(...changeResult.abstentions);
+  failures.push(...changeResult.failures);
+  addStatistics(statistics, changeResult.statistics);
+  const moduleResult = await analyzeModulesWithFailures(
+    { changes: scope, config, projectFiles },
+    evaluator,
+  );
+  judgments.push(...moduleResult.judgments);
+  abstentions.push(...moduleResult.abstentions);
+  failures.push(...moduleResult.failures);
+  addStatistics(statistics, moduleResult.statistics);
+
+  const exitCode = finishRun(
+    { judgments, abstentions, failures, statistics, cachedEvaluator, coverage: undefined },
+    options,
+    stdout,
+    stderr,
+  );
+  if (options.debug.includes("timings")) {
+    reportTimings(timings, stderr);
+  }
+  return exitCode;
 }
 
 export async function runCli(args: string[], dependencies: CliDependencies = {}): Promise<number> {
   const stdout = dependencies.stdout ?? ((text: string) => process.stdout.write(text));
   const stderr = dependencies.stderr ?? ((text: string) => process.stderr.write(text));
-  const options = parseArgs(args);
+  const parsed = parseArgs(args);
 
-  if (!options) {
-    stderr(USAGE);
+  if (!parsed.ok) {
+    if (parsed.help === "review") {
+      stdout(USAGE_REVIEW);
+      return 0;
+    }
+    if (parsed.help === "audit") {
+      stdout(USAGE_AUDIT);
+      return 0;
+    }
+    if (parsed.help === "general") {
+      stdout(USAGE_GENERAL);
+      return 0;
+    }
+    stderr(USAGE_GENERAL);
     return 2;
-  }
-  if (options.help) {
-    stdout(USAGE);
-    return 0;
   }
 
   const cwd = dependencies.cwd ?? process.cwd();
   try {
-    if (options.command === "audit") {
-      return await runAudit(cwd, options, dependencies, stdout, stderr);
+    if (parsed.options.command === "audit") {
+      return await runAudit(cwd, parsed.options, dependencies, stdout, stderr);
     }
-    const configPromise = options.configPath === undefined
-      ? loadConfig({ cwd })
-      : loadConfig({ cwd, configPath: options.configPath });
-    const [config, files, projectFiles] = await Promise.all([
-      configPromise,
-      collectChangedFiles({ cwd, staged: options.staged }),
-      collectRepositoryFiles({ cwd, staged: options.staged }),
-    ]);
-    const { evaluator, cachedEvaluator } = await resolveEvaluator(cwd, options, dependencies);
-    const judgments: Judgment[] = [];
-    const abstentions: StructuralAbstentionCount[] = [];
-    const failures: EvaluationFailure[] = [];
-    const statistics: EvaluationStatistics = { requests: 0, questions: 0 };
-
-    for (const file of files) {
-      const result = await analyzeFileWithFailures(
-        {
-          filePath: file.filePath,
-          source: file.source,
-          changedLines: file.changedLines,
-          config,
-          projectFiles,
-        },
-        evaluator,
-      );
-      judgments.push(...result.judgments);
-      abstentions.push(...result.abstentions);
-      failures.push(...result.failures);
-      addStatistics(statistics, result.statistics);
-    }
-    const changeResult = await analyzeChangesWithFailures(
-      { changes: files, config, projectFiles },
-      evaluator,
-    );
-    judgments.push(...changeResult.judgments);
-    abstentions.push(...changeResult.abstentions);
-    failures.push(...changeResult.failures);
-    addStatistics(statistics, changeResult.statistics);
-    const moduleResult = await analyzeModulesWithFailures(
-      { changes: files, config, projectFiles },
-      evaluator,
-    );
-    judgments.push(...moduleResult.judgments);
-    abstentions.push(...moduleResult.abstentions);
-    failures.push(...moduleResult.failures);
-    addStatistics(statistics, moduleResult.statistics);
-
-    return finishRun(
-      { judgments, abstentions, failures, statistics, cachedEvaluator, coverage: undefined },
-      options,
-      stdout,
-      stderr,
-    );
+    return await runReview(cwd, parsed.options, dependencies, stdout, stderr);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     stderr(`jevlint: ${message}\n`);
