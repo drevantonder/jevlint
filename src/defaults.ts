@@ -5633,5 +5633,59 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This change narrows what existing callers may pass while current call sites break.",
     },
+    "jev/no-unpinned-compat-quirk": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function contain behavior that looks redundant or wrong on its face — a special case, redundant path, or unusual return — that existing in-repo callers actually depend on, with no comment or test pinning the dependency, so a well-meaning cleanup would silently break them?",
+          inspect: "Use the quirk spans with their source, the observed callers with their argument lists, which callers exercise each quirk, and the pinning signals in the supplied evidence.",
+          focus: "Judge whether removal of the odd-looking span would silently break current callers. Undocumented-or-apparently-wrong does not make change harmless.",
+          decision_boundary: [
+            "A special case or unusual return that callers demonstrably exercise, with no comment or test naming the compatibility obligation, is strong evidence of an unpinned quirk.",
+            "A span no caller exercises is dead weight, not a compat quirk.",
+            "A comment above the function or a test referencing the quirky behavior pins the obligation and answers the question negatively.",
+            "A span that states the module's documented convention is not a quirk merely because it looks unusual in isolation.",
+            "If the function has no observable in-repo callers, dependence cannot be established; answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An odd-looking span that current callers depend on survives on convention alone, with nothing pinning the obligation for the next cleanup",
+            remedy: "Name the compatibility obligation in a comment and pin the quirky value in a regression test",
+          },
+          false: {
+            what: "The span is dead, already pinned by a comment or test, the module's stated convention, or caller dependence cannot be established",
+          },
+        },
+      },
+      message: "This function keeps an odd-looking span alive only because current callers depend on it.",
+    },
+    "jev/no-entangled-mechanical-change": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change interleave mechanical edits (formatting, renames, import sorting) with semantic edits in the same hunks or files, so a reviewer cannot isolate what changes behavior — with no separation making behavior preservation checkable?",
+          inspect: "Use the per-hunk mechanical versus semantic line counts, which hunks interleave both, and the coverage metadata showing what was omitted in the supplied evidence.",
+          focus: "Judge whether the reviewer can isolate the behavioral delta, not whether the diff is large or the cleanup is welcome.",
+          decision_boundary: [
+            "Semantic lines hiding inside predominantly mechanical hunks across files the reviewer must already scan is strong evidence of entanglement.",
+            "Mechanical and semantic edits in disjoint hunks or files answer the question negatively; the delta is isolable.",
+            "A wholly mechanical diff carries no behavioral delta to obscure and answers the question negatively.",
+            "Churn matters here only insofar as it obscures a behavioral delta; mechanical-only volume is out of scope.",
+            "If coverage metadata shows omitted files that could hold the semantic half of the change, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Mechanical and semantic edits share hunks so the behavior change cannot be isolated or checked for preservation",
+            remedy: "Split the mechanical edits into their own hunk, file, or commit so the semantic delta stands alone",
+          },
+          false: {
+            what: "The layers sit in disjoint hunks or files, the diff is wholly mechanical, or the evidence does not show an obscured behavioral delta",
+          },
+        },
+      },
+      message: "This change interleaves mechanical edits with behavior edits so the delta cannot be isolated.",
+    },
   },
 };

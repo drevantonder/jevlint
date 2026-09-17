@@ -222,6 +222,8 @@ describe("loadConfig", () => {
       "jev/no-mutable-surface-expansion",
       "jev/no-subclass-fragility-hook",
       "jev/no-contract-narrowing-after-ship",
+      "jev/no-unpinned-compat-quirk",
+      "jev/no-entangled-mechanical-change",
     ]);
   });
 

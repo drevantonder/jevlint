@@ -186,6 +186,8 @@ const extractedRules = [
   ["jev/no-mutable-surface-expansion", "change"],
   ["jev/no-subclass-fragility-hook", "function"],
   ["jev/no-contract-narrowing-after-ship", "change"],
+  ["jev/no-unpinned-compat-quirk", "function"],
+  ["jev/no-entangled-mechanical-change", "change"],
 ] as const;
 
 describe("extracted review rules", () => {

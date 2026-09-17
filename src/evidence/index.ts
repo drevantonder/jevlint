@@ -208,6 +208,8 @@ import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
 import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
 import { buildContractNarrowingEvidence } from "./contract-narrowing-after-ship.js";
+import { buildUnpinnedCompatQuirkEvidence } from "./unpinned-compat-quirk.js";
+import { buildEntangledMechanicalChangeEvidence } from "./entangled-mechanical-change.js";
 export type RuleEvidenceResult =
   | { handled: false }
   | { handled: true; evidence: JsonValue | undefined };
@@ -1164,6 +1166,18 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildContractNarrowingEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unpinned-compat-quirk") {
+    return {
+      handled: true,
+      evidence: buildUnpinnedCompatQuirkEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-entangled-mechanical-change") {
+    return {
+      handled: true,
+      evidence: buildEntangledMechanicalChangeEvidence(candidate, changes, projectFiles),
     };
   }
 return { handled: false };
