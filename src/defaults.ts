@@ -5529,5 +5529,83 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type duplicates a field shape already owned by another module.",
     },
+    "jev/no-unused-exported-helper": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this exported function retained in the codebase although repository evidence indicates nothing uses it?",
+          inspect: "Use the zero-caller reading with the symbol importers, the barrel re-export paths, the same-file references, the dynamic-import and registration leads, and the module initialization calls in the supplied evidence.",
+          focus: "Judge whether retention is abandonment rather than deliberate public API, weighing each liveness signal on its own.",
+          decision_boundary: [
+            "Zero callers with zero symbol importers, no re-export path, no textual leads, and no module initialization work is strong evidence of an abandoned export.",
+            "A barrel re-export, a symbol importer, a dynamic-import or framework-registration lead, or same-name callback passing answers the question negatively as deliberate retention.",
+            "A solitary textual lead without import linkage keeps the probability middling rather than clearing it.",
+            "jev/no-single-caller-exported-helper scores the exactly-one-caller seam and jev/no-retained-superseded-implementation scores the marked end; this scores the unmarked zero-caller remainder.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An unmarked exported function with no callers, no importers, no re-export path, and no liveness leads",
+            remedy: "Delete the unused export, or keep it behind a documented public entry point if external consumers need it",
+          },
+          false: {
+            what: "The function shows a liveness signal such as a re-export, an importer, a registration lead, or initialization work",
+          },
+        },
+      },
+      message: "This exported function has no callers and nothing re-exports it.",
+    },
+    "jev/no-commented-out-implementation": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Is this comment block a disabled implementation retained in the source rather than documentation of the live code?",
+          inspect: "Compare the stripped text with its parsed statement shape, brace and semicolon signals, prose-line mixing, unresolved identifiers, and the adjacent live duplicate in the supplied evidence.",
+          focus: "Judge whether the block is dead code wearing comment syntax, not whether any single line looks executable.",
+          decision_boundary: [
+            "Multi-line parseable statements referring to symbols absent from the repository, beside a live duplicate of the same logic, are strong evidence of a disabled implementation.",
+            "Fragmentary content, prose mixed with code such as usage examples or wire formats, and identifiers that still resolve to live declarations answer the question negatively.",
+            "Example-shaped comments are the persistent liveness alternative this rule must weigh, not dismiss.",
+            "jev/no-stale-comment scores prose claims contradicting code; this scores code-shaped text that prose rules never examine.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A comment block holding parseable implementation statements disconnected from live declarations",
+            remedy: "Delete the commented-out implementation, or restore it as live code with tests if it is still needed",
+          },
+          false: {
+            what: "The block is documentation, an example, a config sample, or prose that merely mentions code",
+          },
+        },
+      },
+      message: "This comment block is a disabled implementation retained in the source.",
+    },
+    "jev/no-unmarked-abandoned-compat-layer": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this compatibility-named implementation retained although its migration appears complete?",
+          inspect: "Use the compat-naming match with the zero-caller reading, each token-overlapping successor and its use count, and the symbol importers and re-export paths in the supplied evidence.",
+          focus: "Judge whether the migration is finished and the old layer remains as history, not whether compat naming alone looks stale.",
+          decision_boundary: [
+            "Compat naming with zero callers and an actively used token-overlapping successor is strong evidence of a completed migration left behind.",
+            "Compat naming alone is weak, since many versioned modules are the current contract; zero callers without an in-use successor belongs to the unused-export question, not this one.",
+            "A barrel re-export or external-consumer exposure lowers the probability without clearing it.",
+            "jev/no-retained-superseded-implementation scores the marked end and jev/no-change-stranded-code scores the migration moment; this scores the unmarked post-migration remainder.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An unmarked compat-named implementation with no callers beside an actively used successor",
+            remedy: "Remove the abandoned compat layer now that the successor carries the callers",
+          },
+          false: {
+            what: "The naming is current-contract versioning, no in-use successor exists, or callers and consumers remain",
+          },
+        },
+      },
+      message: "This compat layer has no callers while its successor serves the repository.",
+    },
   },
 };

@@ -203,6 +203,9 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildUnusedExportedHelperEvidence } from "./unused-exported-helper.js";
+import { buildCommentedOutImplementationEvidence } from "./commented-out-implementation.js";
+import { buildUnmarkedAbandonedCompatLayerEvidence } from "./unmarked-abandoned-compat-layer.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1140,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unused-exported-helper") {
+    return { handled: true, evidence: buildUnusedExportedHelperEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-commented-out-implementation") {
+    return { handled: true, evidence: buildCommentedOutImplementationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unmarked-abandoned-compat-layer") {
+    return {
+      handled: true,
+      evidence: buildUnmarkedAbandonedCompatLayerEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
