@@ -1203,5 +1203,168 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type-system escape hides an assumption the compiler can no longer check.",
     },
+
+    "jev/no-unawaited-iteration-work": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do the promises produced by this iteration's callbacks escape the surrounding flow, so per-item failures avoid the visible error handling?",
+          inspect: "Compare each extracted iteration call, its callback async-ness, the awaited and Promise.all signals, the enclosing try/catch regions, and the repository callers in the supplied evidence.",
+          focus: "Judge whether callback rejections can settle into the surrounding flow, not whether individual callbacks use await internally.",
+          decision_boundary: [
+            "A forEach or each loop with an async callback inside a try/catch is strong evidence of escaping work, because the iteration primitive discards every callback promise.",
+            "An awaited Promise.all over a mapped collection shows the per-item promises settle into the surrounding flow.",
+            "A synchronous callback with no async work performs no detached promises even when it uses an iteration primitive.",
+            "SetTimeout or setInterval wrappers around async work escape unless their handles are tracked and settled.",
+            "If no async callback or iteration primitive is shown, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Callback promises never settle into the surrounding flow, so per-item failures escape the visible error handling",
+            remedy: "Await the per-item work with Promise.all over a mapped collection or a for...of loop",
+          },
+          false: {
+            what: "The collection settles through an explicit await, the callbacks are synchronous, or the evidence does not show escaping async work",
+          },
+        },
+      },
+      message: "Per-item async work in this iteration escapes the surrounding error handling.",
+    },
+    "jev/no-asymmetric-normalization": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this comparison normalize one side while leaving the other raw, so equivalent inputs can compare unequal or blocked inputs can pass?",
+          inspect: "Compare each extracted comparison, which side carries the normalizer, the normalizer used, and the repository callers supplying the raw operand in the supplied evidence.",
+          focus: "Judge the symmetry of the single comparison site, not whether the involved types are otherwise well modeled.",
+          decision_boundary: [
+            "A normalized allow-list or block-list compared against a raw request input is strong evidence of a bypass or mismatch.",
+            "Normalizing both sides, including one redundant normalization of an already-normalized constant, is symmetric comparison rather than asymmetry.",
+            "A case-insensitive regular expression flag can normalize the pattern side when the input side is intentionally raw.",
+            "One-sided formatting for display purposes that never gates a decision is not a comparison smell.",
+            "If neither side normalizes or the comparison does not gate meaning, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Exactly one operand flows from a normalizer while the other stays raw at a decision-making comparison",
+            remedy: "Normalize both operands with the same transformation before comparing",
+          },
+          false: {
+            what: "Both sides share normalization, the comparison is display-only, or the evidence does not establish a one-sided gate",
+          },
+        },
+      },
+      message: "This comparison normalizes one side but not the other.",
+    },
+    "jev/no-unguarded-nullable-dereference": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this member access or call dereference a value whose source can be absent, with no guard between the source and the use?",
+          inspect: "Compare each extracted dereference, its nullable origin, its guard status, the validator imports, and the repository callers in the supplied evidence.",
+          focus: "Judge whether an absent value can reach the use at runtime, not whether absence handling exists elsewhere in the module.",
+          decision_boundary: [
+            "A property read or call on a find, Map.get, querySelector, or params-shaped result with no intervening guard is strong evidence of an unguarded dereference.",
+            "An explicit presence check with throw or return, optional chaining, nullish handling, an assertion helper, or a schema validator between source and use is a guard.",
+            "A guard elsewhere in the module does not protect this use unless it executes on every path from the source.",
+            "Direct chaining off a nullable-returning call without an intermediate binding is still a dereference of a possibly absent value.",
+            "If the source cannot be absent or a guard covers the path, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A possibly absent value reaches a member access or call with no guard on the path between source and use",
+            remedy: "Check presence explicitly, narrow with a validator, or handle absence before dereferencing",
+          },
+          false: {
+            what: "A guard, validator, or caller guarantee covers the path, or the evidence does not establish that the source can be absent",
+          },
+        },
+      },
+      message: "This dereference can reach an absent value without a guard.",
+    },
+    "jev/no-falsy-absent-conflation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this presence check treat a valid falsy value such as 0, empty string, or false as absent, silently dropping legitimate input?",
+          inspect: "Compare each extracted truthiness or default site, the tested value, the declared types, and the repository callers passing edge values in the supplied evidence.",
+          focus: "Judge whether falsy is a legitimate member of the tested domain, not whether truthiness checks appear at all.",
+          decision_boundary: [
+            "A truthiness test or || default on a numeric, timestamp, rate, count, or boolean domain where 0, empty string, or false carries meaning is strong evidence of conflation.",
+            "A ?? default preserves falsy values and is the explicit absence check for nullable domains.",
+            "A truthiness check on a value whose validator or type rejects every falsy member upstream is a genuine absence check.",
+            "Explicit comparisons against undefined or null do not conflate falsy with absent.",
+            "If the domain excludes falsy values or the evidence does not establish that falsy is legitimate, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A truthiness test or fallback discards a falsy value that belongs to the domain",
+            remedy: "Test explicitly for null or undefined, or default with ?? instead of ||",
+          },
+          false: {
+            what: "Falsy values are invalid upstream, the check already distinguishes absence explicitly, or the domain evidence is insufficient",
+          },
+        },
+      },
+      message: "This presence check treats a valid falsy value as absent.",
+    },
+    "jev/no-unanchored-domain-check": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this host or domain allow-check match substrings rather than domain boundaries, so an attacker-controlled superstring can pass it?",
+          inspect: "Compare each extracted check, its matching method, anchoring and dot-boundary signals, whether the URL was parsed first, and the callers in trust-gating paths in the supplied evidence.",
+          focus: "Judge whether a superstring of an allowed entry can satisfy the check, not whether substring matching appears at all.",
+          decision_boundary: [
+            "An indexOf, includes, startsWith, or endsWith comparison of a request host or origin against an allow-list entry is strong evidence of an unanchored check.",
+            "An unanchored regular expression without start or end anchors and without a dot-boundary admits sibling and superstring domains.",
+            "Parsing with new URL and comparing the exact hostname, or requiring an explicit dot-boundary, anchors the check to domain structure.",
+            "Substring matching on full paths or non-trust values where substring semantics are intended is not a domain-boundary smell.",
+            "If the value never gates trust or the check is anchored to exact host equality, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A trust-gating host comparison accepts superstrings of an allowed entry instead of matching domain boundaries",
+            remedy: "Parse the URL and compare exact hostnames or require an explicit dot-boundary",
+          },
+          false: {
+            what: "The check is anchored to exact host equality, the value never gates trust, or the evidence does not establish a superstring bypass",
+          },
+        },
+      },
+      message: "This host check matches substrings instead of domain boundaries.",
+    },
+    "jev/no-contract-signature-drift": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Has this implementation or call site drifted from the contract it claims to satisfy in arity, abstract members, or nullability, so conforming callers hit runtime failures?",
+          inspect: "Compare each extracted drift with the resolved contract module excerpt, sibling implementations, declared return contracts, and the repository callers in the supplied evidence.",
+          focus: "Judge structural disagreement between an existing machine-readable contract and its implementation or use, not whether documentation prose is missing.",
+          decision_boundary: [
+            "An override with fewer parameters than the resolved base requires, a missing abstract member, a short call, or a null return against a non-nullable contract is strong evidence of drift.",
+            "An override that adds only optional parameters while satisfying every existing call site still satisfies the contract.",
+            "A contract excerpt that is unavailable or ambiguous is insufficient; structural disagreement must be visible.",
+            "Intentional overloads and documented optional extensions that every caller honors are not drift.",
+            "If the contract and implementation agree or the disagreement is not established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The implementation or call site structurally disagrees with an existing contract in parameters, members, or nullability",
+            remedy: "Restore the missing parameters, members, or nullability guarantees so the contract holds",
+          },
+          false: {
+            what: "The code satisfies the contract, extends it only with compatible optional shape, or lacks enough contract evidence to judge",
+          },
+        },
+      },
+      message: "This code disagrees with the contract signature it claims to satisfy.",
+    },
   },
 };

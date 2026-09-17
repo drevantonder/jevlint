@@ -1,10 +1,12 @@
 import type { JsonValue } from "@typesafe-ai/sdk";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
+import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
+import { buildContractSignatureDriftEvidence } from "./contract-signature-drift.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
@@ -12,6 +14,7 @@ import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.j
 import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
 import { buildForeignMutationEvidence } from "./foreign-mutation.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
+import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
@@ -38,9 +41,12 @@ import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
+import { buildUnanchoredDomainCheckEvidence } from "./unanchored-domain-check.js";
+import { buildUnawaitedIterationWorkEvidence } from "./unawaited-iteration-work.js";
 import { buildUnboundedWaitEvidence } from "./unbounded-wait.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
+import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-dereference.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 
 export type RuleEvidenceResult =
@@ -223,6 +229,42 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-type-checker-escape") {
     return { handled: true, evidence: buildTypeCheckerEscapeEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unawaited-iteration-work") {
+    return {
+      handled: true,
+      evidence: buildUnawaitedIterationWorkEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-asymmetric-normalization") {
+    return {
+      handled: true,
+      evidence: buildAsymmetricNormalizationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unguarded-nullable-dereference") {
+    return {
+      handled: true,
+      evidence: buildUnguardedNullableDereferenceEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-falsy-absent-conflation") {
+    return {
+      handled: true,
+      evidence: buildFalsyAbsentConflationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unanchored-domain-check") {
+    return {
+      handled: true,
+      evidence: buildUnanchoredDomainCheckEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-contract-signature-drift") {
+    return {
+      handled: true,
+      evidence: buildContractSignatureDriftEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

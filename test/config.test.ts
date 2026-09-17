@@ -56,6 +56,12 @@ describe("loadConfig", () => {
       "jev/no-detached-async-work",
       "jev/no-shared-mutable-module-state",
       "jev/no-type-checker-escape",
+      "jev/no-unawaited-iteration-work",
+      "jev/no-asymmetric-normalization",
+      "jev/no-unguarded-nullable-dereference",
+      "jev/no-falsy-absent-conflation",
+      "jev/no-unanchored-domain-check",
+      "jev/no-contract-signature-drift",
     ]);
   });
 
