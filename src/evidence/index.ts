@@ -44,6 +44,7 @@ import { buildContractSignatureDriftEvidence } from "./contract-signature-drift.
 import { buildConventionBreakingAdditionEvidence } from "./convention-breaking-addition.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
+import { buildCoupledIndexCollectionsEvidence } from "./coupled-index-collections.js";
 import { buildCrossAreaExportBreakEvidence } from "./cross-area-export-break.js";
 import { buildCrossContextTestReachEvidence } from "./cross-context-test-reach.js";
 import { buildCrossModuleCallOrderEvidence } from "./cross-module-call-order.js";
@@ -352,6 +353,7 @@ type EvidenceRegistry = {
   "jev/no-convention-breaking-addition": EvidenceBuilder;
   "jev/no-convergent-twin-types": EvidenceBuilder;
   "jev/no-correlated-state-booleans": EvidenceBuilder;
+  "jev/no-coupled-index-collections": EvidenceBuilder;
   "jev/no-cross-area-export-break": EvidenceBuilder;
   "jev/no-cross-context-test-reach": EvidenceBuilder;
   "jev/no-cross-module-call-order": EvidenceBuilder;
@@ -692,6 +694,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildConvergentTwinTypesEvidence(candidate, projectFiles),
   "jev/no-correlated-state-booleans": (candidate, projectFiles) =>
     buildCorrelatedStateBooleansEvidence(candidate, projectFiles),
+  "jev/no-coupled-index-collections": (candidate, projectFiles) =>
+    buildCoupledIndexCollectionsEvidence(candidate, projectFiles),
   "jev/no-cross-area-export-break": (candidate, projectFiles, changes) =>
     buildCrossAreaExportBreakEvidence(candidate, projectFiles, changes),
   "jev/no-cross-context-test-reach": (candidate, projectFiles, changes) =>

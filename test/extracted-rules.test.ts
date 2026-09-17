@@ -44,6 +44,7 @@ const extractedRules = [
   ["jev/no-convention-breaking-addition", "function"],
   ["jev/no-convergent-twin-types", "abstraction"],
   ["jev/no-correlated-state-booleans", "abstraction"],
+  ["jev/no-coupled-index-collections", "function"],
   ["jev/no-cross-area-export-break", "module"],
   ["jev/no-cross-context-test-reach", "module"],
   ["jev/no-cross-module-call-order", "function"],

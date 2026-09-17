@@ -311,6 +311,7 @@ describe("loadConfig", () => {
       "jev/no-same-stem-divergent-role",
       "jev/no-non-exhaustive-domain-handling",
       "jev/no-misplaced-coordination",
+      "jev/no-coupled-index-collections",
       // END GENERATED: rule-keys
     ]);
   });
