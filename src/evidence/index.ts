@@ -24,8 +24,10 @@ import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
+import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
+import { buildInvertedAuthorizationPredicateEvidence } from "./inverted-authorization-predicate.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInappropriateIntimacyEvidence } from "./inappropriate-intimacy.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
@@ -38,8 +40,11 @@ import { buildMessageChainEvidence } from "./message-chain.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
+import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
+import { buildSiblingIdentifierSwapEvidence } from "./sibling-identifier-swap.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
+import { buildPreGateSideEffectEvidence } from "./pre-gate-side-effect.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildRefusedInheritanceEvidence } from "./refused-inheritance.js";
@@ -50,6 +55,7 @@ import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js"
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTemporaryFieldEvidence } from "./temporary-field.js";
+import { buildUnvalidatedBoundaryEvidence } from "./unvalidated-boundary-shape.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
@@ -343,6 +349,42 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-live-credential") {
     return { handled: true, evidence: buildLiveCredentialEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unvalidated-boundary-shape") {
+    return {
+      handled: true,
+      evidence: buildUnvalidatedBoundaryEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-stale-binding-use") {
+    return {
+      handled: true,
+      evidence: buildStaleBindingUseEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-pre-gate-side-effect") {
+    return {
+      handled: true,
+      evidence: buildPreGateSideEffectEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-inverted-authorization-predicate") {
+    return {
+      handled: true,
+      evidence: buildInvertedAuthorizationPredicateEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-hardcoded-config-shadow") {
+    return {
+      handled: true,
+      evidence: buildHardcodedConfigShadowEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-sibling-identifier-swap") {
+    return {
+      handled: true,
+      evidence: buildSiblingIdentifierSwapEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

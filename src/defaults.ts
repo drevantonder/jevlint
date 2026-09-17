@@ -967,6 +967,164 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This function mixes raw mechanics with domain-level operations.",
     },
+
+    "jev/no-unvalidated-boundary-shape": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function consume a cross-boundary value assuming a shape nothing in the function verifies?",
+          inspect: "Compare each boundary read and its origin with the validators present, the validation library import, the related producer modules, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the function reads properties or destructures values that cross a network, parser, or plugin boundary without establishing that the expected shape holds.",
+          decision_boundary: [
+            "Reading data properties off a safeParse-style wrapper, a raw fetch Response, or an unchecked payload field without narrowing is strong evidence of an unverified shape assumption.",
+            "A schema parse, success check, type narrowing, key check, or instance check between the boundary and the use establishes the shape and answers the question negatively.",
+            "Optional chaining and fallback defaults guard absence but do not establish that sibling fields or nested shapes exist.",
+            "Reads of ordinary domain parameters with no boundary origin in the evidence are insufficient; answer no when no cross-boundary source is established.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function reads or destructures a boundary-crossing value while no validator in the evidence establishes the assumed shape",
+            remedy: "Validate the payload with a shared schema or narrow its shape before reading caller-relevant fields",
+          },
+          false: {
+            what: "The reads stay within verified shapes, a validator covers the access, or the evidence does not establish a cross-boundary source",
+          },
+        },
+      },
+      message: "This function assumes a boundary value's shape without verifying it.",
+    },
+    "jev/no-stale-binding-use": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function read a pre-update binding after the updated value was already derived, silently discarding the fresh value?",
+          inspect: "Compare each stale use with its discarded derivation, the full derived-binding list, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the function derives a fresher value and then returns or passes the older binding, so callers observe an outcome that never advances.",
+          decision_boundary: [
+            "Building an updated copy and then returning the original container, or refreshing credentials and then connecting with the pre-refresh values, is strong evidence of a discarded update.",
+            "Returning the original intentionally after establishing the derived copy carries no semantic difference answers the question negatively.",
+            "A derived binding that is used later in the function is propagated, not discarded.",
+            "If the evidence does not show the use occurring after the derivation, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A return or call argument reads the older binding while a derived fresher binding in the same function goes unused",
+            remedy: "Return or pass the derived value, or remove the derivation if the original is genuinely intended",
+          },
+          false: {
+            what: "The derived value is propagated, the original is intentionally equivalent, or ordering does not show a discarded update",
+          },
+        },
+      },
+      message: "This function discards a derived update and uses the stale binding.",
+    },
+    "jev/no-pre-gate-side-effect": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function perform an externally visible effect before the check that can reject the operation, leaving residue observable after rejection?",
+          inspect: "Compare the position of each effect with each rejecting gate, the compensating cleanup present, and the repository callers in the supplied evidence.",
+          focus: "Judge ordering: a legitimate write that lands before a limit, flag, or authorization check leaves residue whenever the check rejects.",
+          decision_boundary: [
+            "A cache, analytics, database, or network write textually preceding a gate with an early exit is strong evidence of residue on the rejection path.",
+            "Writes placed after every rejecting gate, and writes before purely descriptive checks that cannot reject, answer the question negatively.",
+            "Compensating cleanup on the rejection path weakens the residue concern but does not erase the ordering smell by itself.",
+            "Local-only mutations and logging that cannot leak across requests are insufficient; answer no when no externally visible effect precedes a gate.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An externally visible effect lands before a rejecting gate with no cleanup that fully removes the residue",
+            remedy: "Move the gate before the effect or compensate the rejection path so rejected operations leave no trace",
+          },
+          false: {
+            what: "Effects follow every gate, the checks cannot reject, cleanup removes the residue, or no pre-gate effect is established",
+          },
+        },
+      },
+      message: "This function writes a visible effect before the check that can reject it.",
+    },
+    "jev/no-inverted-authorization-predicate": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this authorization predicate admit or deny the wrong set of subjects because of its operator or scope selection?",
+          inspect: "Compare each predicate with its sibling predicates in the same module, the permission framework import, and the enforcement callers in the supplied evidence.",
+          focus: "Judge whether the operator or scope set matches the evident intent: either-or roles joined by and, fallback scopes broader than requested, or identity comparisons whose branches invert the outcome.",
+          decision_boundary: [
+            "Joining admin-or-owner style roles with && while sibling checks for the same roles use || is strong evidence of an inverted predicate.",
+            "A manage check that falls back to granting on a view scope admits subjects the policy never intended.",
+            "Equality direction on identity or token matches combined with swapped allow and deny branches inverts who passes.",
+            "Genuinely conjunctive requirements, such as owning the resource and belonging to the team, with both conditions intended, answer the question negatively.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The predicate's operator or scope set admits subjects the policy should deny or denies subjects it should admit",
+            remedy: "Align the operator and scope set with the intended policy and mirror the sibling predicates that already express it",
+          },
+          false: {
+            what: "The operator and scopes match a conjunctive or correctly scoped policy, or the evidence does not establish an authorization intent",
+          },
+        },
+      },
+      message: "This authorization predicate admits or denies the wrong subjects.",
+    },
+    "jev/no-hardcoded-config-shadow": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this literal duplicate a value the repository already owns as configuration, so the two can diverge silently?",
+          inspect: "Compare each literal with the config sources found in the repository, the sibling modules reading the same concept from config, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the literal shadows an existing source of truth: a locale, URL, size, or limit the repository configures elsewhere.",
+          decision_boundary: [
+            "A locale, endpoint, or per-type limit literal alongside a config source or sibling reads for the same concept is strong evidence of a shadow.",
+            "A literal matching a config default where the module genuinely has no access to the config layer and the value is documented as a fallback answers the question negatively.",
+            "One-off literals with no corresponding config source anywhere in the repository are insufficient; answer no when the inventory shows no source of truth.",
+            "Readable, well-named literals can still shadow config; naming clarity alone does not settle the question.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A literal restates a configured value owned elsewhere, so changing config leaves this call site behind",
+            remedy: "Read the value from the shared config source or locale hook instead of restating it",
+          },
+          false: {
+            what: "No config source owns the concept, the module cannot reach the config layer, or the literal is a documented fallback",
+          },
+        },
+      },
+      message: "This literal shadows a value the repository configures elsewhere.",
+    },
+    "jev/no-sibling-identifier-swap": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this expression use a near-identical sibling identifier where the surrounding pattern indicates the other one was meant?",
+          inspect: "Compare each finding with the full scope-binding use counts and the repository callers in the supplied evidence.",
+          focus: "Judge selection among live bindings: the same identifier validated twice while a sibling goes unused, one side of a start and end pair used alone, or an expression compared against itself.",
+          decision_boundary: [
+            "Repeated identical arguments to distinct parameter positions, or the same validation applied twice while a required sibling is never referenced, is strong evidence of a swap.",
+            "Using one side of a paired binding while its counterpart sits unused deserves suspicion only when the surrounding pattern needs both sides.",
+            "Intentional repeated use, such as a re-read or a deliberate self-check with the sibling used elsewhere, answers the question negatively.",
+            "A single use of one binding with no unused sibling in scope is insufficient; answer no when every sibling is accounted for.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The expression selects the wrong sibling among live bindings, leaving the intended identifier unused or comparing a value with itself",
+            remedy: "Use the intended sibling identifier so each binding the pattern requires is actually referenced",
+          },
+          false: {
+            what: "Each sibling is used as intended, repetition is deliberate, or no unused sibling suggests a mistaken selection",
+          },
+        },
+      },
+      message: "This expression uses the wrong sibling identifier.",
+
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

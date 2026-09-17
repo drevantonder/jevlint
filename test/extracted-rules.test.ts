@@ -45,6 +45,12 @@ const extractedRules = [
   ["jev/no-unaccountable-todo", "comment"],
   ["jev/no-adversarial-regex", "function"],
   ["jev/no-live-credential", "function"],
+  ["jev/no-unvalidated-boundary-shape", "function"],
+  ["jev/no-stale-binding-use", "function"],
+  ["jev/no-pre-gate-side-effect", "function"],
+  ["jev/no-inverted-authorization-predicate", "function"],
+  ["jev/no-hardcoded-config-shadow", "function"],
+  ["jev/no-sibling-identifier-swap", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
