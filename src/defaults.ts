@@ -3786,5 +3786,161 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This function's nominal path is buried under layers of nesting.",
     },
+    "jev/no-unmeasured-performance-machinery": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this caching, memoization, or batching layer carry no shown hotspot, benchmark, or invalidation policy, so readers maintain machinery that may optimize nothing?",
+          inspect: "Compare each perf-machinery shape with the invalidation policy, the wrapped operation's cost, the perf evidence in the repository, and the callers in the supplied evidence.",
+          focus: "Judge whether the machinery answers a demonstrated cost, not whether caching idioms look expert.",
+          decision_boundary: [
+            "A bespoke cache with no eviction policy around a cheap synchronous helper and no perf evidence in the repository is strong evidence of unmeasured machinery.",
+            "Memoization beside a benchmark, a documented hotspot, or an explicit invalidation rule answers the question negatively.",
+            "A useMemo over a genuinely expensive derived value with measured callers weakens the claim even when no benchmark file names it.",
+            "If no caching, memoization, batching, or pooling shape appears, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Performance machinery with no demonstrated hotspot, benchmark, or invalidation policy behind it",
+            remedy: "Measure the hotspot first, then keep the layer only with an explicit invalidation and eviction policy",
+          },
+          false: {
+            what: "The layer answers a demonstrated cost, carries an invalidation policy, or no perf machinery is present",
+          },
+        },
+      },
+      message: "This caching, memoization, or batching layer shows no hotspot, benchmark, or invalidation policy behind it.",
+    },
+    "jev/no-unmigrated-schema-change": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this schema or model edit constrain stored or wire data more tightly while showing no migration, default, or reader-compatibility handling, so existing rows and old readers break?",
+          inspect: "Compare each schema edit with the migrations and backfill or default handling in the same change, the repository migration precedent, and the coverage in the supplied evidence.",
+          focus: "Judge whether existing stored data and old readers survive the edit, not whether the new shape reads well fresh.",
+          decision_boundary: [
+            "A new non-nullable field with no default and no migration in the same change, in a repository that migrates, is strong evidence of an unmigrated change.",
+            "Additive nullable fields, or a full migration with backfill in the same change, answer the question negatively.",
+            "A tightened validator beside dual-shape readers that accept both forms weakens the claim even when no migration file ships.",
+            "If the change adds no required field, removes nothing, and narrows nothing, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Stored or wire data constrained more tightly with no migration, default, or compatibility handling for existing rows",
+            remedy: "Ship the migration with a default or backfill in the same change, or keep the edit additive until readers converge",
+          },
+          false: {
+            what: "The edit is additive, migrations and backfill ship together, or readers already handle both shapes",
+          },
+        },
+      },
+      message: "This schema edit constrains stored data more tightly with no migration, default, or reader-compatibility handling.",
+    },
+    "jev/no-unconsumed-telemetry": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this metric, log channel, or span emitted where nothing in the repository consumes it, so it adds volume and maintenance without informing any response?",
+          inspect: "Compare each emission name with the in-repository consumers, the sibling emissions that feed live consumers, and the callers in the supplied evidence.",
+          focus: "Judge whether the emission closes a loop to an alert, dashboard, query, or runbook, not whether instrumentation reads as diligence.",
+          decision_boundary: [
+            "A novel metric name emitted per request with zero in-repository consumers while sibling emissions feed alerts is strong evidence of unconsumed telemetry.",
+            "Emission into a demonstrably consumed channel, with an alert or dashboard naming it, answers the question negatively.",
+            "A span in a repository whose trace backend lives outside the diff weakens the claim, since consumption may be unobservable from the repository.",
+            "If no metric, channel, or span emission appears, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Telemetry emitted where no alert, dashboard, query, or runbook consumes it",
+            remedy: "Wire the emission to a consumer that responds to it, or remove the emission",
+          },
+          false: {
+            what: "The emission feeds a live consumer, siblings show the channel is watched, or consumption lives outside the observable repository",
+          },
+        },
+      },
+      message: "This telemetry is emitted where nothing in the repository consumes it.",
+    },
+    "jev/no-english-only-pluralization": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this user string branch quantity wording on English grammar while the repository locale reach requires plural rules, so a second locale renders wrong?",
+          inspect: "Compare each plural branch over internationalization keys with the plural-rules usage, the project internationalization frameworks, the locale reach, and the callers in the supplied evidence.",
+          focus: "Judge whether quantity wording follows locale plural rules, not whether the English rendering reads correctly.",
+          decision_boundary: [
+            "An English singular-or-plural test selecting between translation keys in a multi-locale repository whose siblings use framework plurals is strong evidence of English-only branching.",
+            "Branching through Intl.PluralRules or a framework plural with a count option answers the question negatively.",
+            "A single-locale product with no internationalization shelf never reaches this judgment; bare literal ternaries belong to unlocalized strings, not this rule.",
+            "If no quantity branch over localized wording appears, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Quantity wording branched on English grammar while the repository serves locales with different plural rules",
+            remedy: "Route the quantity through Intl.PluralRules or the framework plural form with the count",
+          },
+          false: {
+            what: "Plural rules already decide the form, the product serves one locale with no internationalization shelf, or no quantity branch exists",
+          },
+        },
+      },
+      message: "This user string branches quantity wording on English grammar instead of locale plural rules.",
+    },
+    "jev/no-duplicate-config-source": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change read configuration through a new channel while the repository already owns one, so precedence, validation, and documentation now live in two places?",
+          inspect: "Compare each new config read with the owned config module, whether the new channel delegates to it, the owned-channel and direct-env user counts, and the coverage in the supplied evidence.",
+          focus: "Judge whether configuration keeps one validated source of truth, not whether the new read returns the right value today.",
+          decision_boundary: [
+            "Fresh environment reads bypassing a typed config module every sibling uses, with no delegation, is strong evidence of a duplicate source.",
+            "A new source that delegates to the owned module, or a build-time-only channel with no runtime overlap, answers the question negatively.",
+            "A new read beside an owned module that no sibling imports weakens the claim, since no single source is established.",
+            "If no new config read appears on the changed lines, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Configuration read through a parallel channel that bypasses the owned, validated module",
+            remedy: "Route the read through the owned config module, or promote the new channel into it with precedence documented",
+          },
+          false: {
+            what: "The new channel delegates to the owned module, overlaps no runtime source, or no owned source exists to duplicate",
+          },
+        },
+      },
+      message: "This change reads configuration through a new channel while the repository already owns one.",
+    },
+    "jev/no-unowned-feature-flag": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this new flag gate behavior with no named owner, tracked ticket, or expiry note, so no future reader can tell when it may be removed?",
+          inspect: "Compare each new gate with its adjacent owner, ticket, and expiry annotations, the sibling flag lifecycle norms, and the coverage in the supplied evidence.",
+          focus: "Judge whether the flag carries a removal story a future reader can execute, not whether gating itself is disciplined.",
+          decision_boundary: [
+            "A new widely-gated flag with no ticket or owner in a repository where sibling flags carry both is strong evidence of an unowned flag.",
+            "A flagged rollout with a tracked ticket and a dated removal note answers the question negatively.",
+            "A flag born beside an explicit experiment plan with an owner weakens the claim even when the expiry date is approximate.",
+            "If no new flag gate appears, or the repository keeps no flag discipline to depart from, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A newborn flag gating behavior with no owner, ticket, or expiry a future reader could act on",
+            remedy: "Name the owner, link the tracking ticket, and note the expiry or removal condition beside the flag",
+          },
+          false: {
+            what: "The flag carries a removal story, the repository keeps no flag norms, or no new gate is introduced",
+          },
+        },
+      },
+      message: "This new flag gates behavior with no named owner, tracked ticket, or expiry note.",
+    },
   },
 };

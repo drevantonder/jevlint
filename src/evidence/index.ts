@@ -137,6 +137,12 @@ import { buildUnlocalizedUserStringEvidence } from "./unlocalized-user-string.js
 import { buildConsoleResidueEvidence } from "./console-residue.js";
 import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js";
 import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
+import { buildUnmeasuredPerformanceMachineryEvidence } from "./unmeasured-performance-machinery.js";
+import { buildUnmigratedSchemaChangeEvidence } from "./unmigrated-schema-change.js";
+import { buildUnconsumedTelemetryEvidence } from "./unconsumed-telemetry.js";
+import { buildEnglishOnlyPluralizationEvidence } from "./english-only-pluralization.js";
+import { buildDuplicateConfigSourceEvidence } from "./duplicate-config-source.js";
+import { buildUnownedFeatureFlagEvidence } from "./unowned-feature-flag.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -752,6 +758,42 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnverifiedClaimEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unmeasured-performance-machinery") {
+    return {
+      handled: true,
+      evidence: buildUnmeasuredPerformanceMachineryEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unmigrated-schema-change") {
+    return {
+      handled: true,
+      evidence: buildUnmigratedSchemaChangeEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unconsumed-telemetry") {
+    return {
+      handled: true,
+      evidence: buildUnconsumedTelemetryEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-english-only-pluralization") {
+    return {
+      handled: true,
+      evidence: buildEnglishOnlyPluralizationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-duplicate-config-source") {
+    return {
+      handled: true,
+      evidence: buildDuplicateConfigSourceEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unowned-feature-flag") {
+    return {
+      handled: true,
+      evidence: buildUnownedFeatureFlagEvidence(candidate, changes, projectFiles),
     };
   }
   return { handled: false };
