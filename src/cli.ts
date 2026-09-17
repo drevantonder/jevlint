@@ -16,15 +16,18 @@ import type { CacheMode } from "./cache.js";
 import { defaultConfig, loadConfig } from "./config.js";
 import {
   createReviewReport,
+  formatGithub,
   formatJson,
   formatText,
   MAX_REPORTED_FAILURES,
 } from "./format.js";
 import type { CreateReviewReportInput } from "./format.js";
+import { createFileArtifact, writeFileArtifact, writeSummaryArtifact } from "./out-dir.js";
 import type { DisplayOptions } from "./types.js";
 import { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 import { TypeSafeEvaluator } from "./typesafe-evaluator.js";
 import type {
+  AnalysisResult,
   AuditCoverage,
   EvaluationFailure,
   EvaluationRequest,
@@ -40,7 +43,10 @@ type DebugMode = "files" | "timings" | "cache";
 type HelpCommand = "general" | "review" | "audit";
 
 const OPTIONS_SHARED = `Shared options:
-  --format <format>  Output text or json
+  --format <format>  Output text, json, or github (also -f)
+  -f <format>        Alias for --format
+  --out-dir <dir>    Write one JSON artifact per evaluated file as files
+                     complete, plus summary.json with the full report
   --config <path>    Use a specific config file
   --min-score <n>    Display scores at or above n (0 to 1)
   --limit <n>        Display at most n judgments (default 5)
@@ -54,7 +60,11 @@ const OPTIONS_SHARED = `Shared options:
   --help             Show this help
 
 --rules prints every bundled rule key, one per line (a JSON array with
---format json), and exits without evaluating.
+--format json), and exits without evaluating. --format github prints one
+workflow annotation per judgment (file with its line/column span and the
+probability in the message); display filters do not apply to annotations.
+--out-dir writes artifacts alongside the normal stdout report without
+replacing it.
 --debug=files prints the resolved scope file list to stderr and exits without
 evaluating. --debug=timings prints a per-rule timing table to stderr after the
 report. --debug=cache prints cache statistics to stderr. Stdout carries only
@@ -141,7 +151,8 @@ interface CliOptions {
   command: "review" | "audit";
   paths: string[];
   staged: boolean;
-  format: "text" | "json";
+  format: "text" | "json" | "github";
+  outDir?: string;
   configPath?: string;
   minScore: number;
   limit?: number;
@@ -211,10 +222,21 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
       endOfFlags = true;
       continue;
     }
-    if (!endOfFlags && argument.startsWith("--")) {
+    if (!endOfFlags && (argument.startsWith("--") || argument === "-f" || argument.startsWith("-f="))) {
       if (argument === "--staged") {
         if (options.command === "audit") return false;
         options.staged = true;
+      } else if (argument === "-f" || argument.startsWith("-f=")) {
+        let value: string | undefined;
+        if (argument === "-f") {
+          value = args[index + 1];
+          if (value === undefined) return false;
+          index += 1;
+        } else {
+          value = argument.slice("-f=".length);
+        }
+        if (value !== "text" && value !== "json" && value !== "github") return false;
+        options.format = value;
       } else if (argument === "--help") options.help = true;
       else if (argument === "--print-config") options.printConfig = true;
       else if (argument === "--rules") options.listRules = true;
@@ -248,13 +270,17 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
         || argument === "--limit"
         || argument === "--max-questions"
         || argument === "--evidence-budget-ms"
+        || argument === "--out-dir"
       ) {
         const value = args[index + 1];
         if (value === undefined) return false;
         index += 1;
         if (argument === "--format") {
-          if (value !== "text" && value !== "json") return false;
+          if (value !== "text" && value !== "json" && value !== "github") return false;
           options.format = value;
+        } else if (argument === "--out-dir") {
+          if (value === "") return false;
+          options.outDir = value;
         } else if (argument === "--config") {
           options.configPath = value;
         } else if (argument === "--min-score") {
@@ -390,12 +416,26 @@ interface FinishedRun {
   coverage: AuditCoverage | undefined;
 }
 
-function finishRun(
+interface FileBucket {
+  judgments: Judgment[];
+  abstentions: StructuralAbstentionCount[];
+}
+
+async function writeBucketArtifact(
+  outDir: string,
+  filePath: string,
+  bucket: FileBucket,
+): Promise<void> {
+  await writeFileArtifact(outDir, createFileArtifact(filePath, bucket.judgments, bucket.abstentions));
+}
+
+async function finishRun(
   run: FinishedRun,
   options: CliOptions,
   stdout: (text: string) => void,
   stderr: (text: string) => void,
-): number {
+  outDir?: string,
+): Promise<number> {
   const { judgments, abstentions, failures, statistics, cachedEvaluator, coverage } = run;
   const reportInput: CreateReviewReportInput = {
     judgments,
@@ -409,8 +449,15 @@ function finishRun(
   if (options.limit !== undefined) display.limit = options.limit;
   reportInput.display = display;
   const report = createReviewReport(reportInput);
-  const output = options.format === "json" ? formatJson(report) : formatText(report);
-  stdout(`${output}\n`);
+  let output: string;
+  if (options.format === "json") {
+    output = formatJson(report);
+  } else if (options.format === "github") {
+    output = formatGithub(report);
+  } else {
+    output = formatText(report);
+  }
+  if (output !== "") stdout(`${output}\n`);
 
   for (const failure of failures.slice(0, MAX_REPORTED_FAILURES)) {
     stderr(
@@ -430,6 +477,15 @@ function finishRun(
       stderr("jevlint cache: dry run (no requests)\n");
     } else {
       stderr("jevlint cache: disabled\n");
+    }
+  }
+  if (outDir !== undefined) {
+    try {
+      await writeSummaryArtifact(outDir, report);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      stderr(`jevlint: cannot write output directory ${outDir}: ${message}\n`);
+      return 2;
     }
   }
   return failures.length > 0 ? 2 : 0;
@@ -540,6 +596,10 @@ async function runAudit(
     config,
     dryRun: options.dryRun,
   };
+  const outDir = options.outDir === undefined ? undefined : resolve(cwd, options.outDir);
+  if (outDir !== undefined) {
+    auditInput.onFileComplete = (artifact) => writeFileArtifact(outDir, artifact);
+  }
   if (options.maxQuestions !== undefined) {
     auditInput.maxQuestions = options.maxQuestions;
   }
@@ -547,7 +607,7 @@ async function runAudit(
     auditInput.evidenceBudgetMs = options.evidenceBudgetMs;
   }
   const result = await analyzeAuditWithFailures(auditInput, evaluator);
-  const exitCode = finishRun(
+  const exitCode = await finishRun(
     {
       judgments: result.judgments,
       abstentions: result.abstentions,
@@ -559,6 +619,7 @@ async function runAudit(
     options,
     stdout,
     stderr,
+    outDir,
   );
   if (options.debug.includes("timings")) {
     reportTimings(timings, stderr);
@@ -609,6 +670,42 @@ async function runReview(
   const abstentions: StructuralAbstentionCount[] = [];
   const failures: EvaluationFailure[] = [];
   const statistics: EvaluationStatistics = { requests: 0, questions: 0 };
+  const outDir = options.outDir === undefined ? undefined : resolve(cwd, options.outDir);
+  const buckets = new Map<string, FileBucket>();
+
+  function bucketFor(filePath: string): FileBucket {
+    const bucket = buckets.get(filePath) ?? { judgments: [], abstentions: [] };
+    buckets.set(filePath, bucket);
+    return bucket;
+  }
+
+  async function absorbFileResult(filePath: string, result: AnalysisResult): Promise<void> {
+    const bucket = bucketFor(filePath);
+    bucket.judgments.push(...result.judgments);
+    bucket.abstentions.push(...result.abstentions);
+    if (outDir !== undefined) await writeBucketArtifact(outDir, filePath, bucket);
+  }
+
+  async function absorbSharedResult(result: AnalysisResult, fallbackFiles: string[]): Promise<void> {
+    const touched: string[] = [];
+    for (const judgment of result.judgments) {
+      if (!touched.includes(judgment.filePath)) touched.push(judgment.filePath);
+      bucketFor(judgment.filePath).judgments.push(judgment);
+    }
+    if (result.abstentions.length > 0) {
+      const host = touched[0] ?? fallbackFiles[0];
+      if (host !== undefined) {
+        bucketFor(host).abstentions.push(...result.abstentions);
+        if (!touched.includes(host)) touched.push(host);
+      }
+    }
+    if (outDir !== undefined) {
+      for (const filePath of touched) {
+        const bucket = buckets.get(filePath);
+        if (bucket !== undefined) await writeBucketArtifact(outDir, filePath, bucket);
+      }
+    }
+  }
 
   for (const file of scope) {
     const result = await analyzeFileWithFailures(
@@ -625,6 +722,7 @@ async function runReview(
     abstentions.push(...result.abstentions);
     failures.push(...result.failures);
     addStatistics(statistics, result.statistics);
+    await absorbFileResult(file.filePath, result);
   }
   const changeResult = await analyzeChangesWithFailures(
     { changes: scope, config, projectFiles },
@@ -634,6 +732,7 @@ async function runReview(
   abstentions.push(...changeResult.abstentions);
   failures.push(...changeResult.failures);
   addStatistics(statistics, changeResult.statistics);
+  await absorbSharedResult(changeResult, scope.map((file) => file.filePath));
   const moduleResult = await analyzeModulesWithFailures(
     { changes: scope, config, projectFiles },
     evaluator,
@@ -642,12 +741,14 @@ async function runReview(
   abstentions.push(...moduleResult.abstentions);
   failures.push(...moduleResult.failures);
   addStatistics(statistics, moduleResult.statistics);
+  await absorbSharedResult(moduleResult, scope.map((file) => file.filePath));
 
-  const exitCode = finishRun(
+  const exitCode = await finishRun(
     { judgments, abstentions, failures, statistics, cachedEvaluator, coverage: undefined },
     options,
     stdout,
     stderr,
+    outDir,
   );
   if (options.debug.includes("timings")) {
     reportTimings(timings, stderr);

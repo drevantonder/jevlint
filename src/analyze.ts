@@ -17,6 +17,7 @@ import type {
   EvaluationFailure,
   EvaluationRequest,
   Evaluator,
+  FileReviewArtifact,
   JevLintConfig,
   Judgment,
   LineRange,
@@ -532,6 +533,7 @@ export interface AnalyzeAuditInput {
   maxQuestions?: number;
   evidenceBudgetMs?: number;
   dryRun?: boolean;
+  onFileComplete?: (artifact: FileReviewArtifact) => void | Promise<void>;
 }
 
 export interface AnalyzeAuditResult extends AnalysisResult {
@@ -598,6 +600,8 @@ export async function analyzeAuditWithFailures(
 
   const prepared: { item: PreparedQuestion; source: string }[] = [];
   const abstentions: StructuralAbstentionCount[] = [];
+  const abstentionsByFile = new Map<string, StructuralAbstentionCount[]>();
+  const preparedByFile = new Map<string, number>();
   const visitedByRule = new Map<string, number>();
   const candidatesWithQuestions = new Set<string>();
   const filesWithQuestions = new Set<string>();
@@ -620,6 +624,9 @@ export async function analyzeAuditWithFailures(
       if (evidenceResult.handled) {
         if (evidenceResult.evidence === undefined) {
           abstentions.push({ ruleId, candidateKind: entry.candidate.kind, count: 1 });
+          const fileAbstentions = abstentionsByFile.get(entry.candidate.filePath) ?? [];
+          fileAbstentions.push({ ruleId, candidateKind: entry.candidate.kind, count: 1 });
+          abstentionsByFile.set(entry.candidate.filePath, fileAbstentions);
           continue;
         }
         const compacted = compactEvidence(evidenceResult.evidence);
@@ -634,6 +641,10 @@ export async function analyzeAuditWithFailures(
         prepared.push({ item: question, source: entry.source });
         candidatesWithQuestions.add(entry.candidate.id);
         filesWithQuestions.add(entry.candidate.filePath);
+        preparedByFile.set(
+          entry.candidate.filePath,
+          (preparedByFile.get(entry.candidate.filePath) ?? 0) + 1,
+        );
         if (hasTruncatedFlag(compacted.evidence)) truncatedEvidence += 1;
       } else {
         const question: PreparedQuestion = {
@@ -645,6 +656,10 @@ export async function analyzeAuditWithFailures(
         prepared.push({ item: question, source: entry.source });
         candidatesWithQuestions.add(entry.candidate.id);
         filesWithQuestions.add(entry.candidate.filePath);
+        preparedByFile.set(
+          entry.candidate.filePath,
+          (preparedByFile.get(entry.candidate.filePath) ?? 0) + 1,
+        );
       }
     }
     const capped = (input.maxQuestions !== undefined && prepared.length >= input.maxQuestions)
@@ -694,9 +709,49 @@ export async function analyzeAuditWithFailures(
       group.items.push(item);
       groups.set(key, group);
     }
+    const onFileComplete = input.onFileComplete;
+    const emittedFiles = new Set<string>();
+    async function emitFileArtifact(filePath: string, judgments: Judgment[]): Promise<void> {
+      if (onFileComplete === undefined) return;
+      const sortedAbstentions = sortAbstentions(abstentionsByFile.get(filePath) ?? []);
+      await onFileComplete({
+        version: 1,
+        filePath,
+        summary: {
+          evaluated: judgments.length,
+          abstained: sortedAbstentions.reduce((total, abstention) => total + abstention.count, 0),
+        },
+        judgments: sortJudgments(judgments),
+        abstentions: sortedAbstentions,
+      });
+      emittedFiles.add(filePath);
+    }
+    if (onFileComplete !== undefined) {
+      for (const entry of ordered) {
+        const filePath = entry.candidate.filePath;
+        if (!preparedByFile.has(filePath) && !emittedFiles.has(filePath)) {
+          await emitFileArtifact(filePath, []);
+        }
+      }
+    }
     for (const group of groups.values()) {
+      const before = result.judgments.length;
       for (const batch of batches(group.filePath, group.items)) {
         await evaluateBatch(group.filePath, batch, evaluator, result);
+      }
+      if (onFileComplete !== undefined) {
+        const byFile = new Map<string, Judgment[]>();
+        for (const judgment of result.judgments.slice(before)) {
+          const list = byFile.get(judgment.filePath) ?? [];
+          list.push(judgment);
+          byFile.set(judgment.filePath, list);
+        }
+        for (const item of group.items) {
+          const filePath = item.candidate.filePath;
+          if (emittedFiles.has(filePath)) continue;
+          emittedFiles.add(filePath);
+          await emitFileArtifact(filePath, byFile.get(filePath) ?? []);
+        }
       }
     }
     result.judgments = sortJudgments(result.judgments);

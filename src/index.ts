@@ -21,14 +21,22 @@ export {
   createReviewReport,
   DEFAULT_DISPLAY_LIMIT,
   formatCoverage,
+  formatGithub,
   formatJson,
   formatText,
   MAX_REPORTED_FAILURES,
 } from "./format.js";
 export type { CreateReviewReportInput } from "./format.js";
+export {
+  artifactFileName,
+  createFileArtifact,
+  writeFileArtifact,
+  writeSummaryArtifact,
+} from "./out-dir.js";
 export type { DisplayOptions } from "./types.js";
 export type {
   AuditCoverage,
+  FileReviewArtifact,
   OmittedByKind,
   OmittedByRule,
   UnscoredRule,
