@@ -1,5 +1,5 @@
 import { parseSync } from "oxc-parser";
-import type { CallExpression, Expression, Program } from "oxc-parser";
+import type { Argument, CallExpression, Expression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
@@ -16,6 +16,21 @@ type TargetModuleEvidence = {
   source: string;
 };
 
+type ArgumentFeatures = {
+  callback: boolean;
+  nestedCall: boolean;
+  constructed: boolean;
+};
+
+type ForwardingEvidence = {
+  receiverParameter: string | null;
+  forwardedParameters: string[];
+  directParameterForwarding: boolean;
+  hasCallbackArgument: boolean;
+  hasNestedCallArgument: boolean;
+  hasConstructedArgument: boolean;
+};
+
 export type PassThroughWrapperEvidence = {
   function: {
     name: string;
@@ -30,6 +45,7 @@ export type PassThroughWrapperEvidence = {
     importedFrom: string | null;
     ownership: "same-module" | "project-module" | "external-package" | "unresolved";
     targetModule: TargetModuleEvidence | null;
+    forwarding: ForwardingEvidence;
   };
   callers: FunctionCaller[];
 };
@@ -53,6 +69,67 @@ function rootIdentifier(expression: Expression): string | undefined {
   if (expression.type === "MemberExpression") return rootIdentifier(expression.object);
   if (expression.type === "ChainExpression") return rootIdentifier(expression.expression);
   return undefined;
+}
+
+function bindingName(parameter: FunctionNode["params"][number]): string | undefined {
+  const value = parameter.type === "TSParameterProperty" ? parameter.parameter : parameter;
+  if (value.type === "Identifier") return value.name;
+  if (value.type === "AssignmentPattern" && value.left.type === "Identifier") {
+    return value.left.name;
+  }
+  if (value.type === "RestElement" && value.argument.type === "Identifier") {
+    return value.argument.name;
+  }
+  return undefined;
+}
+
+function argumentFeatures(argument: Argument): ArgumentFeatures {
+  if (argument.type === "ArrowFunctionExpression" || argument.type === "FunctionExpression") {
+    return { callback: true, nestedCall: false, constructed: false };
+  }
+  if (argument.type === "SpreadElement") return argumentFeatures(argument.argument);
+  if (argument.type === "ChainExpression") return argumentFeatures(argument.expression);
+  if (argument.type === "CallExpression" || argument.type === "NewExpression") {
+    const nested = argument.arguments.map(argumentFeatures);
+    return {
+      callback: nested.some(({ callback }) => callback),
+      nestedCall: argument.type === "CallExpression"
+        || nested.some(({ nestedCall }) => nestedCall),
+      constructed: argument.type === "NewExpression"
+        || nested.some(({ constructed }) => constructed),
+    };
+  }
+  return { callback: false, nestedCall: false, constructed: false };
+}
+
+function forwardingEvidence(
+  fn: FunctionNode,
+  call: CallExpression,
+  targetRoot: string,
+): ForwardingEvidence {
+  const parameters = fn.params.flatMap((parameter) => {
+    const name = bindingName(parameter);
+    return name === undefined ? [] : [name];
+  });
+  const receiverParameter = parameters.includes(targetRoot) ? targetRoot : null;
+  const expectedForwarding = parameters.filter((name) => name !== receiverParameter);
+  const forwardedParameters = call.arguments.flatMap((argument) =>
+    argument.type === "Identifier" ? [argument.name] : []
+  );
+  const features = call.arguments.map(argumentFeatures);
+  const hasCallbackArgument = features.some(({ callback }) => callback);
+  const hasNestedCallArgument = features.some(({ nestedCall }) => nestedCall);
+  const hasConstructedArgument = features.some(({ constructed }) => constructed);
+  return {
+    receiverParameter,
+    forwardedParameters,
+    directParameterForwarding: call.arguments.length === expectedForwarding.length
+      && forwardedParameters.length === expectedForwarding.length
+      && forwardedParameters.every((name, index) => name === expectedForwarding[index]),
+    hasCallbackArgument,
+    hasNestedCallArgument,
+    hasConstructedArgument,
+  };
 }
 
 function hasTopLevelBinding(program: Program, name: string): boolean {
@@ -160,6 +237,7 @@ export function buildPassThroughWrapperEvidence(
             source: localTargetTypeSource ?? targetFile.source.slice(0, 12_000),
           }
         : null,
+      forwarding: forwardingEvidence(fn, call, targetRoot),
     },
     callers: findFunctionCallers(candidate.filePath, name, projectFiles),
   };

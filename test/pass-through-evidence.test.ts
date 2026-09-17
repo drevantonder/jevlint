@@ -79,6 +79,73 @@ describe("pass-through wrapper evidence", () => {
     });
   });
 
+  it("distinguishes direct forwarding from callback and nested-call abstractions", async () => {
+    const cases = await Promise.all([
+      "src/read-google-foundation.ts",
+      "src/replace-at.ts",
+      "src/access-oauth-random.ts",
+    ].map(async (filePath) => ({
+      filePath,
+      source: await readFile(
+        new URL(`./fixtures/repositories/pass-through-forge-cases/${filePath}`, import.meta.url),
+        "utf8",
+      ),
+    })));
+    const evidenceFor = (filePath: string, marker: string) => {
+      const file = cases.find((candidate) => candidate.filePath === filePath);
+      expect(file).toBeDefined();
+      if (!file) return undefined;
+      const candidate = extractCandidates(file.filePath, file.source)
+        .find(({ source }) => source.includes(marker));
+      expect(candidate).toBeDefined();
+      return candidate ? buildPassThroughWrapperEvidence(candidate, cases) : undefined;
+    };
+
+    expect(evidenceFor("src/read-google-foundation.ts", "operations.read"))
+      .toMatchObject({
+        function: { name: "readGoogleFoundation" },
+        delegation: {
+          call: "operations.read(props, policy, owned)",
+          forwarding: {
+            receiverParameter: "operations",
+            forwardedParameters: ["props", "policy", "owned"],
+            directParameterForwarding: true,
+            hasCallbackArgument: false,
+            hasNestedCallArgument: false,
+            hasConstructedArgument: false,
+          },
+        },
+      });
+    expect(evidenceFor("src/replace-at.ts", "items.map"))
+      .toMatchObject({
+        function: { name: "replaceAt" },
+        delegation: {
+          forwarding: {
+            receiverParameter: "items",
+            forwardedParameters: [],
+            directParameterForwarding: false,
+            hasCallbackArgument: true,
+            hasNestedCallArgument: false,
+            hasConstructedArgument: false,
+          },
+        },
+      });
+    expect(evidenceFor("src/access-oauth-random.ts", "base64url(crypto"))
+      .toMatchObject({
+        function: { name: "accessOAuthRandom" },
+        delegation: {
+          forwarding: {
+            receiverParameter: null,
+            forwardedParameters: [],
+            directParameterForwarding: false,
+            hasCallbackArgument: false,
+            hasNestedCallArgument: true,
+            hasConstructedArgument: true,
+          },
+        },
+      });
+  });
+
   it("supports exported arrow-function wrappers", () => {
     const source = `
       const usersRepository = { getUserById: (id: string) => database.users.find(id) };
