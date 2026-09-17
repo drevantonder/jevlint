@@ -108,6 +108,7 @@ import { buildHandRolledUrlQueryEvidence } from "./hand-rolled-url-query.js";
 import { buildHandRolledUuidEvidence } from "./hand-rolled-uuid.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHeterogeneousPrimitiveCallersEvidence } from "./heterogeneous-primitive-callers.js";
+import { buildHiddenCollaboratorReadEvidence } from "./hidden-collaborator-read.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -149,6 +150,7 @@ import { buildMissingHealthSignalEvidence } from "./missing-health-signal.js";
 import { buildMissingShutdownDrainEvidence } from "./missing-shutdown-drain.js";
 import { buildMixedAbsenceConventionEvidence } from "./mixed-absence-convention.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
+import { buildMixedCalculationAndInteractionEvidence } from "./mixed-calculation-and-interaction.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildMockEverythingEvidence } from "./mock-everything.js";
 import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
@@ -407,6 +409,7 @@ type EvidenceRegistry = {
   "jev/no-hand-rolled-uuid": EvidenceBuilder;
   "jev/no-hardcoded-config-shadow": EvidenceBuilder;
   "jev/no-heterogeneous-primitive-callers": EvidenceBuilder;
+  "jev/no-hidden-collaborator-read": EvidenceBuilder;
   "jev/no-hidden-initialization-order": EvidenceBuilder;
   "jev/no-hidden-input-mutation": EvidenceBuilder;
   "jev/no-hidden-io": EvidenceBuilder;
@@ -448,6 +451,7 @@ type EvidenceRegistry = {
   "jev/no-missing-shutdown-drain": EvidenceBuilder;
   "jev/no-mixed-absence-convention": EvidenceBuilder;
   "jev/no-mixed-abstraction-levels": EvidenceBuilder;
+  "jev/no-mixed-calculation-and-interaction": EvidenceBuilder;
   "jev/no-mixed-responsibilities": EvidenceBuilder;
   "jev/no-mock-everything": EvidenceBuilder;
   "jev/no-mode-flag-parameter": EvidenceBuilder;
@@ -802,6 +806,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildHardcodedConfigShadowEvidence(candidate, projectFiles),
   "jev/no-heterogeneous-primitive-callers": (candidate, projectFiles) =>
     buildHeterogeneousPrimitiveCallersEvidence(candidate, projectFiles),
+  "jev/no-hidden-collaborator-read": (candidate, projectFiles) =>
+    buildHiddenCollaboratorReadEvidence(candidate, projectFiles),
   "jev/no-hidden-initialization-order": (candidate, projectFiles) =>
     buildHiddenInitializationOrderEvidence(candidate, projectFiles),
   "jev/no-hidden-input-mutation": (candidate, projectFiles) =>
@@ -884,6 +890,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildMixedAbsenceConventionEvidence(candidate, projectFiles),
   "jev/no-mixed-abstraction-levels": (candidate, projectFiles) =>
     buildMixedAbstractionLevelsEvidence(candidate, projectFiles),
+  "jev/no-mixed-calculation-and-interaction": (candidate, projectFiles) =>
+    buildMixedCalculationAndInteractionEvidence(candidate, projectFiles),
   "jev/no-mixed-responsibilities": (candidate, projectFiles) =>
     buildMixedResponsibilitiesEvidence(candidate, projectFiles),
   "jev/no-mock-everything": (candidate, projectFiles) =>

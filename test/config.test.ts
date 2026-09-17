@@ -302,6 +302,8 @@ describe("loadConfig", () => {
       "jev/no-twin-gateway-emergence",
       "jev/no-unwrapped-service-edge",
       "jev/no-unpinned-compat-quirk",
+      "jev/no-hidden-collaborator-read",
+      "jev/no-mixed-calculation-and-interaction",
       // END GENERATED: rule-keys
     ]);
   });
