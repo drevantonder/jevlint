@@ -149,6 +149,10 @@ import { buildUnconsumedTelemetryEvidence } from "./unconsumed-telemetry.js";
 import { buildEnglishOnlyPluralizationEvidence } from "./english-only-pluralization.js";
 import { buildDuplicateConfigSourceEvidence } from "./duplicate-config-source.js";
 import { buildUnownedFeatureFlagEvidence } from "./unowned-feature-flag.js";
+import { buildNestedConditionalExpressionEvidence } from "./nested-conditional-expression.js";
+import { buildUnexplainedBehavioralLiteralEvidence } from "./unexplained-behavioral-literal.js";
+import { buildShadowedMeaningEvidence } from "./shadowed-meaning.js";
+import { buildOversizedWorkingSetEvidence } from "./oversized-working-set.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -818,6 +822,30 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnownedFeatureFlagEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-nested-conditional-expression") {
+    return {
+      handled: true,
+      evidence: buildNestedConditionalExpressionEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-unexplained-behavioral-literal") {
+    return {
+      handled: true,
+      evidence: buildUnexplainedBehavioralLiteralEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-shadowed-meaning") {
+    return {
+      handled: true,
+      evidence: buildShadowedMeaningEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-oversized-working-set") {
+    return {
+      handled: true,
+      evidence: buildOversizedWorkingSetEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

@@ -128,6 +128,10 @@ const extractedRules = [
   ["jev/no-english-only-pluralization", "function"],
   ["jev/no-duplicate-config-source", "change"],
   ["jev/no-unowned-feature-flag", "change"],
+  ["jev/no-nested-conditional-expression", "function"],
+  ["jev/no-unexplained-behavioral-literal", "function"],
+  ["jev/no-shadowed-meaning", "function"],
+  ["jev/no-oversized-working-set", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
