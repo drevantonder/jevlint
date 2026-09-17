@@ -126,6 +126,11 @@ import { buildLocaleDateSerializationEvidence } from "./locale-date-serializatio
 import { buildDisabledTlsVerificationEvidence } from "./disabled-tls-verification.js";
 import { buildDynamicCodeExecutionEvidence } from "./dynamic-code-execution.js";
 import { buildLocaleBlindOrderingEvidence } from "./locale-blind-ordering.js";
+import { buildAssertionFreeTestEvidence } from "./assertion-free-test.js";
+import { buildSleepInTestEvidence } from "./sleep-in-test.js";
+import { buildLogicInTestEvidence } from "./logic-in-test.js";
+import { buildMockEverythingEvidence } from "./mock-everything.js";
+import { buildDuplicatedFixtureDriftEvidence } from "./duplicated-fixture-drift.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -693,6 +698,24 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildDeploymentCoupledAssumptionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-assertion-free-test") {
+    return { handled: true, evidence: buildAssertionFreeTestEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-sleep-in-test") {
+    return { handled: true, evidence: buildSleepInTestEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-logic-in-test") {
+    return { handled: true, evidence: buildLogicInTestEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mock-everything") {
+    return { handled: true, evidence: buildMockEverythingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-duplicated-fixture-drift") {
+    return {
+      handled: true,
+      evidence: buildDuplicatedFixtureDriftEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };
