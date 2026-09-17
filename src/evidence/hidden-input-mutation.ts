@@ -1,0 +1,215 @@
+import { parseSync, Visitor } from "oxc-parser";
+import type { AssignmentTarget, Expression } from "oxc-parser";
+import type { Candidate, ProjectFile } from "../types.js";
+import {
+  findDirectFunction,
+  findFunctionCallers,
+  functionName,
+  isFunctionExported,
+} from "./repository.js";
+import type { FunctionCaller, FunctionNode } from "./repository.js";
+
+type MutationKind = "assignment" | "update" | "delete" | "mutating-call";
+
+type InputMutation = {
+  parameter: string;
+  kind: MutationKind;
+  operation: string;
+};
+
+export type HiddenInputMutationEvidence = {
+  function: {
+    name: string;
+    exported: boolean;
+    filePath: string;
+    source: string;
+    moduleSource: string;
+    parameters: string[];
+  };
+  mutations: InputMutation[];
+  callers: FunctionCaller[];
+};
+
+type SourceRange = {
+  start: number;
+  end: number;
+};
+
+const MUTATING_METHODS = new Set([
+  "add",
+  "clear",
+  "copyWithin",
+  "delete",
+  "fill",
+  "pop",
+  "push",
+  "reverse",
+  "set",
+  "shift",
+  "sort",
+  "splice",
+  "unshift",
+]);
+
+const OBJECT_MUTATORS = new Set([
+  "assign",
+  "defineProperties",
+  "defineProperty",
+  "setPrototypeOf",
+]);
+
+function rootIdentifier(target: AssignmentTarget | Expression): string | undefined {
+  if (target.type === "Identifier") return target.name;
+  if (target.type === "MemberExpression") {
+    return target.object.type === "Super" ? undefined : rootIdentifier(target.object);
+  }
+  if (target.type === "ChainExpression") return rootIdentifier(target.expression);
+  if (
+    target.type === "TSAsExpression"
+    || target.type === "TSNonNullExpression"
+    || target.type === "TSSatisfiesExpression"
+    || target.type === "TSTypeAssertion"
+  ) return rootIdentifier(target.expression);
+  return undefined;
+}
+
+function memberName(expression: Expression): string | undefined {
+  if (expression.type !== "MemberExpression" || expression.computed) return undefined;
+  return expression.property.type === "Identifier" ? expression.property.name : undefined;
+}
+
+function directParameters(fn: FunctionNode, source: string): Map<string, string> {
+  const result = new Map<string, string>();
+  for (const parameter of fn.params) {
+    if (parameter.type === "Identifier") {
+      result.set(parameter.name, source.slice(parameter.start, parameter.end));
+    } else if (parameter.type === "RestElement" && parameter.argument.type === "Identifier") {
+      result.set(parameter.argument.name, source.slice(parameter.start, parameter.end));
+    }
+  }
+  return result;
+}
+
+function nestedFunctionRanges(candidate: Candidate, program: Parameters<Visitor["visit"]>[0]): SourceRange[] {
+  const ranges: SourceRange[] = [];
+  const add = (node: SourceRange): void => {
+    if (node.start > candidate.start && node.end < candidate.end) ranges.push(node);
+  };
+  new Visitor({
+    ArrowFunctionExpression: add,
+    FunctionDeclaration: add,
+    FunctionExpression: add,
+  }).visit(program);
+  return ranges;
+}
+
+function isDirectOperation(node: SourceRange, nested: SourceRange[]): boolean {
+  return !nested.some((range) => range.start <= node.start && range.end >= node.end);
+}
+
+function parameterFor(
+  expression: AssignmentTarget | Expression,
+  parameters: Map<string, string>,
+): string | undefined {
+  const root = rootIdentifier(expression);
+  return root && parameters.has(root) ? root : undefined;
+}
+
+export function buildHiddenInputMutationEvidence(
+  candidate: Candidate,
+  projectFiles: ProjectFile[],
+): HiddenInputMutationEvidence | undefined {
+  if (candidate.kind !== "function") return undefined;
+  const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
+  if (!owner) return undefined;
+  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
+  const fn = findDirectFunction(parsed.program, candidate);
+  if (!fn) return undefined;
+  const name = functionName(parsed.program, fn);
+  if (!name) return undefined;
+  const parameters = directParameters(fn, owner.source);
+  if (parameters.size === 0) return undefined;
+  const nested = nestedFunctionRanges(candidate, parsed.program);
+  const mutations: Array<InputMutation & SourceRange> = [];
+
+  new Visitor({
+    AssignmentExpression(node) {
+      if (!isDirectOperation(node, nested)) return;
+      const parameter = parameterFor(node.left, parameters);
+      if (!parameter || node.left.type !== "MemberExpression") return;
+      mutations.push({
+        parameter,
+        kind: node.operator === "=" ? "assignment" : "update",
+        operation: owner.source.slice(node.start, node.end),
+        start: node.start,
+        end: node.end,
+      });
+    },
+    UpdateExpression(node) {
+      if (!isDirectOperation(node, nested)) return;
+      const parameter = parameterFor(node.argument, parameters);
+      if (!parameter || node.argument.type !== "MemberExpression") return;
+      mutations.push({
+        parameter,
+        kind: "update",
+        operation: owner.source.slice(node.start, node.end),
+        start: node.start,
+        end: node.end,
+      });
+    },
+    UnaryExpression(node) {
+      if (node.operator !== "delete" || !isDirectOperation(node, nested)) return;
+      const parameter = parameterFor(node.argument, parameters);
+      if (!parameter || node.argument.type !== "MemberExpression") return;
+      mutations.push({
+        parameter,
+        kind: "delete",
+        operation: owner.source.slice(node.start, node.end),
+        start: node.start,
+        end: node.end,
+      });
+    },
+    CallExpression(node) {
+      if (!isDirectOperation(node, nested) || node.callee.type !== "MemberExpression") return;
+      const method = memberName(node.callee);
+      if (!method) return;
+      let parameter = MUTATING_METHODS.has(method)
+        ? parameterFor(node.callee.object, parameters)
+        : undefined;
+      if (
+        !parameter
+        && OBJECT_MUTATORS.has(method)
+        && rootIdentifier(node.callee.object) === "Object"
+      ) {
+        const target = node.arguments[0];
+        if (target && target.type !== "SpreadElement") {
+          parameter = parameterFor(target, parameters);
+        }
+      }
+      if (!parameter) return;
+      mutations.push({
+        parameter,
+        kind: "mutating-call",
+        operation: owner.source.slice(node.start, node.end),
+        start: node.start,
+        end: node.end,
+      });
+    },
+  }).visit(parsed.program);
+
+  if (mutations.length === 0) return undefined;
+  mutations.sort((left, right) => left.start - right.start);
+  return {
+    function: {
+      name,
+      exported: isFunctionExported(parsed.program, fn, name),
+      filePath: owner.filePath,
+      source: candidate.source,
+      moduleSource: owner.source.slice(0, 16_000),
+      parameters: [...parameters.values()],
+    },
+    mutations: mutations.map(({ parameter, kind, operation }) => ({ parameter, kind, operation })),
+    callers: findFunctionCallers(candidate.filePath, name, projectFiles),
+  };
+}

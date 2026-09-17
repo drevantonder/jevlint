@@ -14,11 +14,12 @@ This first slice supports:
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
 - Text and JSON diagnostics
-- Fourteen bundled Jev rules
+- Fifteen bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules flag:
 
+- mutation of caller-owned inputs that the function contract does not disclose
 - comments that repeat nearby code
 - wrappers that add no meaningful behavior
 - names that obscure a function's purpose
@@ -33,6 +34,8 @@ The bundled Jev rules flag:
 - avoidable sequential orchestration
 - changes that displace rather than reduce complexity
 - feature envy
+
+The hidden-input-mutation rule uses Oxc to prove that an argument is changed, then asks Jev whether the API makes the in-place behavior clear. Pure copies never reach Jev, while explicit mutable protocols remain valid.
 
 The eight accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, variation, policy, and dependency constraints. The state-modeling rules distinguish correlated lifecycle flags from independent booleans, closed internal states from open strings, and conditionally required payloads from optional metadata or boundary contracts. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
 

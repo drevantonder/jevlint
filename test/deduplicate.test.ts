@@ -26,7 +26,7 @@ describe("diagnostic deduplication", () => {
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-generic-magic"]);
   });
 
-  it("prefers a state-model cause over generic configuration on the same type", () => {
+  it("keeps state-model findings separate from accidental-complexity findings", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-disproportionate-configuration", 4, 12),
       diagnostic("jev/no-correlated-state-booleans", 4, 12),
@@ -34,23 +34,25 @@ describe("diagnostic deduplication", () => {
 
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
       "jev/no-correlated-state-booleans",
+      "jev/no-disproportionate-configuration",
     ]);
   });
 
-  it("prefers constrained state modeling over generic configuration", () => {
+  it("keeps closed-state findings separate from generic configuration", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-disproportionate-configuration", 4, 12),
       diagnostic("jev/no-unconstrained-state-string", 4, 12),
     ]);
 
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-disproportionate-configuration",
       "jev/no-unconstrained-state-string",
     ]);
   });
 
-  it("prefers an invalid state model over generic abstraction findings", () => {
+  it("prefers the strongest state-model cause for the same type", () => {
     const diagnostics = deduplicateDiagnostics([
-      diagnostic("jev/no-needless-abstraction", 4, 12),
+      diagnostic("jev/no-correlated-state-booleans", 4, 12),
       diagnostic("jev/no-conditionally-valid-state", 4, 12),
     ]);
 
@@ -75,5 +77,17 @@ describe("diagnostic deduplication", () => {
     ]);
 
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-complexity-displacement"]);
+  });
+
+  it("keeps independent principle families on the same function", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-hidden-input-mutation", 5, 12),
+      diagnostic("jev/no-generic-magic", 5, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-generic-magic",
+      "jev/no-hidden-input-mutation",
+    ]);
   });
 });

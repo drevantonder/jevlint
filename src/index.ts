@@ -12,6 +12,7 @@ export { buildConditionallyValidStateEvidence } from "./evidence/conditionally-v
 export { buildCorrelatedStateBooleansEvidence } from "./evidence/correlated-state-booleans.js";
 export { buildDisproportionateConfigurationEvidence } from "./evidence/disproportionate-configuration.js";
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
+export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
 export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";

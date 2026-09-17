@@ -11,6 +11,7 @@ describe("loadConfig", () => {
     const config = await loadConfig({ cwd: directory });
 
     expect(Object.keys(config.rules)).toEqual([
+      "jev/no-hidden-input-mutation",
       "jev/no-narrating-comment",
       "jev/no-pass-through-wrapper",
       "jev/no-mysterious-name",

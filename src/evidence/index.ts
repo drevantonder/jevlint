@@ -7,6 +7,7 @@ import { buildConditionallyValidStateEvidence } from "./conditionally-valid-stat
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
+import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
@@ -22,6 +23,9 @@ export function buildRuleEvidence(
   projectFiles: ProjectFile[],
   changes: SourceFile[] = [],
 ): RuleEvidenceResult {
+  if (ruleId === "jev/no-hidden-input-mutation") {
+    return { handled: true, evidence: buildHiddenInputMutationEvidence(candidate, projectFiles) };
+  }
   if (ruleId === "jev/no-pass-through-wrapper") {
     return { handled: true, evidence: buildPassThroughWrapperEvidence(candidate, projectFiles) };
   }

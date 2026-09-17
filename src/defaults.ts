@@ -2,6 +2,35 @@ import type { JevLintConfig } from "./types.js";
 
 export const defaultConfig: JevLintConfig = {
   rules: {
+    "jev/no-hidden-input-mutation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function mutate a caller-owned input without making that behavior clear in its API contract?",
+          inspect: "Compare the function name, parameter contract, extracted mutations, module context, and repository callers in the supplied evidence.",
+          focus: "Judge whether a reasonable caller would understand before reading the implementation that the supplied object or collection will change in place.",
+          decision_boundary: [
+            "Names such as normalize, prepare, map, or transform usually promise a result, not mutation of the input used to produce it.",
+            "Returning the same mutated value does not by itself disclose in-place mutation.",
+            "Names such as mutate, inPlace, appendTo, or explicit mutable accumulator contracts can disclose mutation clearly.",
+            "Builder callbacks, reducers, performance-sensitive buffer APIs, and framework lifecycle hooks may intentionally accept mutable inputs when that contract is visible.",
+            "If the evidence does not establish caller ownership or whether mutation is part of the contract, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function changes an argument that callers can still observe, while its name and visible contract suggest a pure transformation or do not disclose mutation",
+            remedy: "Return a new value or rename and document the API so in-place mutation is explicit",
+          },
+          false: {
+            what: "The function returns a copy, mutates only local state, clearly advertises in-place behavior, follows an explicit mutable protocol, or lacks enough evidence to establish surprise",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This function mutates caller-owned input without making that behavior clear.",
+    },
     "jev/no-narrating-comment": {
       scope: "comment",
       question: {

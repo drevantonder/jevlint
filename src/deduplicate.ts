@@ -1,10 +1,7 @@
 import type { Diagnostic } from "./types.js";
 
-const RULE_PRIORITY = new Map<string, number>([
+const ACCIDENTAL_COMPLEXITY_PRIORITY = new Map<string, number>([
   ["jev/no-complexity-displacement", 100],
-  ["jev/no-conditionally-valid-state", 98],
-  ["jev/no-correlated-state-booleans", 95],
-  ["jev/no-unconstrained-state-string", 95],
   ["jev/no-disproportionate-configuration", 90],
   ["jev/no-avoidable-orchestration", 90],
   ["jev/no-ad-hoc-branching", 90],
@@ -14,20 +11,35 @@ const RULE_PRIORITY = new Map<string, number>([
   ["jev/no-speculative-generality", 70],
 ]);
 
+const STATE_MODEL_PRIORITY = new Map<string, number>([
+  ["jev/no-conditionally-valid-state", 98],
+  ["jev/no-correlated-state-booleans", 95],
+  ["jev/no-unconstrained-state-string", 95],
+]);
+
+const API_CONTRACT_PRIORITY = new Map<string, number>([
+  ["jev/no-hidden-input-mutation", 90],
+]);
+
+const RULE_FAMILIES = [
+  ACCIDENTAL_COMPLEXITY_PRIORITY,
+  STATE_MODEL_PRIORITY,
+  API_CONTRACT_PRIORITY,
+];
+
 function overlaps(left: Diagnostic, right: Diagnostic): boolean {
   return left.filePath === right.filePath
     && left.line <= right.endLine
     && right.line <= left.endLine;
 }
 
-function sameAccidentalComplexityRoot(left: Diagnostic, right: Diagnostic): boolean {
-  return RULE_PRIORITY.has(left.ruleId)
-    && RULE_PRIORITY.has(right.ruleId)
+function sameRuleFamilyRoot(left: Diagnostic, right: Diagnostic): boolean {
+  return RULE_FAMILIES.some((family) => family.has(left.ruleId) && family.has(right.ruleId))
     && overlaps(left, right);
 }
 
 function rank(diagnostic: Diagnostic): number {
-  return RULE_PRIORITY.get(diagnostic.ruleId) ?? 0;
+  return Math.max(...RULE_FAMILIES.map((family) => family.get(diagnostic.ruleId) ?? 0));
 }
 
 export function deduplicateDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] {
@@ -36,7 +48,7 @@ export function deduplicateDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] 
   );
   const kept: Diagnostic[] = [];
   for (const diagnostic of prioritized) {
-    if (kept.some((existing) => sameAccidentalComplexityRoot(existing, diagnostic))) continue;
+    if (kept.some((existing) => sameRuleFamilyRoot(existing, diagnostic))) continue;
     kept.push(diagnostic);
   }
   return kept.sort((left, right) =>
