@@ -165,6 +165,11 @@ import { buildRareCaseFirstEvidence } from "./rare-case-first.js";
 import { buildSideEffectingConditionalEvidence } from "./side-effecting-conditional-expression.js";
 import { buildUnexplainedComplexConditionEvidence } from "./unexplained-complex-condition.js";
 import { buildCleverExpressionEvidence } from "./clever-expression.js";
+import { buildHandRolledGroupByEvidence } from "./hand-rolled-group-by.js";
+import { buildHandRolledDeepCloneEvidence } from "./hand-rolled-deep-clone.js";
+import { buildHandRolledSetOpsEvidence } from "./hand-rolled-set-ops.js";
+import { buildHandRolledFlattenEvidence } from "./hand-rolled-flatten.js";
+import { buildHandRolledDeepEqualEvidence } from "./hand-rolled-deep-equal.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -919,6 +924,21 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-clever-expression") {
     return { handled: true, evidence: buildCleverExpressionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-group-by") {
+    return { handled: true, evidence: buildHandRolledGroupByEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-deep-clone") {
+    return { handled: true, evidence: buildHandRolledDeepCloneEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-set-ops") {
+    return { handled: true, evidence: buildHandRolledSetOpsEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-flatten") {
+    return { handled: true, evidence: buildHandRolledFlattenEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-deep-equal") {
+    return { handled: true, evidence: buildHandRolledDeepEqualEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

@@ -180,6 +180,11 @@ describe("loadConfig", () => {
       "jev/no-side-effecting-conditional-expression",
       "jev/no-unexplained-complex-condition",
       "jev/no-clever-expression",
+      "jev/no-hand-rolled-group-by",
+      "jev/no-hand-rolled-deep-clone",
+      "jev/no-hand-rolled-set-ops",
+      "jev/no-hand-rolled-flatten",
+      "jev/no-hand-rolled-deep-equal",
     ]);
   });
 
