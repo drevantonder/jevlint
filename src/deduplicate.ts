@@ -30,6 +30,10 @@ const EXPLICIT_EFFECTS_PRIORITY = new Map<string, number>([
   ["jev/no-hidden-runtime-input", 95],
 ]);
 
+const FAILURE_INTEGRITY_PRIORITY = new Map<string, number>([
+  ["jev/no-swallowed-error", 80],
+]);
+
 const INPUT_MUTATION_PRIORITY = new Map<string, number>([
   ["jev/no-hidden-input-mutation", 90],
 ]);
@@ -47,6 +51,7 @@ const RULE_FAMILIES = [
   ACCIDENTAL_COMPLEXITY_PRIORITY,
   STATE_MODEL_PRIORITY,
   EXPLICIT_EFFECTS_PRIORITY,
+  FAILURE_INTEGRITY_PRIORITY,
   INPUT_MUTATION_PRIORITY,
   API_SIDE_EFFECT_PRIORITY,
   API_RETURN_PRIORITY,

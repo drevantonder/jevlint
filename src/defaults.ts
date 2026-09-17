@@ -773,6 +773,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This adapter owns domain policy.",
     },
+    "jev/no-swallowed-error": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function absorb an operational failure while leaving its caller-facing outcome looking successful or indistinguishable from an ordinary no-result?",
+          inspect: "Use each extracted try block, catch outcome, continuation after the catch, imported dependency contract, and observed callers in the supplied evidence.",
+          focus: "Judge whether the function preserves failure meaning across its boundary, not whether it uses catch syntax or writes a log.",
+          decision_boundary: [
+            "A catch that logs and then continues into success state, or returns the same sentinel used for an ordinary absence, is strong evidence of a swallowed error.",
+            "Logging alone does not preserve the failure for code that must decide what happened.",
+            "Rethrowing, returning an explicit failure result, or otherwise making failure distinguishable preserves integrity.",
+            "A documented best-effort side effect may fail without invalidating an already completed primary operation.",
+            "A credible fallback for an expected unavailable dependency is not a swallowed error; if the contract or consequence is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The handler prevents a relevant failure from reaching the caller and the remaining return or state can be mistaken for success or normal absence",
+            remedy: "Propagate the error or represent the failure explicitly in the function's contract",
+          },
+          false: {
+            what: "Failure remains explicit, the failed work is genuinely best effort, a fallback preserves the contract, or the evidence cannot establish false success",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This handler hides a failure from its caller.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

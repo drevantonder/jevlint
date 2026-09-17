@@ -38,6 +38,7 @@ describe("loadConfig", () => {
       "jev/no-persistence-model-leak",
       "jev/no-interchangeable-domain-primitives",
       "jev/no-domain-policy-in-adapter",
+      "jev/no-swallowed-error",
       "jev/no-feature-envy",
     ]);
   });

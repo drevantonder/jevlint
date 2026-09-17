@@ -23,6 +23,7 @@ import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
+import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 
@@ -140,6 +141,9 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildDomainPolicyInAdapterEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-swallowed-error") {
+    return { handled: true, evidence: buildSwallowedErrorEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

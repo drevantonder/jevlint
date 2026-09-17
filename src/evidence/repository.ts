@@ -24,6 +24,13 @@ export type FunctionCaller = {
   line: number;
 };
 
+export type RelatedProjectModule = {
+  filePath: string;
+  importedFrom: string;
+  importedSymbols: string[];
+  source: string;
+};
+
 interface ImportedCallNames {
   identifiers: Set<string>;
   namespaces: Set<string>;
@@ -128,6 +135,32 @@ export function resolveModule(
 ): ProjectFile | undefined {
   const paths = new Set(possibleModulePaths(fromFile, specifier));
   return projectFiles.find((file) => paths.has(posix.normalize(file.filePath)));
+}
+
+export function findRelatedProjectModules(
+  ownerPath: string,
+  program: Program,
+  projectFiles: ProjectFile[],
+): RelatedProjectModule[] {
+  const modules = new Map<string, RelatedProjectModule>();
+  for (const imported of moduleImports(program)) {
+    const resolved = resolveModule(ownerPath, imported.source, projectFiles);
+    if (!resolved || resolved.filePath === ownerPath) continue;
+    const existing = modules.get(resolved.filePath);
+    if (existing) {
+      if (!existing.importedSymbols.includes(imported.imported)) {
+        existing.importedSymbols.push(imported.imported);
+      }
+      continue;
+    }
+    modules.set(resolved.filePath, {
+      filePath: resolved.filePath,
+      importedFrom: imported.source,
+      importedSymbols: [imported.imported],
+      source: resolved.source.slice(0, 12_000),
+    });
+  }
+  return [...modules.values()].slice(0, 12);
 }
 
 function lineAt(source: string, offset: number): number {
