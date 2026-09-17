@@ -161,6 +161,10 @@ import { buildCheckThenActRaceEvidence } from "./check-then-act-race.js";
 import { buildNonIdempotentRetryEvidence } from "./non-idempotent-retry.js";
 import { buildParallelAbstractionEvidence } from "./parallel-abstraction.js";
 import { buildMisplacedErrorBoundaryEvidence } from "./misplaced-error-boundary.js";
+import { buildRareCaseFirstEvidence } from "./rare-case-first.js";
+import { buildSideEffectingConditionalEvidence } from "./side-effecting-conditional-expression.js";
+import { buildUnexplainedComplexConditionEvidence } from "./unexplained-complex-condition.js";
+import { buildCleverExpressionEvidence } from "./clever-expression.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -903,6 +907,18 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildMisplacedErrorBoundaryEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-rare-case-first") {
+    return { handled: true, evidence: buildRareCaseFirstEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-side-effecting-conditional-expression") {
+    return { handled: true, evidence: buildSideEffectingConditionalEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unexplained-complex-condition") {
+    return { handled: true, evidence: buildUnexplainedComplexConditionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-clever-expression") {
+    return { handled: true, evidence: buildCleverExpressionEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
