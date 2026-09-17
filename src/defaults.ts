@@ -3786,5 +3786,161 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This function's nominal path is buried under layers of nesting.",
     },
+    "jev/no-drilled-prop": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this prop pass unchanged through components that never read it while the repository already provides a nearer state channel for the same value?",
+          inspect: "Compare each forwarded prop with its reads in the component body, the forwarding depth, the available state channels, and sibling value reads in the supplied evidence.",
+          focus: "Judge whether intermediate layers depend on data only the leaves consume, not whether prop passing appears at all.",
+          decision_boundary: [
+            "A prop forwarded under the same name through intermediates that never read it, while a context or store hook serves the same value to siblings, is strong evidence of invented drilling.",
+            "Single-level passing to a direct child that consumes the value is ordinary composition.",
+            "Genuinely per-level configurability, where an intermediate reads or transforms the value, answers the question negatively.",
+            "If no nearer state channel exists in the repository, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Intermediate components forward the value unread while a nearer shared state decision already serves it",
+            remedy: "Read the value from the existing context or store channel at the consuming leaf",
+          },
+          false: {
+            what: "Each layer consumes or shapes the value, the passing is single-level, or no nearer channel exists",
+          },
+        },
+      },
+      message: "This prop is drilled through layers that never read it.",
+    },
+    "jev/no-stale-comment": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Does this comment assert behavior the adjoining code no longer exhibits, so readers inherit instructions that contradict the implementation?",
+          inspect: "Compare each extracted behavior claim with the adjoining code signals and the computed contradictions, and weigh which side of the diff changed in the supplied evidence.",
+          focus: "Judge confident contradiction with the current implementation, not vagueness or redundancy.",
+          decision_boundary: [
+            "A numeric claim such as retry counts or named outcomes contradicted by the adjoined body is strong evidence of staleness.",
+            "An edited body beside an untouched comment is the high-meaning shape; a freshly written comment beside fresh code weakens the claim.",
+            "Vague prose broadly consistent with the body answers the question negatively.",
+            "Accurate but redundant narration belongs to the narrating-comment rule, not this one.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The comment confidently describes behavior the current adjoining code contradicts",
+            remedy: "Update the comment to describe the current behavior or remove it",
+          },
+          false: {
+            what: "The comment is consistent with the body, merely redundant, honestly hedged, or too vague to contradict",
+          },
+        },
+      },
+      message: "This comment describes behavior the adjoining code no longer exhibits.",
+    },
+    "jev/no-paraphrased-sibling-logic": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function compute what a neighboring helper already provides, spelled differently enough to evade textual matching?",
+          inspect: "Compare the candidate signature with each matched helper signature, their textual dissimilarity, the fingerprint-gap signals, and shared callers in the supplied evidence.",
+          focus: "Judge input and output equivalence plus helper existence, never text identity.",
+          decision_boundary: [
+            "Identical parameter and return shapes with a coexisting helper and interchangeable callers are strong evidence of one computation owned twice.",
+            "High textual dissimilarity corroborates that whole-body fingerprinting cannot see the duplication; it is evidence of the gap, not of innocence.",
+            "Similar-typed helpers whose edge-case behavior provably differs answer the question negatively.",
+            "If the evidence does not establish equivalent inputs and outputs, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A neighboring helper already provides the same computation under different spelling",
+            remedy: "Delete the reimplementation and call the existing helper",
+          },
+          false: {
+            what: "The helpers differ in inputs, outputs, or edge-case behavior, or equivalence is not established",
+          },
+        },
+      },
+      message: "This function reimplements a neighboring helper in different words.",
+    },
+    "jev/no-unclosed-handle": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function acquire a releasable resource on a path that can exit without releasing it?",
+          inspect: "Compare each acquisition with the releases in the function, early returns before any release, ownership transfer, and module release idioms in the supplied evidence.",
+          focus: "Judge whether some execution leaks the handle, not whether acquisition syntax appears.",
+          decision_boundary: [
+            "An acquisition with early returns before any release and no ownership transfer is strong evidence of a leak.",
+            "Returning the resource to the caller or registering it with a disposer transfers ownership and answers the question negatively.",
+            "Acquisition immediately wrapped in a disposer or using construct weakens the claim.",
+            "Framework-managed lifecycles where cleanup lives with the owner answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Some exit path leaves an acquired file, connection, or lock handle unreleased with no ownership transfer",
+            remedy: "Release the handle on every exit path or transfer ownership explicitly",
+          },
+          false: {
+            what: "Every path releases the handle, ownership transfers to the caller or a disposer, or the lifecycle is framework-managed",
+          },
+        },
+      },
+      message: "This function can exit without releasing an acquired handle.",
+    },
+    "jev/no-bespoke-crypto-construction": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function assemble a cryptographic construction from bitwise and arithmetic operations instead of calling a vetted primitive?",
+          inspect: "Compare the bitwise operation shapes and byte-loop signals with the vetted imports, the absence of named primitive calls, and the security-bearing callers in the supplied evidence.",
+          focus: "Judge whether security rests on unreviewed design rather than analysis.",
+          decision_boundary: [
+            "XOR and shift loops over bytes inside an encrypt, hash, or token function whose output is stored or compared is strong evidence of a bespoke construction.",
+            "Non-security fingerprinting such as sharding or display hashes used likewise by siblings answers the question negatively.",
+            "Calling a named vetted primitive for the security-bearing work weakens the claim even when bit manipulation appears nearby.",
+            "If the output never guards a security decision, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A hand-rolled cipher, hash, or token scheme carries security meaning without a vetted primitive",
+            remedy: "Replace the construction with a vetted primitive from the platform or an established library",
+          },
+          false: {
+            what: "The bit manipulation serves non-security purposes, a vetted primitive does the security work, or no security bearing is shown",
+          },
+        },
+      },
+      message: "This function hand-rolls cryptography instead of calling a vetted primitive.",
+    },
+    "jev/no-duplicated-style-object": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this style object repeat literal values a shared theme, token set, or style helper already owns?",
+          inspect: "Compare the style object fingerprint with each cross-component match, the shared entries, the theme modules, and their adoption in the supplied evidence.",
+          focus: "Judge whether visual evolution must be replayed per copy, not whether style literals appear.",
+          decision_boundary: [
+            "Byte-identical multi-key objects repeated across components beside an adopted theme are strong evidence of duplication.",
+            "Objects sharing a few tokens with per-component differences in the exercised dimension answer the question negatively.",
+            "Copies that already diverge about values weaken the claim toward ordinary variation.",
+            "If no shared theme or token set exists, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Literal style values repeat across components while a shared theme already owns them",
+            remedy: "Move the values into the shared theme or tokens and consume them from each component",
+          },
+          false: {
+            what: "The overlap is incidental, per-component differences are exercised, or no shared theme exists",
+          },
+        },
+      },
+      message: "This style object repeats literals a shared theme already owns.",
+    },
   },
 };

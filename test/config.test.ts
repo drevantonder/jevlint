@@ -152,6 +152,12 @@ describe("loadConfig", () => {
       "jev/no-unlocalized-user-string",
       "jev/no-console-residue",
       "jev/no-deep-happy-path-nesting",
+      "jev/no-drilled-prop",
+      "jev/no-stale-comment",
+      "jev/no-paraphrased-sibling-logic",
+      "jev/no-unclosed-handle",
+      "jev/no-bespoke-crypto-construction",
+      "jev/no-duplicated-style-object",
     ]);
   });
 
