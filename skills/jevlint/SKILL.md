@@ -12,7 +12,8 @@ Oxc discovers review candidates and builds rule-specific repository evidence; Je
 One copy-pasteable line (key is loaded from 1Password via Varlock; never copy the key itself):
 
 ```sh
-pnpm jevlint review
+pnpm jevlint                       # full-tree audit: no subcommand, no diff needed
+pnpm jevlint review                # changed code only (working tree + untracked)
 ```
 
 ## review vs audit in one breath
@@ -21,9 +22,11 @@ pnpm jevlint review
 
 ## Flag cheat-sheet
 
-All flags verified against `src/cli.ts` on main. Bare `jevlint` with no subcommand, and any `--rules` flag, are owned by packet E — re-verify after 168 lands before asserting behavior.
+All flags verified against `src/cli.ts` on main.
 
 ```sh
+pnpm jevlint                         # bare: full-tree audit, no subcommand needed
+pnpm jevlint --rules                 # list bundled rule keys, exit without evaluating
 pnpm jevlint review src/checkout          # PATH scope: files or dirs, either command
 pnpm jevlint review --staged              # review only: staged changes
 pnpm jevlint audit --max-questions 2000   # audit only: stop preparing after n questions
@@ -41,7 +44,7 @@ pnpm jevlint review --config ./jevlint.config.ts # explicit config file
 pnpm jevlint review --no-error-on-unmatched-pattern  # empty scope exits 0, not 2
 ```
 
-Notes: `--staged` is rejected by `audit`; `--max-questions`, `--evidence-budget-ms`, and `--dry-run` are rejected by `review`. `--no-cache` and `--refresh-cache` are mutually exclusive. `--debug` modes are comma-separated and composable. Rule selection lives in the config file (`rules: { "jev/<id>": "off" }`); there is no CLI rule filter on main. A scope matching nothing is exit 2 unless `--no-error-on-unmatched-pattern` is given. Omitted audit pairs are deterministic priority order, never sampled, never cut by score; change-scope rules are never scored by audit (listed under `coverage.unscoredRules`).
+Notes: `--staged` is rejected by `audit`; `--max-questions`, `--evidence-budget-ms`, and `--dry-run` are rejected by `review`. `--no-cache` and `--refresh-cache` are mutually exclusive. `--debug` modes are comma-separated and composable. Rule selection lives in the config file (`rules: { "jev/<id>": "off" }`); `--rules` lists bundled rule keys (one per line, JSON array with `--format json`) and exits without evaluating. A scope matching nothing is exit 2 unless `--no-error-on-unmatched-pattern` is given. Omitted audit pairs are deterministic priority order, never sampled, never cut by score; change-scope rules are never scored by audit (listed under `coverage.unscoredRules`).
 
 ## Output shapes
 
