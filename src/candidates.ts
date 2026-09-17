@@ -1,6 +1,8 @@
 import { parseSync, Visitor } from "oxc-parser";
 import type { Candidate, LineRange, ProjectFile, SourceFile } from "./types.js";
-import { planModuleCandidates } from "./evidence/module.js";
+import { buildModuleGraph, isSourcePath, planModuleCandidates } from "./evidence/module.js";
+import type { ModuleGraph } from "./evidence/module.js";
+import { resolveModule } from "./evidence/repository.js";
 
 interface Position {
   line: number;
@@ -123,4 +125,38 @@ export function extractModuleCandidates(
 ): Candidate[] {
   const plan = planModuleCandidates(changes, projectFiles);
   return plan.included.map((change, index) => moduleCandidate(change.filePath, index));
+}
+
+export function countImporterInDegree(
+  projectFiles: ProjectFile[],
+  graph?: ModuleGraph,
+): Map<string, number> {
+  const resolved = graph ?? buildModuleGraph(projectFiles);
+  const inDegree = new Map<string, number>();
+  for (const file of projectFiles) {
+    if (isSourcePath(file.filePath)) inDegree.set(file.filePath, 0);
+  }
+  for (const [from, specifiers] of resolved.specifiers) {
+    for (const specifier of specifiers) {
+      const target = resolveModule(from, specifier, projectFiles)?.filePath;
+      if (target !== undefined && target !== from && inDegree.has(target)) {
+        inDegree.set(target, (inDegree.get(target) ?? 0) + 1);
+      }
+    }
+  }
+  return inDegree;
+}
+
+export function planWholeRepoModuleCandidates(
+  projectFiles: ProjectFile[],
+  graph?: ModuleGraph,
+): Candidate[] {
+  const resolved = graph ?? buildModuleGraph(projectFiles);
+  const inDegree = countImporterInDegree(projectFiles, resolved);
+  const sources = projectFiles.filter((file) => isSourcePath(file.filePath));
+  sources.sort((left, right) =>
+    (inDegree.get(right.filePath) ?? 0) - (inDegree.get(left.filePath) ?? 0)
+    || left.filePath.localeCompare(right.filePath)
+  );
+  return sources.map((file, index) => moduleCandidate(file.filePath, index));
 }

@@ -1,6 +1,7 @@
 import { sortAbstentions, sortJudgments } from "./analyze.js";
 import type { CacheStatistics } from "./cache.js";
 import type {
+  AuditCoverage,
   DisplayOptions,
   EvaluationFailure,
   EvaluationStatistics,
@@ -20,6 +21,7 @@ export interface CreateReviewReportInput {
   statistics: EvaluationStatistics;
   cacheStatistics?: CacheStatistics;
   display?: DisplayOptions;
+  coverage?: AuditCoverage;
 }
 
 export function createReviewReport(input: CreateReviewReportInput): ReviewReport {
@@ -37,7 +39,7 @@ export function createReviewReport(input: CreateReviewReportInput): ReviewReport
   if (input.cacheStatistics !== undefined) statistics.cache = { ...input.cacheStatistics };
   const display: DisplayOptions = { minScore, limit };
 
-  return {
+  const report: ReviewReport = {
     version: 1,
     summary: {
       evaluated: judgments.length,
@@ -56,12 +58,23 @@ export function createReviewReport(input: CreateReviewReportInput): ReviewReport
     },
     statistics,
   };
+  if (input.coverage !== undefined) report.coverage = input.coverage;
+  return report;
 }
 
 function location(judgment: Judgment): string {
   const start = judgment.span.start;
   const end = judgment.span.end;
   return `${judgment.filePath}:${start.line}:${start.column}-${end.line}:${end.column}`;
+}
+
+export function formatCoverage(coverage: AuditCoverage): string {
+  return `${coverage.filesScored} of ${coverage.filesEnumerated} files scored, `
+    + `${coverage.filesOmitted} omitted; `
+    + `${coverage.candidatesScored} of ${coverage.candidatesEnumerated} candidates scored; `
+    + `${coverage.questionsPrepared} prepared, ${coverage.questionsAsked} asked; `
+    + `${coverage.unscoredRules.length} rules unscored without change context; `
+    + `coverage ${coverage.complete ? "complete" : "incomplete"}`;
 }
 
 export function formatText(report: ReviewReport): string {
@@ -74,7 +87,8 @@ export function formatText(report: ReviewReport): string {
       + `${judgment.candidateKind}  ${judgment.ruleId}  ${judgment.message}`
     );
   const summary = `${report.summary.evaluated} evaluated; ${report.summary.displayed} displayed; `
-    + `${report.summary.abstained} structurally abstained; ${report.summary.failed} failed`;
+    + `${report.summary.abstained} structurally abstained; ${report.summary.failed} failed`
+    + (report.coverage !== undefined ? `; ${formatCoverage(report.coverage)}` : "");
   const hidden = matching.length - rows.length;
   const hint = hidden > 0
     ? `\n${hidden} more judgments hidden; raise --limit, filter with --min-score, or use --format json for the full report.`

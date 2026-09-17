@@ -1,8 +1,16 @@
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
-import { extractCandidates, extractModuleCandidates, filterCandidatesByChangedLines } from "./candidates.js";
+import {
+  countImporterInDegree,
+  extractCandidates,
+  extractModuleCandidates,
+  filterCandidatesByChangedLines,
+  planWholeRepoModuleCandidates,
+} from "./candidates.js";
 import { buildRuleEvidence } from "./evidence/index.js";
+import { buildModuleGraph } from "./evidence/module.js";
 import type {
   AnalysisResult,
+  AuditCoverage,
   Candidate,
   CandidateKind,
   EvaluationCandidate,
@@ -12,10 +20,13 @@ import type {
   JevLintConfig,
   Judgment,
   LineRange,
+  OmittedByKind,
+  OmittedByRule,
   ProjectFile,
   RuleConfig,
   SourceFile,
   StructuralAbstentionCount,
+  UnscoredRule,
 } from "./types.js";
 
 export const EVALUATION_REQUEST_BUDGET_CHARS = 48_000;
@@ -509,4 +520,206 @@ export async function analyzeModules(
   const result = await analyzeModulesWithFailures(input, evaluator);
   throwEvaluationFailures(result.failures);
   return result.judgments;
+}
+
+export const AUDIT_UNSCORED_REASON = "requires-before-after-change-context";
+
+const AUDIT_KIND_ORDER: CandidateKind[] = ["module", "abstraction", "function", "comment"];
+
+export interface AnalyzeAuditInput {
+  projectFiles: ProjectFile[];
+  config: JevLintConfig;
+  maxQuestions?: number;
+  evidenceBudgetMs?: number;
+  dryRun?: boolean;
+}
+
+export interface AnalyzeAuditResult extends AnalysisResult {
+  coverage: AuditCoverage;
+}
+
+interface OrderedAuditCandidate {
+  candidate: Candidate;
+  source: string;
+}
+
+function hasTruncatedFlag(value: JsonValue): boolean {
+  return JSON.stringify(value).includes('"truncated":true');
+}
+
+function orderAuditCandidates(
+  projectFiles: ProjectFile[],
+  config: JevLintConfig,
+): OrderedAuditCandidate[] {
+  const graph = buildModuleGraph(projectFiles);
+  const inDegree = countImporterInDegree(projectFiles, graph);
+  const sourcesByPath = new Map(projectFiles.map((file) => [file.filePath, file.source]));
+  const ordered: OrderedAuditCandidate[] = [];
+
+  for (const candidate of planWholeRepoModuleCandidates(projectFiles, graph)) {
+    if (!Object.values(config.rules).some((rule) => rule.scope === candidate.kind)) continue;
+    ordered.push({
+      candidate: { ...candidate, id: `audit:${candidate.filePath}#${candidate.id}` },
+      source: "",
+    });
+  }
+
+  const byKind = new Map<CandidateKind, OrderedAuditCandidate[]>();
+  for (const file of projectFiles) {
+    for (const candidate of extractCandidates(file.filePath, file.source)) {
+      if (!Object.values(config.rules).some((rule) => rule.scope === candidate.kind)) continue;
+      const list = byKind.get(candidate.kind) ?? [];
+      list.push({
+        candidate: { ...candidate, id: `audit:${candidate.filePath}#${candidate.id}` },
+        source: sourcesByPath.get(candidate.filePath) ?? file.source,
+      });
+      byKind.set(candidate.kind, list);
+    }
+  }
+  for (const kind of ["abstraction", "function", "comment"] as const) {
+    const list = byKind.get(kind) ?? [];
+    list.sort((left, right) =>
+      (inDegree.get(right.candidate.filePath) ?? 0) - (inDegree.get(left.candidate.filePath) ?? 0)
+      || left.candidate.start - right.candidate.start
+      || left.candidate.filePath.localeCompare(right.candidate.filePath)
+    );
+    ordered.push(...list);
+  }
+  return ordered;
+}
+
+export async function analyzeAuditWithFailures(
+  input: AnalyzeAuditInput,
+  evaluator: Evaluator,
+): Promise<AnalyzeAuditResult> {
+  const ordered = orderAuditCandidates(input.projectFiles, input.config);
+  const rules = Object.entries(input.config.rules);
+  const startedAt = Date.now();
+
+  const prepared: { item: PreparedQuestion; source: string }[] = [];
+  const abstentions: StructuralAbstentionCount[] = [];
+  const visitedByRule = new Map<string, number>();
+  const candidatesWithQuestions = new Set<string>();
+  const filesWithQuestions = new Set<string>();
+  let truncatedEvidence = 0;
+
+  for (const entry of ordered) {
+    for (const [ruleId, rule] of rules) {
+      if (rule.scope !== entry.candidate.kind) continue;
+      if (input.maxQuestions !== undefined && prepared.length >= input.maxQuestions) break;
+      if (input.evidenceBudgetMs !== undefined && Date.now() - startedAt >= input.evidenceBudgetMs) {
+        break;
+      }
+      visitedByRule.set(ruleId, (visitedByRule.get(ruleId) ?? 0) + 1);
+      const evidenceResult = buildRuleEvidence(
+        ruleId,
+        entry.candidate,
+        input.projectFiles,
+        [],
+      );
+      if (evidenceResult.handled) {
+        if (evidenceResult.evidence === undefined) {
+          abstentions.push({ ruleId, candidateKind: entry.candidate.kind, count: 1 });
+          continue;
+        }
+        const compacted = compactEvidence(evidenceResult.evidence);
+        const question: PreparedQuestion = {
+          candidate: entry.candidate,
+          evaluationCandidate: evaluationCandidate(entry.source, entry.candidate),
+          ruleId,
+          rule,
+          evidence: compacted.evidence,
+        };
+        if (compacted.moduleSource !== undefined) question.moduleSource = compacted.moduleSource;
+        prepared.push({ item: question, source: entry.source });
+        candidatesWithQuestions.add(entry.candidate.id);
+        filesWithQuestions.add(entry.candidate.filePath);
+        if (hasTruncatedFlag(compacted.evidence)) truncatedEvidence += 1;
+      } else {
+        const question: PreparedQuestion = {
+          candidate: entry.candidate,
+          evaluationCandidate: evaluationCandidate(entry.source, entry.candidate),
+          ruleId,
+          rule,
+        };
+        prepared.push({ item: question, source: entry.source });
+        candidatesWithQuestions.add(entry.candidate.id);
+        filesWithQuestions.add(entry.candidate.filePath);
+      }
+    }
+    const capped = (input.maxQuestions !== undefined && prepared.length >= input.maxQuestions)
+      || (input.evidenceBudgetMs !== undefined && Date.now() - startedAt >= input.evidenceBudgetMs);
+    if (capped) break;
+  }
+
+  const candidatesByKind = new Map<CandidateKind, number>();
+  for (const entry of ordered) {
+    candidatesByKind.set(entry.candidate.kind, (candidatesByKind.get(entry.candidate.kind) ?? 0) + 1);
+  }
+  const omittedByRule: OmittedByRule[] = [];
+  const omittedTotals = new Map<CandidateKind, number>();
+  for (const [ruleId, rule] of rules) {
+    if (rule.scope === "change") continue;
+    const total = candidatesByKind.get(rule.scope) ?? 0;
+    const omitted = total - (visitedByRule.get(ruleId) ?? 0);
+    if (omitted > 0) {
+      omittedByRule.push({ ruleId, omitted });
+      omittedTotals.set(rule.scope, (omittedTotals.get(rule.scope) ?? 0) + omitted);
+    }
+  }
+  omittedByRule.sort((left, right) => left.ruleId.localeCompare(right.ruleId));
+  const omittedByKind: OmittedByKind[] = AUDIT_KIND_ORDER
+    .filter((kind) => (omittedTotals.get(kind) ?? 0) > 0)
+    .map((kind) => ({ kind, omitted: omittedTotals.get(kind) ?? 0 }));
+  const unscoredRules: UnscoredRule[] = rules
+    .filter(([, rule]) => rule.scope === "change")
+    .map(([ruleId, rule]) => ({ ruleId, scope: rule.scope, reason: AUDIT_UNSCORED_REASON }))
+    .sort((left, right) => left.ruleId.localeCompare(right.ruleId));
+
+  const result: AnalysisResult = {
+    judgments: [],
+    abstentions: sortAbstentions(abstentions),
+    failures: [],
+    statistics: { requests: 0, questions: 0 },
+  };
+  if (!input.dryRun) {
+    const groups = new Map<string, { filePath: string; source: string; items: PreparedQuestion[] }>();
+    for (const { item, source } of prepared) {
+      const key = item.candidate.kind === "module" ? "audit:modules" : `audit:file:${item.candidate.filePath}`;
+      const group = groups.get(key) ?? {
+        filePath: item.candidate.kind === "module" ? item.candidate.filePath : item.candidate.filePath,
+        source,
+        items: [],
+      };
+      group.items.push(item);
+      groups.set(key, group);
+    }
+    for (const group of groups.values()) {
+      for (const batch of batches(group.filePath, group.items)) {
+        await evaluateBatch(group.filePath, batch, evaluator, result);
+      }
+    }
+    result.judgments = sortJudgments(result.judgments);
+  }
+
+  const filesEnumerated = input.projectFiles.length;
+  const filesScored = filesWithQuestions.size;
+  const coverage: AuditCoverage = {
+    filesEnumerated,
+    filesScored,
+    filesOmitted: filesEnumerated - filesScored,
+    candidatesEnumerated: ordered.length,
+    candidatesScored: candidatesWithQuestions.size,
+    questionsPrepared: prepared.length,
+    questionsAsked: result.statistics.questions,
+    maxQuestions: input.maxQuestions ?? null,
+    evidenceBudgetMs: input.evidenceBudgetMs ?? null,
+    dryRun: input.dryRun ?? false,
+    omittedByKind,
+    omittedByRule,
+    unscoredRules,
+    truncatedEvidence,
+    complete: omittedByRule.length === 0,
+  };
+  return { ...result, coverage };
 }
