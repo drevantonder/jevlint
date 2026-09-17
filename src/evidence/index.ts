@@ -143,6 +143,11 @@ import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logi
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
 import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
+import { buildRedundantConditionalArmEvidence } from "./redundant-conditional-arm.js";
+import { buildDoubleNegationEvidence } from "./double-negation.js";
+import { buildHollowDelegationChainEvidence } from "./hollow-delegation-chain.js";
+import { buildTransitivePlumbingEvidence } from "./transitive-plumbing.js";
+import { buildDistrustfulTypeGuardEvidence } from "./distrustful-type-guard.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -777,6 +782,30 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-duplicated-style-object") {
     return { handled: true, evidence: buildDuplicatedStyleObjectEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-redundant-conditional-arm") {
+    return {
+      handled: true,
+      evidence: buildRedundantConditionalArmEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-double-negation") {
+    return { handled: true, evidence: buildDoubleNegationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hollow-delegation-chain") {
+    return {
+      handled: true,
+      evidence: buildHollowDelegationChainEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-transitive-plumbing") {
+    return { handled: true, evidence: buildTransitivePlumbingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-distrustful-type-guard") {
+    return {
+      handled: true,
+      evidence: buildDistrustfulTypeGuardEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
