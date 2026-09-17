@@ -13,7 +13,9 @@ import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
 import { buildForeignMutationEvidence } from "./foreign-mutation.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
+import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildHiddenLoopExitEvidence } from "./hidden-loop-exit.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
@@ -28,9 +30,11 @@ import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
+import { buildPrototypeInProductionEvidence } from "./prototype-in-production.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
+import { buildShallowConvenienceLayerEvidence } from "./shallow-convenience-layer.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
@@ -223,6 +227,27 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-type-checker-escape") {
     return { handled: true, evidence: buildTypeCheckerEscapeEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-excess-context-parameter") {
+    return {
+      handled: true,
+      evidence: buildExcessContextParameterEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-shallow-convenience-layer") {
+    return {
+      handled: true,
+      evidence: buildShallowConvenienceLayerEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-prototype-in-production") {
+    return {
+      handled: true,
+      evidence: buildPrototypeInProductionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-hidden-loop-exit") {
+    return { handled: true, evidence: buildHiddenLoopExitEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

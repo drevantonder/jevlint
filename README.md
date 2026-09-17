@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- Forty-five bundled Jev rules
+- Forty-nine bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -187,6 +187,11 @@ pnpm env:check
 pnpm test
 pnpm test:live
 pnpm lint
+pnpm check
+pnpm build
+```
+
+The tests were written before the implementation. The normal suite uses deterministic evaluator fakes and does not spend TypeSafe credits. `pnpm test:live` loads the key through Varlock and checks the rule fixtures against the real Jev API.
 pnpm check
 pnpm build
 ```
