@@ -218,6 +218,10 @@ describe("loadConfig", () => {
       "jev/no-single-caller-exported-helper",
       "jev/no-string-duplicated-enumeration",
       "jev/no-convergent-twin-types",
+      "jev/no-cross-area-export-break",
+      "jev/no-efferent-coupling-burst",
+      "jev/no-stable-to-volatile-edge",
+      "jev/no-new-foreign-state-write-edge",
     ]);
   });
 

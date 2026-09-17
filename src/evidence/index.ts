@@ -203,6 +203,10 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildCrossAreaExportBreakEvidence } from "./cross-area-export-break.js";
+import { buildEfferentCouplingBurstEvidence } from "./efferent-coupling-burst.js";
+import { buildStableToVolatileEdgeEvidence } from "./stable-to-volatile-edge.js";
+import { buildNewForeignStateWriteEdgeEvidence } from "./new-foreign-state-write-edge.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1141,30 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-cross-area-export-break") {
+    return {
+      handled: true,
+      evidence: buildCrossAreaExportBreakEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-efferent-coupling-burst") {
+    return {
+      handled: true,
+      evidence: buildEfferentCouplingBurstEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-stable-to-volatile-edge") {
+    return {
+      handled: true,
+      evidence: buildStableToVolatileEdgeEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-new-foreign-state-write-edge") {
+    return {
+      handled: true,
+      evidence: buildNewForeignStateWriteEdgeEvidence(candidate, projectFiles, changes),
+    };
   }
   return { handled: false };
 }
