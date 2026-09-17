@@ -194,6 +194,10 @@ describe("loadConfig", () => {
       "jev/no-unexplained-behavioral-literal",
       "jev/no-shadowed-meaning",
       "jev/no-oversized-working-set",
+      "jev/no-hand-rolled-date-format",
+      "jev/no-hand-rolled-relative-time",
+      "jev/no-hand-rolled-number-format",
+      "jev/no-hand-rolled-url-query",
     ]);
   });
 

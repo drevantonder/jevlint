@@ -179,6 +179,10 @@ import { buildNestedConditionalExpressionEvidence } from "./nested-conditional-e
 import { buildUnexplainedBehavioralLiteralEvidence } from "./unexplained-behavioral-literal.js";
 import { buildShadowedMeaningEvidence } from "./shadowed-meaning.js";
 import { buildOversizedWorkingSetEvidence } from "./oversized-working-set.js";
+import { buildHandRolledDateFormatEvidence } from "./hand-rolled-date-format.js";
+import { buildHandRolledRelativeTimeEvidence } from "./hand-rolled-relative-time.js";
+import { buildHandRolledNumberFormatEvidence } from "./hand-rolled-number-format.js";
+import { buildHandRolledUrlQueryEvidence } from "./hand-rolled-url-query.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -990,6 +994,24 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildOversizedWorkingSetEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-hand-rolled-date-format") {
+    return { handled: true, evidence: buildHandRolledDateFormatEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-relative-time") {
+    return {
+      handled: true,
+      evidence: buildHandRolledRelativeTimeEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-hand-rolled-number-format") {
+    return {
+      handled: true,
+      evidence: buildHandRolledNumberFormatEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-hand-rolled-url-query") {
+    return { handled: true, evidence: buildHandRolledUrlQueryEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
