@@ -59,7 +59,7 @@ const repo = `export const userRepo = {
 
 function candidateFor(filePath: string, source: string, marker: string) {
   const candidate = extractCandidates(filePath, source)
-    .find(({ source: text }) => text.includes(marker));
+    .find(({ kind, source: text }) => kind === "function" && text.includes(marker));
   expect(candidate).toBeDefined();
   return candidate!;
 }
