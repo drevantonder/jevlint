@@ -3942,5 +3942,140 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-hand-rolled-group-by": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this grouping helper reimplement Object.groupBy or Map.groupBy with no demonstrated need for its differences?",
+          inspect: "Compare the grouping loop and accumulator writes with the key normalization, Map identity use, target constraint comments, and repository callers in the supplied evidence.",
+          focus: "Judge whether the local copy is gratuitous or justified by key semantics, engine targets, or caller-relied behavior the platform cannot express.",
+          decision_boundary: [
+            "A plain string-key group on modern engines with no key normalization and no comment is strong evidence of a gratuitous reimplementation.",
+            "Composite or custom-collapsed keys, a Map with identity semantics the call sites rely on, or a comment citing a sub-ES2024 target weaken the claim toward justified.",
+            "Grouping loops alone are insufficient; the accumulator-write shape must show key-indexed collection building.",
+            "jev/no-duplicated-logic scores duplication against another repository function; this scores duplication against the shared platform and needs no repository match.",
+            "If the evidence does not establish a grouping shape or the justification side is unresolved, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function rebuilds platform grouping with plain keys while engines admit the platform form and no justification is shown",
+            remedy: "Use Object.groupBy or Map.groupBy, or document the key semantics or target constraint that forces the local copy",
+          },
+          false: {
+            what: "The grouping needs custom keys, identity semantics, an older target, or the evidence does not establish a grouping shape",
+          },
+        },
+      },
+      message: "This grouping helper reimplements platform grouping without a demonstrated need.",
+    },
+    "jev/no-hand-rolled-deep-clone": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this copy routine reimplement structuredClone with no demonstrated need for its differences?",
+          inspect: "Compare the JSON round-trip or recursive type-branching shape with the prototype, function, and reviver preservation signals, the lossy-tradeoff comment, and repository callers in the supplied evidence.",
+          focus: "Judge whether the local copy is gratuitous or justified by class instances, function preservation, or a named lossy tradeoff the callers accept.",
+          decision_boundary: [
+            "A JSON round-trip applied to state holding Date, Map, Set, or undefined values is strong evidence of a gratuitous reimplementation.",
+            "Class instances needing a reviver, function-prototype preservation, or a comment naming the lossy tradeoff weaken the claim toward justified.",
+            "A single JSON.stringify for serialization or logging without a parse-back copy is not a clone shape.",
+            "jev/no-duplicated-logic scores duplication against another repository function; this scores duplication against the shared platform and needs no repository match.",
+            "If the evidence does not establish a copy shape or the preserved semantics are unresolved, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The routine copies structured state the platform clones natively while dropping semantics no caller accepts losing",
+            remedy: "Use structuredClone, or document the preservation semantics that force the local copy",
+          },
+          false: {
+            what: "The copy preserves prototypes, functions, or custom semantics, names its lossy tradeoff, or lacks a clone shape",
+          },
+        },
+      },
+      message: "This copy routine reimplements structuredClone without a demonstrated need.",
+    },
+    "jev/no-hand-rolled-set-ops": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this loop reimplement dedupe, intersection, or difference that Set expresses directly, with no custom equality doing real work?",
+          inspect: "Compare the loop excerpts and membership checks with the comparator signals and repository callers in the supplied evidence.",
+          focus: "Judge whether the membership test is plain identity a Set covers or domain equality the call sites demonstrably need.",
+          decision_boundary: [
+            "Primitive dedupe by identity with no comparator in sight is strong evidence of a gratuitous reimplementation.",
+            "Dedupe by a domain key function, epsilon or ordering-sensitive comparison, or lazy-generator consumption the call sites demonstrate weaken the claim toward justified.",
+            "Loops with membership checks but no collected result are iteration, not set operations.",
+            "jev/no-duplicated-logic scores duplication against another repository function; this scores duplication against the shared platform and needs no repository match.",
+            "If the evidence does not establish a dedupe, intersection, or difference shape, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The loop rebuilds identity-based set semantics the platform expresses directly with no custom equality at work",
+            remedy: "Use Set dedupe, intersection, or difference, or document the domain equality that forces the local loop",
+          },
+          false: {
+            what: "A domain comparator does real work, callers need lazy consumption, or no set-operation shape is established",
+          },
+        },
+      },
+      message: "This loop reimplements set semantics the platform expresses directly.",
+    },
+    "jev/no-hand-rolled-flatten": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this recursion reimplement Array.flat or flatMap with no demonstrated need for its differences?",
+          inspect: "Compare the self-recursive concat shape and depth parameter with the depth-cap meaning, hole handling, lazy iteration, and repository callers in the supplied evidence.",
+          focus: "Judge whether the recursion is plain full-depth flattening or carries domain semantics the platform form cannot express.",
+          decision_boundary: [
+            "Unbounded full-depth flattening of plain nested arrays is strong evidence of a gratuitous reimplementation.",
+            "Depth caps with domain meaning, sparse or hole handling the callers rely on, or lazy iteration over a large structure weaken the claim toward justified.",
+            "Array checks without concatenation or recursion are traversal, not flattening.",
+            "jev/no-duplicated-logic scores duplication against another repository function; this scores duplication against the shared platform and needs no repository match.",
+            "If the evidence does not establish a flattening shape or the extra semantics are unresolved, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The recursion flattens plain nested arrays with semantics Array.flat already provides and no demonstrated extra need",
+            remedy: "Use Array.flat or flatMap, or document the depth, hole, or laziness semantics that force the local recursion",
+          },
+          false: {
+            what: "Depth caps, hole handling, or laziness carry caller-relied meaning, or no flattening shape is established",
+          },
+        },
+      },
+      message: "This recursion reimplements Array.flat without a demonstrated need.",
+    },
+    "jev/no-hand-rolled-deep-equal": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this comparison routine reimplement a deep-equality capability the repository already owns, with no demonstrated need for its differences?",
+          inspect: "Compare the key-length check, key iteration, and recursive call shape with the owned capability facts, the domain comparator signals, the zero-dependency footprint, and repository callers in the supplied evidence.",
+          focus: "Judge whether the local compare is gratuitous beside an owned capability or justified by domain comparison semantics or a sustained zero-dependency footprint.",
+          decision_boundary: [
+            "A full recursive structural compare beside an installed deep-equal dependency or an existing node:assert or util import with no options is strong evidence of a gratuitous reimplementation.",
+            "A domain comparator such as numeric epsilon, key subsets, or order-insensitivity exercised by callers, or a zero-dependency footprint the manifest sustains, weakens the claim toward justified.",
+            "Shallow field comparisons without recursion are not deep equality.",
+            "jev/no-duplicated-logic scores duplication against structural similarity to another repository function; this scores duplication against a declared dependency or platform module evidenced by manifest and import facts.",
+            "If the evidence does not establish a recursive structural-compare shape, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The routine rebuilds structural comparison an owned dependency or platform module already provides with no demonstrated extra need",
+            remedy: "Use the owned deep-equal capability, or document the domain comparison semantics that force the local routine",
+          },
+          false: {
+            what: "Domain comparison semantics do real work, the footprint is intentionally dependency-free, or no recursive compare shape is established",
+          },
+        },
+      },
+      message: "This comparison routine reimplements an owned deep-equality capability.",
+    },
   },
 };

@@ -122,6 +122,11 @@ const extractedRules = [
   ["jev/no-unclosed-handle", "function"],
   ["jev/no-bespoke-crypto-construction", "function"],
   ["jev/no-duplicated-style-object", "function"],
+  ["jev/no-hand-rolled-group-by", "function"],
+  ["jev/no-hand-rolled-deep-clone", "function"],
+  ["jev/no-hand-rolled-set-ops", "function"],
+  ["jev/no-hand-rolled-flatten", "function"],
+  ["jev/no-hand-rolled-deep-equal", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
