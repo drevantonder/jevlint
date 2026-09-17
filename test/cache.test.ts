@@ -146,6 +146,10 @@ describe("CachedEvaluator", () => {
     changedPath.state.file.path = "src/other.ts";
     await evaluator.evaluate(changedPath);
 
+    const changedModuleSource = request();
+    changedModuleSource.state.file.source = "const moduleContext = true;";
+    await evaluator.evaluate(changedModuleSource);
+
     const changedId = request();
     changedId.state.candidates[0]!.id = "candidate_1";
     await evaluator.evaluate(changedId);
@@ -162,7 +166,7 @@ describe("CachedEvaluator", () => {
     changedLines.state.candidates[0]!.endLine = 2;
     await evaluator.evaluate(changedLines);
 
-    expect(delegate.requests).toHaveLength(6);
+    expect(delegate.requests).toHaveLength(7);
   });
 
   it("canonicalizes object key order and ignores question map IDs", async () => {

@@ -20,7 +20,7 @@ Each SHA-256 key uses canonical JSON with sorted object keys and ordered arrays.
 - pinned model ID, currently `jev-1.13.0`
 - TypeSafe SDK version
 - Jevlint evaluator version
-- the exact state sent to TypeSafe, including repository-relative file path, normalized candidate source and nearby source, source kind and lines, and rule-specific evidence
+- the exact state sent to TypeSafe, including repository-relative file path, compact module context, normalized candidate source and nearby source, source kind and lines, and rule-specific evidence
 - the exact Noul question, including rule ID, evaluation schema version, prompt instructions, and criteria
 
 Question map IDs are excluded because TypeSafe does not send them to the model. Rule IDs remain part of the question instructions and key. Threshold, severity, and diagnostic message are excluded because they are local policy applied after Jev returns a probability. Changing those values reuses the semantic judgment and reapplies the new policy.
