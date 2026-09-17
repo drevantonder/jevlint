@@ -5110,5 +5110,84 @@ export const defaultConfig: JevLintConfig = {
       message: "This import climbs multiple directory levels although a nearer entry point exists.",
 
     },
+    "jev/no-unverified-mock-contract": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test's mocked layer diverge from the real module contract it stands in for, so the test verifies the mock rather than the interaction?",
+          inspect: "Use each resolved mock target with its stubbed members, the members absent from the real module, the mocked return shapes beside the real return expressions, the error paths no stub reproduces, and whether any assertion checks a value computed by real code in the supplied evidence.",
+          focus: "Judge fidelity between the mock and the real contract, not how many collaborators are doubled.",
+          decision_boundary: [
+            "A stubbed member the real module does not export, or a mocked return shape the real function never returns, is strong evidence of an unverified mock contract.",
+            "A documented error path the real module throws that no stub reproduces leaves the failure behavior unverified.",
+            "A stubbed surface matching the real exports with assertions on values computed by real code answers the question negatively.",
+            "Breadth of doubling alone belongs to mock-everything; this question needs a resolved real module to compare against.",
+            "If no mock resolves to a project module, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The mock's members, return shapes, or error paths diverge from the real module it stands in for",
+            remedy: "Align the stub with the real exports and return shapes, including the documented error paths, or stop doubling that module",
+          },
+          false: {
+            what: "The stub matches the real surface and error behavior, real computed values are asserted, or no mock resolves to a project module",
+          },
+        },
+      },
+      message: "This test's mock diverges from the real module contract it stands in for.",
+    },
+    "jev/no-implementation-mirrored-expectation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do this test's expected values mirror literals copied from the subject implementation rather than from an independent contract, so the assertion pins the implementation's current assumption?",
+          inspect: "Use each expectation literal with whether it appears verbatim in the subject source and which independent anchors outside the subject and the test repeat it in the supplied evidence.",
+          focus: "Judge whether the expected value is anchored outside the subject, not whether the assertion checks an outcome.",
+          decision_boundary: [
+            "An expected literal appearing only in the subject source and the test is strong evidence of a mirrored assumption: changing both together stays green.",
+            "A value repeated in a contract fixture, seed data, or a second independent consumer is anchored outside the subject.",
+            "Assertions pinning call counts, arguments, or order belong to interaction pinning, not literal mirroring.",
+            "A test with no outcome literals to compare cannot mirror an assumption; answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Expected values repeat the subject's own literals with no independent anchor, so the test pins current assumptions",
+            remedy: "Source expected values from the contract, fixture, or independent consumer that defines the behavior",
+          },
+          false: {
+            what: "The expected values are anchored outside the subject, or the test states no outcome literal to mirror",
+          },
+        },
+      },
+      message: "This test's expectations mirror the implementation's own literals rather than an independent contract.",
+    },
+    "jev/no-self-authored-exam": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change author the implementation, its doubles, and its assertions together with no pre-existing anchor, so the same diff writes the exam it takes?",
+          inspect: "Use each implementation and test pairing with the touched declarations, the changed test functions, and the anchor files referencing each declaration outside the pairing in the supplied evidence.",
+          focus: "Judge whether the touched behavior is anchored anywhere the diff leaves alone, not whether tests were added.",
+          decision_boundary: [
+            "Touched declarations exercised only by tests the same diff adds or edits, with zero unchanged references, is strong evidence of a self-authored exam.",
+            "A pre-existing contract test, fixture, spec, or second caller left untouched that still references the behavior anchors the change.",
+            "Implementation edits with no paired test change, or test edits with no paired implementation change, are not a same-diff exam.",
+            "If the change pairs no implementation with a test, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The same diff writes the implementation, its doubles, and its assertions with no anchor the diff leaves alone",
+            remedy: "Anchor the behavior first in an independent contract test or fixture, then change the implementation against it",
+          },
+          false: {
+            what: "Unchanged tests, fixtures, or callers already pin the behavior, or the change pairs no implementation with a test",
+          },
+        },
+      },
+      message: "This change writes the implementation and its exam together with no pre-existing anchor.",
+    },
   },
 };

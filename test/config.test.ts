@@ -202,6 +202,9 @@ describe("loadConfig", () => {
       "jev/no-utils-grab-bag-growth",
       "jev/no-barrel-bypass",
       "jev/no-skipped-level-import",
+      "jev/no-unverified-mock-contract",
+      "jev/no-implementation-mirrored-expectation",
+      "jev/no-self-authored-exam",
     ]);
   });
 

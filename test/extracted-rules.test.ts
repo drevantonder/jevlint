@@ -166,6 +166,9 @@ const extractedRules = [
   ["jev/no-utils-grab-bag-growth", "module"],
   ["jev/no-barrel-bypass", "module"],
   ["jev/no-skipped-level-import", "module"],
+  ["jev/no-unverified-mock-contract", "function"],
+  ["jev/no-implementation-mirrored-expectation", "function"],
+  ["jev/no-self-authored-exam", "change"],
 ] as const;
 
 describe("extracted review rules", () => {
