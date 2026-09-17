@@ -114,6 +114,11 @@ describe("loadConfig", () => {
       "jev/no-shallow-convenience-layer",
       "jev/no-prototype-in-production",
       "jev/no-hidden-loop-exit",
+      "jev/no-blocking-event-loop-call",
+      "jev/no-unguarded-async-init",
+      "jev/no-promise-combinator-mismatch",
+      "jev/no-orphaned-timer",
+      "jev/no-unsynchronized-shared-memory",
     ]);
   });
 
