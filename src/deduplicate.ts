@@ -23,6 +23,7 @@ const INPUT_MUTATION_PRIORITY = new Map<string, number>([
 
 const API_SIDE_EFFECT_PRIORITY = new Map<string, number>([
   ["jev/no-query-side-effect", 95],
+  ["jev/no-hidden-io", 85],
 ]);
 
 const RULE_FAMILIES = [

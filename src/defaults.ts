@@ -31,6 +31,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function mutates caller-owned input without making that behavior clear.",
     },
+    "jev/no-hidden-io": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function cross a material I/O boundary whose latency, failure modes, or resource cost are hidden by its API contract?",
+          inspect: "Compare the function name and signature with each confirmed or possible I/O operation, resolved project target, module context, and repository caller in the supplied evidence.",
+          focus: "Judge whether a caller can reasonably tell that invoking this API may perform network, disk, database, process, or similar external I/O rather than local computation.",
+          decision_boundary: [
+            "Names such as calculate, format, resolve, or build usually imply local work when no domain convention says otherwise.",
+            "Names such as fetch, load, read, write, request, send, persist, or repository operations normally disclose an I/O boundary.",
+            "An async declaration reveals a Promise and scheduling boundary, but not by itself a network, disk, or database dependency.",
+            "In-memory async work, lazy local initialization, and behavior-preserving memoization are not material I/O.",
+            "Treat possible boundaries as insufficient unless the supplied target or context establishes actual external I/O.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The implementation performs confirmed material I/O while the API presents the operation as cheap, local, or computational",
+            remedy: "Rename or redesign the API so callers can anticipate latency, failure, and resource cost",
+          },
+          false: {
+            what: "The contract discloses the boundary, the work is local, only operational caching is involved, or the evidence does not confirm external I/O",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This API hides a material I/O boundary and its cost.",
+    },
     "jev/no-query-side-effect": {
       scope: "function",
       question: {

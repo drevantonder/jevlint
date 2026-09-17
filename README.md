@@ -14,12 +14,13 @@ This first slice supports:
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
 - Text and JSON diagnostics
-- Sixteen bundled Jev rules
+- Seventeen bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules flag:
 
 - mutation of caller-owned inputs that the function contract does not disclose
+- network, disk, database, or process I/O hidden behind local-looking APIs
 - state-changing commands concealed behind query-shaped APIs
 - comments that repeat nearby code
 - wrappers that add no meaningful behavior
@@ -36,7 +37,7 @@ The bundled Jev rules flag:
 - changes that displace rather than reduce complexity
 - feature envy
 
-The API-contract rules use Oxc to prove that an argument changes or that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior. Pure copies and pure queries never reach Jev; explicit mutable protocols, telemetry, and cache population remain valid.
+The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, telemetry, and cache population remain valid.
 
 The eight accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, variation, policy, and dependency constraints. The state-modeling rules distinguish correlated lifecycle flags from independent booleans, closed internal states from open strings, and conditionally required payloads from optional metadata or boundary contracts. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
 

@@ -13,6 +13,7 @@ export { buildCorrelatedStateBooleansEvidence } from "./evidence/correlated-stat
 export { buildDisproportionateConfigurationEvidence } from "./evidence/disproportionate-configuration.js";
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
+export { buildHiddenIoEvidence } from "./evidence/hidden-io.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
 export { buildQuerySideEffectEvidence } from "./evidence/query-side-effect.js";

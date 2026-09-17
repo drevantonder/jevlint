@@ -79,6 +79,15 @@ describe("diagnostic deduplication", () => {
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-complexity-displacement"]);
   });
 
+  it("prefers a hidden command over its generic I/O symptom", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-hidden-io", 5, 12),
+      diagnostic("jev/no-query-side-effect", 5, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-query-side-effect"]);
+  });
+
   it("keeps independent principle families on the same function", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-input-mutation", 5, 12),

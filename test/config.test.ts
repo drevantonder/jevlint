@@ -12,6 +12,7 @@ describe("loadConfig", () => {
 
     expect(Object.keys(config.rules)).toEqual([
       "jev/no-hidden-input-mutation",
+      "jev/no-hidden-io",
       "jev/no-query-side-effect",
       "jev/no-narrating-comment",
       "jev/no-pass-through-wrapper",
