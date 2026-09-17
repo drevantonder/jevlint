@@ -134,6 +134,12 @@ const extractedRules = [
   ["jev/no-single-use-dependency", "change"],
   ["jev/no-second-shelf-dependency", "change"],
   ["jev/no-repeated-test-preamble", "function"],
+  ["jev/no-unpinned-boundary-branch", "function"],
+  ["jev/no-client-only-authorization", "function"],
+  ["jev/no-check-then-act-race", "function"],
+  ["jev/no-non-idempotent-retry", "function"],
+  ["jev/no-parallel-abstraction", "function"],
+  ["jev/no-misplaced-error-boundary", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

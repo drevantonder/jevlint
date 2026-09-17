@@ -170,6 +170,12 @@ describe("loadConfig", () => {
       "jev/no-single-use-dependency",
       "jev/no-second-shelf-dependency",
       "jev/no-repeated-test-preamble",
+      "jev/no-unpinned-boundary-branch",
+      "jev/no-client-only-authorization",
+      "jev/no-check-then-act-race",
+      "jev/no-non-idempotent-retry",
+      "jev/no-parallel-abstraction",
+      "jev/no-misplaced-error-boundary",
     ]);
   });
 

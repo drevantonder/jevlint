@@ -4262,5 +4262,163 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test repeats fixture setup the module already owns once.",
     },
+
+    "jev/no-unpinned-boundary-branch": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this branch decide a boundary value that no test or caller pins, so a plausible-but-wrong comparison here stays green?",
+          inspect: "Compare each extracted boundary predicate with the test references, repository callers, and related modules in the supplied evidence.",
+          focus: "Judge the pinning gap, not whether the comparison is correct — correctness without a spec is undecidable, but an unpinned boundary is observable.",
+          decision_boundary: [
+            "A boundary comparison with callers reaching both sides and zero tests touching either side is strong evidence of an unpinned branch.",
+            "Tests asserting both sides of the boundary pin the decision even when the comparison looks unusual.",
+            "Comparisons over internal counters or loop bounds with no domain meaning deserve less weight than tier, amount, or limit decisions.",
+            "A single boundary arm with no evidence that callers ever reach the edge answers the question negatively.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A reachable boundary decision has no test pinning either side, so the suite cannot tell a wrong comparison from a right one",
+            remedy: "Add tests asserting both sides of the boundary value",
+          },
+          false: {
+            what: "Tests pin both sides of the boundary, callers cannot reach the edge, or the comparison carries no domain meaning",
+          },
+        },
+      },
+      message: "This boundary branch decides a value no test or caller pins.",
+    },
+    "jev/no-client-only-authorization": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this access decision enforced only in client or routing code while the serving endpoint it protects shows no corresponding check?",
+          inspect: "Compare each extracted client guard with the server signals, related modules, and repository callers in the supplied evidence.",
+          focus: "Judge enforcement-layer placement, not whether the predicate points the right way — a correct predicate in the wrong layer still bypasses.",
+          decision_boundary: [
+            "A new route or component guard over a mutating endpoint whose handler performs no role read, while sibling endpoints do, is strong evidence of client-only enforcement.",
+            "Defense-in-depth UI gating above an already-guarded handler answers the question negatively.",
+            "Disabled buttons and hidden panels are presentation, never enforcement, when the endpoint itself is bare.",
+            "If the evidence shows no server surface at all, answer no rather than guessing at an outside-the-repo backend.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The policy lives only in client or routing code while the serving path performs no matching role check, so direct callers bypass it",
+            remedy: "Enforce the role check in the serving endpoint and keep the client guard as presentation only",
+          },
+          false: {
+            what: "The server path already checks the claim, or no server surface is visible to judge against",
+          },
+        },
+      },
+      message: "This access decision is enforced only in client or routing code.",
+    },
+    "jev/no-check-then-act-race": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Are this check and its dependent mutation separated by an await, so concurrent executions can invalidate the check before the mutation lands?",
+          inspect: "Compare each extracted check with its intervening awaits, the later mutation on the same resource, the atomic signals, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the await gap lets a concurrent execution invalidate the checked condition, not whether the sequential logic reads correctly.",
+          decision_boundary: [
+            "An existence or ownership check, followed by an await, followed by a state-changing call on the same key with no atomic wrapper is strong evidence of a race.",
+            "The same span wrapped in a transaction, compare-and-set, or single-flight the repo already uses answers the question negatively.",
+            "Awaits that cannot yield to a concurrent writer of the same resource, such as pure local computation, weaken the claim.",
+            "If the check and the mutation touch different resources, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A check and its dependent mutation straddle an await on the same resource with no atomic guard, so overlap invalidates the check",
+            remedy: "Guard the span with the repo's atomic primitive, transaction, or single-flight",
+          },
+          false: {
+            what: "An atomic primitive covers the span, the gap cannot reach a concurrent writer, or check and mutation touch different resources",
+          },
+        },
+      },
+      message: "This check and its mutation are separated by an await on the same resource.",
+    },
+    "jev/no-non-idempotent-retry": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this retry repeat a state-changing operation that carries no idempotency identity, so a slow first attempt becomes two effects?",
+          inspect: "Use each extracted retry span, its wrapped calls and mutating sinks, the idempotency signals, and the repository callers in the supplied evidence.",
+          focus: "Judge repetition safety, not attempt policy — a bounded, backed-off retry of a keyless charge still duplicates.",
+          decision_boundary: [
+            "Bounded retries around a keyless charge, send, or publish whose endpoint supports keys per sibling usage is strong evidence of duplication risk.",
+            "Retries over reads, or over writes carrying an idempotency key, request ID, or dedupe token, answer the question negatively.",
+            "A callee contract one hop away that accepts or requires a key makes the absence meaningful; without such a contract, weigh the claim less.",
+            "Pure read-only spans never reach this judgment.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A retry repeats a state-changing call with no idempotency identity, so a slow first attempt lands twice",
+            remedy: "Attach an idempotency key, request ID, or dedupe token to the retried call",
+          },
+          false: {
+            what: "The retried operation is read-only, carries an idempotency identity, or has no retry span at all",
+          },
+        },
+      },
+      message: "This retry repeats a state-changing operation with no idempotency identity.",
+    },
+    "jev/no-parallel-abstraction": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this module own a concept the repository already owns elsewhere, so one idea now has two addresses?",
+          inspect: "Compare the module exports with each overlapping sibling's exports and shared vocabulary, the delegation signals, and the importing modules in the supplied evidence.",
+          focus: "Judge concept duplication, not textual duplication — a re-expressed idea under prompt-flavored names still splits future changes across two addresses.",
+          decision_boundary: [
+            "A new module exporting the incumbent's concept under different names, with zero cross-references and a split caller base, is strong evidence of a parallel abstraction.",
+            "A new module that delegates to or wraps the incumbent, such as a migration adapter, answers the question negatively.",
+            "A new unit owning a named sub-capability the incumbent lacks is extension, not duplication.",
+            "Shared generic vocabulary alone, without a shared domain concept, is insufficient.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new module re-derives a repo-owned concept instead of reusing it, so changes must find both addresses",
+            remedy: "Reuse the incumbent module or delegate to it from the new unit",
+          },
+          false: {
+            what: "The new unit delegates to the incumbent, owns a distinct sub-capability, or shares only generic vocabulary",
+          },
+        },
+      },
+      message: "This module owns a concept the repository already owns elsewhere.",
+    },
+    "jev/no-misplaced-error-boundary": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this error boundary guard code whose callees cannot produce the caught failure while a neighboring fallible call sits outside it?",
+          inspect: "Compare each extracted try block and its in-span calls with the caught kinds, the catch body, and the uncovered neighbor calls in the supplied evidence.",
+          focus: "Judge whether the handling is addressed to the span that can actually fail, not whether handling exists at all.",
+          decision_boundary: [
+            "A caught kind no in-span callee produces, beside an uncovered neighbor that observably throws, is strong evidence of a misaddressed boundary.",
+            "A boundary whose kinds match its in-span contracts, with the neighbor covered by its own documented policy, answers the question negatively.",
+            "Catching a broad Error around genuinely fallible in-span calls is placement-correct even when a neighbor also throws elsewhere.",
+            "If callee throw contracts are unknown, weigh the claim less rather than inferring failure modes.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Diligent handling guards an infallible span while the fallible neighbor goes uncovered, so the failure enters through the bare call",
+            remedy: "Move the boundary to cover the fallible call or narrow the caught kinds to what the span produces",
+          },
+          false: {
+            what: "Caught kinds match the in-span contracts, neighbors carry their own handling, or throw contracts are too uncertain to place blame",
+          },
+        },
+      },
+      message: "This error boundary guards the wrong span while a fallible neighbor sits outside it.",
+
+    },
   },
 };
