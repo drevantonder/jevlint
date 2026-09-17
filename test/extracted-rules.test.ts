@@ -166,6 +166,11 @@ const extractedRules = [
   ["jev/no-utils-grab-bag-growth", "module"],
   ["jev/no-barrel-bypass", "module"],
   ["jev/no-skipped-level-import", "module"],
+  ["jev/no-deep-delegation-chain", "function"],
+  ["jev/no-stability-inversion", "abstraction"],
+  ["jev/no-options-style-split", "module"],
+  ["jev/no-concrete-stable-module", "module"],
+  ["jev/no-import-use-skew", "module"],
 ] as const;
 
 describe("extracted review rules", () => {

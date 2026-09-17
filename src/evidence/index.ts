@@ -187,6 +187,11 @@ import { buildFarAwayTestEvidence } from "./far-away-test.js";
 import { buildUtilsGrabBagGrowthEvidence } from "./utils-grab-bag-growth.js";
 import { buildBarrelBypassEvidence } from "./barrel-bypass.js";
 import { buildSkippedLevelImportEvidence } from "./skipped-level-import.js";
+import { buildDeepDelegationChainEvidence } from "./deep-delegation-chain.js";
+import { buildStabilityInversionEvidence } from "./stability-inversion.js";
+import { buildOptionsStyleSplitEvidence } from "./options-style-split.js";
+import { buildConcreteStableModuleEvidence } from "./concrete-stable-module.js";
+import { buildImportUseSkewEvidence } from "./import-use-skew.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1039,6 +1044,36 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildSkippedLevelImportEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-deep-delegation-chain") {
+    return {
+      handled: true,
+      evidence: buildDeepDelegationChainEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-stability-inversion") {
+    return {
+      handled: true,
+      evidence: buildStabilityInversionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-options-style-split") {
+    return {
+      handled: true,
+      evidence: buildOptionsStyleSplitEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-concrete-stable-module") {
+    return {
+      handled: true,
+      evidence: buildConcreteStableModuleEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-import-use-skew") {
+    return {
+      handled: true,
+      evidence: buildImportUseSkewEvidence(candidate, projectFiles, changes),
     };
   }
   return { handled: false };
