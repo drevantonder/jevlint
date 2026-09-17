@@ -91,6 +91,10 @@ describe("loadConfig", () => {
       "jev/no-contextless-error",
       "jev/no-unchecked-precondition",
       "jev/no-unenforced-warning-comment",
+      "jev/no-table-shaped-conditional",
+      "jev/no-sequential-step-soup",
+      "jev/no-mirrored-derived-state",
+      "jev/no-construction-in-use",
     ]);
   });
 

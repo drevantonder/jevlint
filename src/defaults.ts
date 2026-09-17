@@ -1766,7 +1766,6 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This field is meaningful during only part of the object's lifetime.",
     },
-
     "jev/no-low-cohesion-class": {
       scope: "abstraction",
       question: {
@@ -2146,6 +2145,114 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This comment warns of a hazard no code enforces.",
+    },
+
+    "jev/no-table-shaped-conditional": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this conditional map inputs to outcomes as data per arm, so a lookup would state the mapping the branches only enumerate?",
+          inspect: "Use each extracted arm, its tested literal, the shared discriminant, whether any arm performs behavior, any existing record or map keyed by the discriminant, other functions mapping the same discriminant, and callers in the supplied evidence.",
+          focus: "Judge whether the branches enumerate a data table that a lookup could state directly, not whether branching in general is undesirable.",
+          decision_boundary: [
+            "Three or more arms that each return or assign only a constant or lookup value over the same discriminant are strong evidence of a table written as branches.",
+            "Any arm that calls a collaborator, constructs a value with behavior, mutates state, or branches further is behavior dispatch rather than a data mapping; answer no.",
+            "An existing record, map, or object literal keyed by the discriminant, or a second function mapping the same values, shows the table already wants one home.",
+            "Two arms, distinct discriminants per arm, or guards over unrelated conditions are not a table shape.",
+            "If the evidence does not establish that every arm carries only data over one shared discriminant, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The conditional enumerates a data mapping across three or more arms where a keyed lookup would state the same outcomes directly",
+            remedy: "Replace the branches with a record, map, or table keyed by the discriminant",
+          },
+          false: {
+            what: "An arm performs behavior, the arms test different values or shapes, or the evidence does not establish a pure data mapping",
+          },
+        },
+      },
+      message: "This conditional enumerates a data mapping that a lookup could state directly.",
+    },
+    "jev/no-sequential-step-soup": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function perform sequential phases that share no dataflow between them, so each phase is a hidden function its callers never needed together?",
+          inspect: "Use each extracted phase, its statements and declared bindings, the bindings shared between phases, whether a helper already wraps any one phase, and callers in the supplied evidence.",
+          focus: "Judge whether the phases are separable units bundled by sequence rather than one computation its callers need whole.",
+          decision_boundary: [
+            "Three or more coherent phases with no shared local bindings between them are strong evidence that each phase could stand alone.",
+            "Phases that thread one accumulator or intermediate result through every block form a genuine pipeline; answer no.",
+            "A helper that already wraps one phase, or callers that need only one phase's effect, shows the bundling is already straining.",
+            "Two phases, or phases too small to name, are a sequence rather than soup.",
+            "If the evidence does not establish three separable phases, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function bundles sequential phases with disjoint dataflow that callers need independently and that could be named and tested alone",
+            remedy: "Extract each phase into its own function and let callers compose only the phases they need",
+          },
+          false: {
+            what: "The phases share dataflow as one pipeline, the sequence is too small to separate, or the evidence does not establish separable phases",
+          },
+        },
+      },
+      message: "This function bundles sequential phases that share no dataflow.",
+    },
+    "jev/no-mirrored-derived-state": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this value duplicate state owned elsewhere and stay in sync only through manual sync code, so the copies can disagree silently?",
+          inspect: "Use the extracted sync shape, the source and its ownership, the count of independent writes to the copy, reads of the copy where the source is also in scope, and other readers in the supplied evidence.",
+          focus: "Judge whether two homes for one piece of knowledge can drift apart, not whether copying data is ever convenient.",
+          decision_boundary: [
+            "An effect or refresh block copying a source into a second binding, plus independent writes to the copy or readers mixing both homes, is strong evidence of drift surface.",
+            "A memoized derivation or selector recomputed from the source with no independent writes to the copy has a single representation; answer no.",
+            "One-shot initialization copies that are never re-synced or re-written locally do not create an ongoing drift surface.",
+            "If the evidence does not establish a persistent second home with its own write paths, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The copy persists as a second home for source-owned knowledge with manual sync and independent writes or mixed readers that let the copies disagree",
+            remedy: "Derive the value from the source at read time or move ownership so only one home can change",
+          },
+          false: {
+            what: "The value is derived without independent writes, copied once and never re-synced, or lacks evidence of a persistent second home",
+          },
+        },
+      },
+      message: "This value mirrors source-owned state through manual sync code that can drift.",
+    },
+    "jev/no-construction-in-use": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this business-logic function build its own concrete collaborators instead of receiving them, so tests and new callers inherit its wiring choices?",
+          inspect: "Use each extracted construction, its concrete class or factory, the import source, the assigned binding and how it is used for behavior, whether sibling functions receive the same collaborator as a parameter, and callers in the supplied evidence.",
+          focus: "Judge whether the function hard-codes wiring decisions its callers cannot change, not whether constructing objects is ever acceptable.",
+          decision_boundary: [
+            "Constructing a concrete store, client, or service inline and invoking behavior on it, while siblings receive the same collaborator as a parameter, is strong evidence of hard-coded wiring.",
+            "Construction of value objects with no behavior, or assembly undisputedly private to the function, does not constrain callers; answer no.",
+            "Functions whose declared role is construction, such as factories, builders, providers, and composition roots, build by contract rather than by surprise.",
+            "Callers that already hold an equivalent instance they cannot supply show the wiring choice propagating outward.",
+            "If the evidence does not establish a behavior-bearing collaborator built inside domain logic, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function builds a concrete behavior-bearing collaborator inline where callers and tests cannot substitute or reuse their own instance",
+            remedy: "Receive the collaborator as a parameter and move construction to the composition root or caller",
+          },
+          false: {
+            what: "The construction is a value object, private assembly, the function's declared role, or lacks evidence of a behavior-bearing collaborator",
+          },
+        },
+      },
+      message: "This function builds its own concrete collaborators instead of receiving them.",
 
     },
   },

@@ -55,6 +55,10 @@ const extractedRules = [
   ["jev/no-contextless-error", "function"],
   ["jev/no-unchecked-precondition", "function"],
   ["jev/no-unenforced-warning-comment", "comment"],
+  ["jev/no-table-shaped-conditional", "function"],
+  ["jev/no-sequential-step-soup", "function"],
+  ["jev/no-mirrored-derived-state", "function"],
+  ["jev/no-construction-in-use", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
