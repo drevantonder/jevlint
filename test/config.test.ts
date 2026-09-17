@@ -47,6 +47,11 @@ describe("loadConfig", () => {
       "jev/no-temporal-call-coupling",
       "jev/no-shotgun-change",
       "jev/no-undocumented-contract",
+      "jev/no-accidental-serialization",
+      "jev/no-discarded-transformation",
+      "jev/no-load-bearing-async",
+      "jev/no-untrusted-sink-input",
+      "jev/no-unreleased-subscription",
     ]);
   });
 
