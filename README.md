@@ -43,6 +43,10 @@ pnpm build
 
 ## Usage
 
+Jevlint has two modes. `review` scores changed code only; `audit` surveys the whole codebase. Both report probabilities only: no pass/fail, no thresholds, no bands.
+
+### review: changed code
+
 Review staged and unstaged changes relative to `HEAD`, plus untracked source files:
 
 ```sh
@@ -54,6 +58,36 @@ Review only staged changes:
 ```sh
 pnpm jevlint review --staged
 ```
+
+On a clean tree there is nothing changed, so there is nothing to score. To score a clean tree, use `audit` below.
+
+### audit: whole codebase
+
+Survey every source file in the repository without needing a diff. An audit runs to completion by default: every candidate/rule pair is prepared. Opt into a limit only when you want one: `--max-questions` stops question preparation once that many evaluation questions are prepared, and `--evidence-budget-ms` bounds the preparation wall-clock. Remaining candidate/rule pairs are reported as omitted, in deterministic priority order (module candidates first by importer in-degree, then abstraction, function, and comment candidates by owner-file in-degree, start offset, and path).
+
+```sh
+pnpm jevlint audit
+```
+
+Limit a run explicitly when you want a bounded survey instead of a full one:
+
+```sh
+pnpm jevlint audit --max-questions 2000
+```
+
+Count the cost before spending it: `--dry-run` prepares and counts questions without calling Jev, so it reports coverage with zero live requests. Nothing is sampled and nothing is cut by score; what was not scored is listed in the report's `coverage` object with `complete: false`. Omission counts are candidate/rule pairs: prepared plus abstained plus omitted always equals the total pair count, so a truncated run states exactly which kinds and rules were never reached.
+
+```sh
+pnpm jevlint audit --max-questions 2000 --dry-run
+```
+
+Bound the preparation wall-clock with an opt-in budget; on expiry, remaining pairs are omitted:
+
+```sh
+pnpm jevlint audit --max-questions 2000 --evidence-budget-ms 60000
+```
+
+Change-scope rules (for example `jev/no-complexity-displacement`) need before/after change context, so an audit never scores them. They are listed under `coverage.unscoredRules` instead of being scored, and no change candidates are synthesized.
 
 Produce machine-readable output:
 

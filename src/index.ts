@@ -1,14 +1,17 @@
 export {
+  analyzeAuditWithFailures,
   analyzeChanges,
   analyzeChangesWithFailures,
   analyzeFile,
   analyzeFileWithFailures,
   analyzeModules,
   analyzeModulesWithFailures,
+  AUDIT_UNSCORED_REASON,
   EVALUATION_REQUEST_BUDGET_CHARS,
   sortAbstentions,
   sortJudgments,
 } from "./analyze.js";
+export type { AnalyzeAuditInput, AnalyzeAuditResult } from "./analyze.js";
 export { CachedEvaluator } from "./cache.js";
 export type { CacheMode, CacheStatistics, CachedEvaluatorOptions, EvaluatorIdentity } from "./cache.js";
 export { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
@@ -17,12 +20,19 @@ export { defaultConfig, defineConfig, loadConfig } from "./config.js";
 export {
   createReviewReport,
   DEFAULT_DISPLAY_LIMIT,
+  formatCoverage,
   formatJson,
   formatText,
   MAX_REPORTED_FAILURES,
 } from "./format.js";
 export type { CreateReviewReportInput } from "./format.js";
 export type { DisplayOptions } from "./types.js";
+export type {
+  AuditCoverage,
+  OmittedByKind,
+  OmittedByRule,
+  UnscoredRule,
+} from "./types.js";
 export { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 export { buildAdHocBranchingEvidence } from "./evidence/ad-hoc-branching.js";
 export { buildAnemicTypeEvidence } from "./evidence/anemic-type.js";

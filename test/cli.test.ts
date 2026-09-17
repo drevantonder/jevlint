@@ -214,7 +214,7 @@ describe("runCli", () => {
     });
 
     expect(exitCode).toBe(2);
-    expect(stderr).toContain("Usage: jevlint review");
+    expect(stderr).toContain("Usage: jevlint");
   });
 
   it("rejects unsupported commands without calling the evaluator", async () => {
@@ -229,6 +229,6 @@ describe("runCli", () => {
     });
 
     expect(exitCode).toBe(2);
-    expect(stderr).toContain("Usage: jevlint review");
+    expect(stderr).toContain("Usage: jevlint");
   });
 });

@@ -140,6 +140,40 @@ export interface ReviewStatistics {
   };
 }
 
+export interface UnscoredRule {
+  ruleId: string;
+  scope: CandidateKind;
+  reason: string;
+}
+
+export interface OmittedByKind {
+  kind: CandidateKind;
+  omitted: number;
+}
+
+export interface OmittedByRule {
+  ruleId: string;
+  omitted: number;
+}
+
+export interface AuditCoverage {
+  filesEnumerated: number;
+  filesScored: number;
+  filesOmitted: number;
+  candidatesEnumerated: number;
+  candidatesScored: number;
+  questionsPrepared: number;
+  questionsAsked: number;
+  maxQuestions: number | null;
+  evidenceBudgetMs: number | null;
+  dryRun: boolean;
+  omittedByKind: OmittedByKind[];
+  omittedByRule: OmittedByRule[];
+  unscoredRules: UnscoredRule[];
+  truncatedEvidence: number;
+  complete: boolean;
+}
+
 export interface DisplayOptions {
   minScore?: number;
   limit?: number;
@@ -153,6 +187,7 @@ export interface ReviewReport {
   abstentions: StructuralAbstentionCount[];
   failures: ReviewFailureSummary;
   statistics: ReviewStatistics;
+  coverage?: AuditCoverage;
 }
 
 export interface SourceFile {
