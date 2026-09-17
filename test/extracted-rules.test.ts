@@ -231,6 +231,11 @@ const extractedRules = [
   ["jev/no-unversioned-envelope-change", "change"],
   ["jev/no-context-homonym-type", "abstraction"],
   ["jev/no-wide-fan-in-edit", "change"],
+  ["jev/no-deep-delegation-chain", "function"],
+  ["jev/no-stability-inversion", "abstraction"],
+  ["jev/no-options-style-split", "module"],
+  ["jev/no-concrete-stable-module", "module"],
+  ["jev/no-import-use-skew", "module"],
 ] as const;
 
 describe("extracted review rules", () => {

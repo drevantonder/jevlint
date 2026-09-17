@@ -267,6 +267,11 @@ describe("loadConfig", () => {
       "jev/no-unversioned-envelope-change",
       "jev/no-context-homonym-type",
       "jev/no-wide-fan-in-edit",
+      "jev/no-deep-delegation-chain",
+      "jev/no-stability-inversion",
+      "jev/no-options-style-split",
+      "jev/no-concrete-stable-module",
+      "jev/no-import-use-skew",
     ]);
   });
 

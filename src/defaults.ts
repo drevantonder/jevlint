@@ -5108,7 +5108,141 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This import climbs multiple directory levels although a nearer entry point exists.",
-
+    },
+    "jev/no-deep-delegation-chain": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function sit mid-chain in a multi-module delegation path whose depth hides the policy decisions callers transitively depend on?",
+          inspect: "Compare the candidate's delegation target with the intermediate module's forwarding shape and guard signals, the terminal module reached on the second hop, and the module-crossing count in the supplied evidence.",
+          focus: "Judge whether callers must transitively depend on policy they cannot see, not whether delegation itself is wrong.",
+          decision_boundary: [
+            "A candidate delegating into a module whose handler purely forwards into a third module that enforces unseen policy is strong evidence of a deep delegation chain.",
+            "Intermediate hops that add shaping, validation, or guards of their own weaken the claim even when the chain crosses modules.",
+            "A chain that stays inside one module, or a documented pipeline whose stages are explicit, is not a deep delegation chain.",
+            "A single shallow hop, however thin, carries no depth and belongs to pass-through judgments instead.",
+            "If the evidence traces fewer than two hops or fewer than two module crossings, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function delegates across modules into a forwarding middle hop whose terminal hop decides policy invisibly to callers",
+            remedy: "Collapse the chain, move the policy decision beside the caller-visible contract, or document the pipeline stages explicitly",
+          },
+          false: {
+            what: "Each hop adds shaping or guards, the chain stays in one module, the path is a documented pipeline, or no multi-hop chain is shown",
+          },
+        },
+      },
+      message: "This function sits mid-chain in a delegation path whose depth hides the policy its callers depend on.",
+    },
+    "jev/no-stability-inversion": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this widely used abstraction depend on a volatile detail, so churn below threatens calm above?",
+          inspect: "Compare the owner module's importer count with each resolved target module's importer count, test or internal path markers, and internal annotations in the supplied evidence.",
+          focus: "Judge the direction of the dependency edge, stable depending on volatile, not how much the abstraction knows.",
+          decision_boundary: [
+            "A heavily imported type naming an export of a test-only, fixture, or internal module that nothing else imports is strong evidence of a stability inversion.",
+            "A target that is version-pinned, widely imported, and calm weakens the claim even when its path looks internal.",
+            "An abstraction that is itself internal with one caller carries no stability promise to invert.",
+            "Depending outward through a published barrel is a different shape from depending inward on volatility.",
+            "If no resolved project-module dependency is shown, or the direction runs volatile toward stable, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A stable, widely used surface depends inward on a rarely imported, test-marked, or internally documented module",
+            remedy: "Depend on a stable published contract instead, or move the abstraction down beside the volatile detail it needs",
+          },
+          false: {
+            what: "The target is calm and widely used, the abstraction is itself internal, or no stable-onto-volatile edge is shown",
+          },
+        },
+      },
+      message: "This widely used abstraction depends on a volatile detail, so churn below threatens calm above.",
+    },
+    "jev/no-options-style-split": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Do this module's exports mix options-object and positional parameter styles for overlapping call shapes, so callers cannot predict how to pass arguments?",
+          inspect: "Compare each exported function's parameter style and arity with the module majority style, the same-arity siblings on opposite styles, and each sampled call against its enclosing caller's signature and style in the supplied evidence.",
+          focus: "Judge cross-sibling convention incoherence across the module surface, not whether one signature is awkward on its own.",
+          decision_boundary: [
+            "Same-arity siblings on opposite styles, both public, with callers wrapping one to call the other, is strong evidence of an options-style split.",
+            "Styles partitioned by domain, such as builders versus queries, weaken the claim even when both styles appear.",
+            "A module mid-migration with the new style documented is transition, not incoherence.",
+            "A single signature that merely wants an object belongs to unnamed-parameter judgments instead.",
+            "If every export shares one style or fewer than two styled exports are shown, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The module's public exports mix options-object and positional styles for overlapping call shapes without a domain partition",
+            remedy: "Converge the surface on one parameter convention, or partition the styles by documented domain",
+          },
+          false: {
+            what: "One style dominates by domain, the module documents a migration, or no cross-sibling style split is shown",
+          },
+        },
+      },
+      message: "This module's exports mix options-object and positional styles for overlapping call shapes.",
+    },
+    "jev/no-concrete-stable-module": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Is this module widely imported yet offering no abstract surface, so its stability rests on concrete details?",
+          inspect: "Compare the owner module's importer count and imported symbols with its exported abstraction inventory and concrete export list in the supplied evidence.",
+          focus: "Judge whether stability rests on concrete details for lack of interfaces or type aliases shaping the contracts, not whether abstraction is fashionable.",
+          decision_boundary: [
+            "A heavily imported module with all-concrete exports, where the imported symbols are concrete functions or classes, is strong evidence of a concrete stable module.",
+            "A small stable utility with few callers weakens the claim even when it exports no interfaces.",
+            "Leaf-level glue, where an interface would be ceremony, is not a concrete stable module.",
+            "One exported interface or type alias shaping the contracts defeats the claim regardless of importer counts.",
+            "If the module shows any abstract surface, no concrete exports, or no importers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A widely imported module whose de-facto contract is concrete exports with no interfaces or type aliases shaping them",
+            remedy: "Introduce interfaces or type aliases that shape the module's contracts and program callers against them",
+          },
+          false: {
+            what: "The module already offers an abstract surface, has few callers, is leaf-level glue, or shows no importer base",
+          },
+        },
+      },
+      message: "This widely imported module offers no abstract surface, so its stability rests on concrete details.",
+    },
+    "jev/no-import-use-skew": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this file import a wide surface from one module but exercise a narrow slice, keeping a dependency edge heavier than its use justifies?",
+          inspect: "Compare each source module's imported-symbol list with the used and unused names and the used-versus-imported ratio in the supplied evidence.",
+          focus: "Judge whether the dependency edge is heavier than its exercised use justifies, not whether imports are alphabetized or tidy.",
+          decision_boundary: [
+            "Many names imported from one volatile or heavy module with only one exercised in the file is strong evidence of import-use skew.",
+            "Symbols used in conditionally compiled paths present in the source count as used, not skew.",
+            "Type-only extras and barrel re-export files carry no local-use expectation and are not skew.",
+            "One unused name beside a broadly exercised surface is ordinary drift, not a heavy edge.",
+            "If every source's imports are exercised or the file is a barrel, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The file holds a wide import surface from a module while exercising a narrow slice of it",
+            remedy: "Narrow the import to the exercised symbols or split the dependency so the edge matches its use",
+          },
+          false: {
+            what: "Each source's imports are exercised, the extras are type-only, the file re-exports, or no unused surface is shown",
+          },
+        },
+      },
+      message: "This file imports a wide surface from one module but exercises a narrow slice of it.",
     },
     "jev/no-unverified-mock-contract": {
       scope: "function",
