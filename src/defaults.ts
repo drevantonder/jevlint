@@ -850,5 +850,115 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This behavior appears to belong with the data it inspects.",
     },
+    "jev/no-unbounded-wait": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this network or I/O call wait without a deadline, timeout, or cancellation bound that keeps a hung remote from blocking forever?",
+          inspect: "Use the extracted wait calls, their timeout and signal options, module-level abort control, any one-hop wrapper policy, dependency roles, and callers in the supplied evidence.",
+          focus: "Judge whether this attempt is bounded against a hung remote, not whether retries or fallbacks exist elsewhere.",
+          decision_boundary: [
+            "A bare fetch or client call with no signal, timeout, or abort control anywhere in the module is strong evidence of an unbounded wait.",
+            "A wrapper that sets a default timeout one hop away bounds the wait even when the call site shows no explicit option.",
+            "An explicit signal, timeout option, or AbortSignal timeout attached to the call establishes a bound.",
+            "Retry policy, error handling, or response validation alone never bounds the wait itself.",
+            "If the evidence cannot establish that the call reaches a network, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The shown call can block indefinitely on a hung remote because no deadline, timeout, or cancellation is attached at the call, in scope, or one hop away",
+            remedy: "Attach an explicit timeout, deadline, or cancellation signal to every remote wait",
+          },
+          false: {
+            what: "The wait is bounded by an explicit option, a scope-level abort control, a wrapper default, or the evidence cannot establish a network wait",
+          },
+        },
+      },
+      message: "This remote call waits without a visible deadline, timeout, or cancellation.",
+    },
+    "jev/no-detached-async-work": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this asynchronous work detached from completion tracking and error handling, so its failure would surface as an unhandled rejection or silent loss?",
+          inspect: "Use the extracted detached calls, each callee's async certainty, how the work is stored or returned, the module rejection guard, dependency roles, and callers in the supplied evidence.",
+          focus: "Judge whether anyone observes this work's completion or failure, not whether the callee itself handles errors internally.",
+          decision_boundary: [
+            "A bare-statement call to a confirmed async function in a non-async handler with no catch tail and no module rejection guard is strong evidence of detached work.",
+            "Awaiting, returning, or attaching a catch or then handler keeps the work tracked even when the handler is brief.",
+            "Storing the promise without awaiting or returning it leaves completion unobserved even when the value is named.",
+            "A module-level unhandledRejection guard or a tracked background set makes fire-and-forget intentional rather than lost.",
+            "Calls whose promise return cannot be established from the evidence are only possible, never proof of detachment.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The shown asynchronous work runs without await, return, handler tail, tracked storage, or a guard that would observe its failure",
+            remedy: "Await, return, or explicitly track the promise and give its failure an observer",
+          },
+          false: {
+            what: "Completion or failure stays observable through await, return, handlers, tracked storage, a rejection guard, or the evidence cannot establish async work",
+          },
+        },
+      },
+      message: "This asynchronous work runs without completion tracking or error handling.",
+    },
+    "jev/no-shared-mutable-module-state": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this module couple its functions through hidden shared mutable data that callers cannot see?",
+          inspect: "Use the extracted shared bindings, each writer and reader function, any reset or inspect export, the importing modules, and observed caller behavior in the supplied evidence.",
+          focus: "Judge whether independent-looking exports communicate through module state, not whether module state exists at all.",
+          decision_boundary: [
+            "One binding assigned in two or more distinct exports, with importers calling both sides, is strong evidence of hidden coupling.",
+            "State initialized once at load and only read thereafter is configuration, not shared mutable coupling.",
+            "An export that resets or inspects the state makes the coupling visible; weigh whether the seam and observed caller discipline contain the ordering and re-entrancy risk.",
+            "A writer that only runs as one-time setup narrows but does not remove the sharing; judge how much runtime behavior still depends on hidden order.",
+            "A binding written in only one function is local ownership even when other functions read it.",
+            "If the evidence does not establish mutation from multiple functions, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The module's exports coordinate through a module-level mutable binding, so call order and re-entrancy change behavior invisibly to callers",
+            remedy: "Pass the shared data explicitly, scope it to one owner, or make the coordination part of the exported contract",
+          },
+          false: {
+            what: "The state is load-time configuration, singly owned, exposed through an explicit contract, or not proven to be shared across functions",
+          },
+        },
+      },
+      message: "This module couples its functions through hidden shared mutable state.",
+    },
+    "jev/no-type-checker-escape": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this type-system escape hide a wrong-assumption failure that would otherwise be caught at compile time?",
+          inspect: "Use each extracted escape, its asserted type, the value's source, downstream calls and member access, nearby narrowing guards, validator imports, bare any notes, and callers in the supplied evidence.",
+          focus: "Judge whether the escape lets an unchecked assumption reach real use, not whether escapes are stylistically undesirable.",
+          decision_boundary: [
+            "An assertion over a runtime boundary value that is dereferenced or passed on with no validator or guard in the module is strong evidence of a hidden wrong-assumption failure.",
+            "An assertion directly after a matching typeof, in, or instanceof check restates what the guard proved and hides little.",
+            "A validator import between the boundary and the use replaces the escape with a checked contract.",
+            "Bare any annotations alone are a deterministic lint matter noted in evidence; they never by themselves establish a hidden failure.",
+            "Double assertions through any or unknown, non-null assertions on lookups, and suppression comments each widen the unchecked gap.",
+            "If the escaped value never reaches a use that assumes its shape, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The escape lets an unchecked value reach dereferences, typed parameters, or downstream calls where a wrong assumption fails at runtime instead of compile time",
+            remedy: "Narrow with a guard or validator at the boundary and keep the escape as close to the check as possible",
+          },
+          false: {
+            what: "A guard or validator covers the assumption, the escape restates checked knowledge, or the value never reaches a shape-assuming use",
+          },
+        },
+      },
+      message: "This type-system escape hides an assumption the compiler can no longer check.",
+    },
   },
 };

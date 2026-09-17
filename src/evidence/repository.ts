@@ -3,10 +3,13 @@ import { parseSync, Visitor } from "oxc-parser";
 import type {
   ArrowFunctionExpression,
   CallExpression,
+  Expression,
   Function as OxcFunction,
   ImportDeclaration,
   Node,
   Program,
+  TSInterfaceDeclaration,
+  TSTypeAliasDeclaration,
 } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 
@@ -292,4 +295,138 @@ export function findFunctionCallersWithCoverage(
 ): FunctionCallersCoverage {
   const callers = collectFunctionCallers(ownerPath, functionName, projectFiles);
   return { callers, total: callers.length };
+}
+
+export type AbstractionNode = TSInterfaceDeclaration | TSTypeAliasDeclaration;
+
+export function findDirectAbstraction(
+  program: Program,
+  candidate: Candidate,
+): AbstractionNode | undefined {
+  let result: AbstractionNode | undefined;
+  const matches = (node: AbstractionNode): void => {
+    if (node.start === candidate.start && node.end === candidate.end) result = node;
+  };
+  new Visitor({
+    TSInterfaceDeclaration: matches,
+    TSTypeAliasDeclaration: matches,
+  }).visit(program);
+  return result;
+}
+
+export function abstractionName(_program: Program, node: AbstractionNode): string {
+  return node.id.name;
+}
+
+export function isAbstractionExported(
+  program: Program,
+  node: AbstractionNode,
+  name: string,
+): boolean {
+  for (const statement of program.body) {
+    if (statement.type !== "ExportNamedDeclaration") continue;
+    if (statement.declaration === node) return true;
+    if (statement.specifiers.some((specifier) => {
+      const local = specifier.local;
+      return local.type === "Identifier" && local.name === name;
+    })) return true;
+  }
+  return false;
+}
+
+export type ModuleImporter = {
+  filePath: string;
+  importedSymbols: string[];
+  source: string;
+};
+
+export function findModuleImporters(
+  ownerPath: string,
+  projectFiles: ProjectFile[],
+): ModuleImporter[] {
+  const result: ModuleImporter[] = [];
+  for (const file of projectFiles) {
+    if (file.filePath === ownerPath) continue;
+    const parsed = parseSync(file.filePath, file.source, { range: true });
+    if (parsed.errors.some((error) => error.severity === "Error")) continue;
+    const symbols: string[] = [];
+    for (const imported of moduleImports(parsed.program)) {
+      const resolved = resolveModule(file.filePath, imported.source, projectFiles);
+      if (resolved?.filePath !== ownerPath) continue;
+      if (!symbols.includes(imported.imported)) symbols.push(imported.imported);
+    }
+    if (symbols.length > 0) {
+      result.push({
+        filePath: file.filePath,
+        importedSymbols: symbols,
+        source: file.source.slice(0, 12_000),
+      });
+    }
+  }
+  return result.slice(0, 12);
+}
+
+export type ModuleMutableBinding = {
+  name: string;
+  kind: "let" | "var" | "const";
+  start: number;
+  end: number;
+};
+
+export function moduleMutableBindings(program: Program): ModuleMutableBinding[] {
+  const bindings: ModuleMutableBinding[] = [];
+  for (const statement of program.body) {
+    const declaration = statement.type === "ExportNamedDeclaration"
+      ? statement.declaration
+      : statement;
+    if (declaration?.type !== "VariableDeclaration") continue;
+    if (declaration.kind !== "let" && declaration.kind !== "var" && declaration.kind !== "const") {
+      continue;
+    }
+    for (const item of declaration.declarations) {
+      if (item.id.type !== "Identifier") continue;
+      if (declaration.kind === "const") {
+        const init = item.init;
+        if (
+          init?.type !== "ObjectExpression"
+          && init?.type !== "ArrayExpression"
+          && init?.type !== "NewExpression"
+        ) continue;
+      }
+      bindings.push({
+        name: item.id.name,
+        kind: declaration.kind,
+        start: declaration.start,
+        end: declaration.end,
+      });
+    }
+  }
+  return bindings;
+}
+
+export function calleeRootName(callee: CallExpression["callee"]): string | null {
+  if (callee.type === "Identifier") return callee.name;
+  if (callee.type === "MemberExpression") {
+    if (callee.object.type === "Super") return null;
+    return memberObjectRoot(callee.object);
+  }
+  if (callee.type === "ChainExpression") {
+    const chained = callee.expression;
+    if (chained.type === "CallExpression") return calleeRootName(chained.callee);
+    if (chained.type === "MemberExpression") {
+      if (chained.object.type === "Super") return null;
+      return memberObjectRoot(chained.object);
+    }
+  }
+  return null;
+}
+
+function memberObjectRoot(object: Expression): string | null {
+  if (object.type === "Identifier") return object.name;
+  if (object.type === "MemberExpression") {
+    if (object.object.type === "Super") return null;
+    return memberObjectRoot(object.object);
+  }
+  if (object.type === "CallExpression") return calleeRootName(object.callee);
+  return null;
 }

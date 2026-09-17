@@ -43,6 +43,10 @@ describe("loadConfig", () => {
       "jev/no-unsafe-retry",
       "jev/no-hidden-partial-failure",
       "jev/no-feature-envy",
+      "jev/no-unbounded-wait",
+      "jev/no-detached-async-work",
+      "jev/no-shared-mutable-module-state",
+      "jev/no-type-checker-escape",
     ]);
   });
 
