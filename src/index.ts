@@ -14,5 +14,6 @@ export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
 export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";
+export { buildUnconstrainedStateStringEvidence } from "./evidence/unconstrained-state-string.js";
 export { TypeSafeEvaluator } from "./typesafe-evaluator.js";
 export type * from "./types.js";

@@ -9,6 +9,7 @@ import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
+import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -36,6 +37,12 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildCorrelatedStateBooleansEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unconstrained-state-string") {
+    return {
+      handled: true,
+      evidence: buildUnconstrainedStateStringEvidence(candidate, projectFiles),
     };
   }
   if (ruleId === "jev/no-generic-magic") {

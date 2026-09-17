@@ -17,6 +17,7 @@ describe("loadConfig", () => {
       "jev/no-speculative-generality",
       "jev/no-ad-hoc-branching",
       "jev/no-correlated-state-booleans",
+      "jev/no-unconstrained-state-string",
       "jev/no-needless-abstraction",
       "jev/no-generic-magic",
       "jev/no-disproportionate-configuration",

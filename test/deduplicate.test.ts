@@ -37,6 +37,17 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("prefers constrained state modeling over generic configuration", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-disproportionate-configuration", 4, 12),
+      diagnostic("jev/no-unconstrained-state-string", 4, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-unconstrained-state-string",
+    ]);
+  });
+
   it("keeps independent findings in separate spans", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-pass-through-wrapper", 4, 6),

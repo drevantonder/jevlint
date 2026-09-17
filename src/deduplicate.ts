@@ -3,6 +3,7 @@ import type { Diagnostic } from "./types.js";
 const RULE_PRIORITY = new Map<string, number>([
   ["jev/no-complexity-displacement", 100],
   ["jev/no-correlated-state-booleans", 95],
+  ["jev/no-unconstrained-state-string", 95],
   ["jev/no-disproportionate-configuration", 90],
   ["jev/no-avoidable-orchestration", 90],
   ["jev/no-ad-hoc-branching", 90],

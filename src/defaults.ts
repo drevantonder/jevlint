@@ -170,6 +170,34 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "Correlated booleans make contradictory states representable.",
     },
+    "jev/no-unconstrained-state-string": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this type leave a closed internal state unconstrained as string even though repository decisions rely on a finite set of literal cases?",
+          inspect: "Use the string property, its literal comparisons or switch cases, transitions, typed usages, and module context in the supplied evidence.",
+          focus: "Decide whether the property is an internal finite state whose valid values the type should enumerate.",
+          decision_boundary: [
+            "Exhaustive-looking branches, rejection of unknown values, and transitions among a few named lifecycle values are strong evidence of closed state.",
+            "Strings from wire formats, storage schemas, plugins, or vendor protocols may need to accept unknown future values at that boundary.",
+            "Open domains such as locale tags, MIME types, user input, and external identifiers remain strings even when code special-cases a few values.",
+            "A few literal comparisons alone are not proof of a closed set. If the evidence does not establish finite internal state, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The property represents a finite internal lifecycle or mode, but its string type accepts values outside every meaningful case",
+            remedy: "Use a literal union, enum-like type, or discriminated union and parse external strings at the boundary",
+          },
+          false: {
+            what: "The string belongs to an open domain, preserves forward compatibility at an external boundary, or lacks enough evidence of a closed set",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "A closed state is represented by an unconstrained string.",
+    },
     "jev/no-needless-abstraction": {
       scope: "abstraction",
       question: {
