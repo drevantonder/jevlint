@@ -108,6 +108,12 @@ import { buildOutputArgumentEvidence } from "./output-argument.js";
 import { buildContextlessErrorEvidence } from "./contextless-error.js";
 import { buildUncheckedPreconditionEvidence } from "./unchecked-precondition.js";
 import { buildUnenforcedWarningCommentEvidence } from "./unenforced-warning-comment.js";
+import { buildTimezoneNaiveArithmeticEvidence } from "./timezone-naive-arithmetic.js";
+import { buildFloatingMoneyArithmeticEvidence } from "./floating-money-arithmetic.js";
+import { buildOffsetPaginationDriftEvidence } from "./offset-pagination-drift.js";
+import { buildUnitScaleMismatchEvidence } from "./unit-scale-mismatch.js";
+import { buildTruncatingNumericParseEvidence } from "./truncating-numeric-parse.js";
+import { buildLocaleDateSerializationEvidence } from "./locale-date-serialization.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -585,6 +591,42 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnsynchronizedSharedMemoryEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-timezone-naive-arithmetic") {
+    return {
+      handled: true,
+      evidence: buildTimezoneNaiveArithmeticEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-floating-money-arithmetic") {
+    return {
+      handled: true,
+      evidence: buildFloatingMoneyArithmeticEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-offset-pagination-drift") {
+    return {
+      handled: true,
+      evidence: buildOffsetPaginationDriftEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unit-scale-mismatch") {
+    return {
+      handled: true,
+      evidence: buildUnitScaleMismatchEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-truncating-numeric-parse") {
+    return {
+      handled: true,
+      evidence: buildTruncatingNumericParseEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-locale-date-serialization") {
+    return {
+      handled: true,
+      evidence: buildLocaleDateSerializationEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

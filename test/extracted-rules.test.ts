@@ -88,6 +88,12 @@ const extractedRules = [
   ["jev/no-promise-combinator-mismatch", "function"],
   ["jev/no-orphaned-timer", "function"],
   ["jev/no-unsynchronized-shared-memory", "function"],
+  ["jev/no-timezone-naive-arithmetic", "function"],
+  ["jev/no-floating-money-arithmetic", "function"],
+  ["jev/no-offset-pagination-drift", "function"],
+  ["jev/no-unit-scale-mismatch", "function"],
+  ["jev/no-truncating-numeric-parse", "function"],
+  ["jev/no-locale-date-serialization", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

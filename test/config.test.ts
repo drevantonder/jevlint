@@ -124,6 +124,12 @@ describe("loadConfig", () => {
       "jev/no-promise-combinator-mismatch",
       "jev/no-orphaned-timer",
       "jev/no-unsynchronized-shared-memory",
+      "jev/no-timezone-naive-arithmetic",
+      "jev/no-floating-money-arithmetic",
+      "jev/no-offset-pagination-drift",
+      "jev/no-unit-scale-mismatch",
+      "jev/no-truncating-numeric-parse",
+      "jev/no-locale-date-serialization",
     ]);
   });
 
