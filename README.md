@@ -66,6 +66,12 @@ The bundled Jev rules judge:
 - asynchronous work detached from completion tracking and error handling
 - module-level mutable state shared across the module's exports
 - type-system escapes that hide unchecked assumptions from the compiler
+- per-item async work that escapes the surrounding error handling
+- comparisons that normalize one side but not the other
+- dereferences that can reach an absent value without a guard
+- presence checks that treat valid falsy values as absent
+- host checks that match substrings instead of domain boundaries
+- implementations that disagree with the contract signature they claim to satisfy
 - loops that serialize independent iterations by awaiting each one
 - array transformations whose discarded result hides lost computation or misused iteration
 - async markers without await that callers depend on as promises
@@ -75,12 +81,20 @@ The bundled Jev rules judge:
 - functions that depend on another module's internals past its advertised interface
 - types whose behavior lives entirely in their clients
 - fields that hold a value during only part of the object's lifetime
+- classes that bundle unrelated responsibilities over disjoint state
+- modules changed for unrelated reasons that should live apart
+- siblings that expose needlessly different interfaces for the same operation
+- subclasses that discard behavior their inheritance link still promises
 - positional parameter lists that describe an object the code never names
 - weak randomness guarding adversary-facing secrets
 - defensive checks guarding cases no caller can produce
 - deferred-work markers without accountable follow-through
 - nested-quantifier patterns running against adversary-shaped input
 - hard-coded secrets that look like live credentials
+- results delivered through output parameters instead of returns
+- raised or re-raised errors that carry no facts about the failure
+- preconditions callers observably violate with no stated guard
+- comments that warn of a hazard no code enforces
 - cross-boundary values consumed without shape verification
 - pre-update bindings used after fresher values were derived
 - visible effects performed before rejecting gates
@@ -91,6 +105,11 @@ The bundled Jev rules judge:
 - functions that bundle sequential phases sharing no dataflow
 - values that mirror source-owned state through manual sync code
 - business-logic functions that build their own concrete collaborators
+- sibling callers that retry the same dependency without spread or bounds
+- collections that grow without eviction or size bound
+- loops that perform one persistence round-trip per item
+- fan-outs that launch unbounded concurrent work per input item
+- shared bindings mutated from concurrent callbacks without coordination
 - logging or telemetry calls that record secrets or personal data
 - navigation targets from caller-controlled input with no allow-check
 - cross-origin grants that trust any origin rather than a named set
@@ -101,6 +120,10 @@ The bundled Jev rules judge:
 - additions that follow a different convention than their owning module
 - handlers that repeat failure handling the module already owns once
 - guards that narrow nothing the flow had not already settled
+- parameters that carry a wider object than the function uses
+- layers that mirror their collaborator without adding meaning
+- code that carries prototype markers yet serves production callers
+- loops whose exit is decided mid-body where the header does not state it
 - sibling operations that report the same failure through incompatible channels
 - changes that reshape a relied-upon export without a migration path
 - functions that extend positionally while their neighbors extend through an options bag
@@ -111,6 +134,16 @@ The bundled Jev rules judge:
 - promise combinators that discard leg work or failures the flow needs
 - timers that outlive their owner because no teardown releases them
 - worker-shared memory accessed without atomic coordination
+- date arithmetic that assumes fixed-length days across daylight saving and zone changes
+- monetary amounts passing through binary floating arithmetic that accumulates error
+- listings that paginate by offset over changing data, so pages drift
+- calls that mix unit scales the surrounding convention distinguishes
+- parses that silently truncate input at the edges, so malformed values look valid
+- dates that cross a boundary in locale-rendered form and cannot round-trip
+- overloads that admit the same call shape for different meanings
+- same-stem siblings that hide which member suspends
+- barrels that re-export internals their clients were never meant to depend on
+- code that protects data with a hash or cipher the industry no longer accepts
 - connections that disable TLS identity verification on real transports
 - runtime sinks that compile caller-shaped text into behavior
 - sort orders that compare human-visible text without locale awareness
@@ -119,6 +152,11 @@ The bundled Jev rules judge:
 - servers that accept work with no graceful shutdown path
 - serving entries that expose traffic endpoints but no health or readiness signal
 - code that assumes its deployment environment instead of receiving it
+- tests that exercise their subject without stating any expectation
+- tests that wait a fixed duration instead of awaiting a condition
+- tests that decide what to check with branches or loops
+- tests that verify their own doubles rather than the subject
+- fixtures that duplicate a setup maintained elsewhere while the copies disagree
 - feature flags that no longer gate live behavior while readers still reason through both arms
 - interactive elements that expose no accessible name to assistive technology
 - user-visible strings baked into code with no internationalization path
