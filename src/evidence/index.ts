@@ -127,6 +127,7 @@ import { buildDisabledTlsVerificationEvidence } from "./disabled-tls-verificatio
 import { buildDynamicCodeExecutionEvidence } from "./dynamic-code-execution.js";
 import { buildLocaleBlindOrderingEvidence } from "./locale-blind-ordering.js";
 import { buildAssertionFreeTestEvidence } from "./assertion-free-test.js";
+import { buildImplementationMirroredExpectationEvidence } from "./implementation-mirrored-expectation.js";
 import { buildSleepInTestEvidence } from "./sleep-in-test.js";
 import { buildLogicInTestEvidence } from "./logic-in-test.js";
 import { buildMockEverythingEvidence } from "./mock-everything.js";
@@ -155,7 +156,9 @@ import { buildInteractionPinningTestEvidence } from "./interaction-pinning-test.
 import { buildSingleUseDependencyEvidence } from "./single-use-dependency.js";
 import { buildSecondShelfDependencyEvidence } from "./second-shelf-dependency.js";
 import { buildRepeatedTestPreambleEvidence } from "./repeated-test-preamble.js";
+import { buildSelfAuthoredExamEvidence } from "./self-authored-exam.js";
 import { buildUnpinnedBoundaryBranchEvidence } from "./unpinned-boundary-branch.js";
+import { buildUnverifiedMockContractEvidence } from "./unverified-mock-contract.js";
 import { buildClientOnlyAuthorizationEvidence } from "./client-only-authorization.js";
 import { buildCheckThenActRaceEvidence } from "./check-then-act-race.js";
 import { buildNonIdempotentRetryEvidence } from "./non-idempotent-retry.js";
@@ -876,6 +879,24 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildUnpinnedBoundaryBranchEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unverified-mock-contract") {
+    return {
+      handled: true,
+      evidence: buildUnverifiedMockContractEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-implementation-mirrored-expectation") {
+    return {
+      handled: true,
+      evidence: buildImplementationMirroredExpectationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-self-authored-exam") {
+    return {
+      handled: true,
+      evidence: buildSelfAuthoredExamEvidence(candidate, changes, projectFiles),
     };
   }
   if (ruleId === "jev/no-client-only-authorization") {

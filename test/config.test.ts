@@ -180,6 +180,9 @@ describe("loadConfig", () => {
       "jev/no-side-effecting-conditional-expression",
       "jev/no-unexplained-complex-condition",
       "jev/no-clever-expression",
+      "jev/no-unverified-mock-contract",
+      "jev/no-implementation-mirrored-expectation",
+      "jev/no-self-authored-exam",
     ]);
   });
 

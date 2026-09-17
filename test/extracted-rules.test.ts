@@ -144,6 +144,9 @@ const extractedRules = [
   ["jev/no-side-effecting-conditional-expression", "function"],
   ["jev/no-unexplained-complex-condition", "function"],
   ["jev/no-clever-expression", "function"],
+  ["jev/no-unverified-mock-contract", "function"],
+  ["jev/no-implementation-mirrored-expectation", "function"],
+  ["jev/no-self-authored-exam", "change"],
 ] as const;
 
 describe("extracted review rules", () => {
