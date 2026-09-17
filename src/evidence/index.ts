@@ -3,7 +3,9 @@ import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
 import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
+import { buildCallInLoopPersistenceEvidence } from "./call-in-loop-persistence.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
+import { buildConcurrentSharedMutationEvidence } from "./concurrent-shared-mutation.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildContractSignatureDriftEvidence } from "./contract-signature-drift.js";
@@ -32,6 +34,7 @@ import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
+import { buildRetryStormEvidence } from "./retry-storm-shape.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
@@ -43,6 +46,8 @@ import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
 import { buildUnanchoredDomainCheckEvidence } from "./unanchored-domain-check.js";
 import { buildUnawaitedIterationWorkEvidence } from "./unawaited-iteration-work.js";
+import { buildUnboundedAccumulationEvidence } from "./unbounded-accumulation.js";
+import { buildUnboundedParallelFanoutEvidence } from "./unbounded-parallel-fanout.js";
 import { buildUnboundedWaitEvidence } from "./unbounded-wait.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
@@ -264,6 +269,33 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildContractSignatureDriftEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-retry-storm-shape") {
+    return { handled: true, evidence: buildRetryStormEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unbounded-accumulation") {
+    return {
+      handled: true,
+      evidence: buildUnboundedAccumulationEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-call-in-loop-persistence") {
+    return {
+      handled: true,
+      evidence: buildCallInLoopPersistenceEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unbounded-parallel-fanout") {
+    return {
+      handled: true,
+      evidence: buildUnboundedParallelFanoutEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-concurrent-shared-mutation") {
+    return {
+      handled: true,
+      evidence: buildConcurrentSharedMutationEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

@@ -26,6 +26,11 @@ const extractedRules = [
   ["jev/no-falsy-absent-conflation", "function"],
   ["jev/no-unanchored-domain-check", "function"],
   ["jev/no-contract-signature-drift", "function"],
+  ["jev/no-retry-storm-shape", "function"],
+  ["jev/no-unbounded-accumulation", "function"],
+  ["jev/no-call-in-loop-persistence", "function"],
+  ["jev/no-unbounded-parallel-fanout", "function"],
+  ["jev/no-concurrent-shared-mutation", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

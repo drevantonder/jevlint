@@ -62,6 +62,11 @@ describe("loadConfig", () => {
       "jev/no-falsy-absent-conflation",
       "jev/no-unanchored-domain-check",
       "jev/no-contract-signature-drift",
+      "jev/no-retry-storm-shape",
+      "jev/no-unbounded-accumulation",
+      "jev/no-call-in-loop-persistence",
+      "jev/no-unbounded-parallel-fanout",
+      "jev/no-concurrent-shared-mutation",
     ]);
   });
 
