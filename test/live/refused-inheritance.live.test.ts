@@ -1,0 +1,62 @@
+import { readFile } from "node:fs/promises";
+import { describe, expect, it } from "vitest";
+import { analyzeFile } from "../../src/analyze.js";
+import { defaultConfig } from "../../src/config.js";
+import { TypeSafeEvaluator } from "../../src/typesafe-evaluator.js";
+import type { EvaluationRequest, Evaluator, JevLintConfig, ProjectFile } from "../../src/types.js";
+
+const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
+const repositories = new URL("../fixtures/repositories/", import.meta.url);
+
+class RecordingEvaluator implements Evaluator {
+  readonly probabilities: number[] = [];
+  readonly delegate = new TypeSafeEvaluator();
+  async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
+    const answers = await this.delegate.evaluate(request);
+    if (answers.q0 !== undefined) this.probabilities.push(answers.q0);
+    return answers;
+  }
+}
+
+async function project(name: string, paths: string[]): Promise<ProjectFile[]> {
+  return Promise.all(paths.map(async (filePath) => ({
+    filePath,
+    source: await readFile(new URL(`${name}/${filePath}`, repositories), "utf8"),
+  })));
+}
+
+async function lint(projectFiles: ProjectFile[], changedPath: string, evaluator: Evaluator) {
+  const changed = projectFiles.find(({ filePath }) => filePath === changedPath);
+  const rule = defaultConfig.rules["jev/no-refused-inheritance"];
+  expect(changed).toBeDefined();
+  expect(rule).toBeDefined();
+  if (!changed || !rule) return [];
+  const config: JevLintConfig = { rules: { "jev/no-refused-inheritance": rule } };
+  return analyzeFile({
+    filePath: changed.filePath,
+    source: changed.source,
+    changedLines: [{ start: 1, end: changed.source.split("\n").length }],
+    config,
+    projectFiles,
+  }, evaluator);
+}
+
+liveDescribe("refused inheritance calibration", () => {
+  it("flags neutralized overrides but keeps specializing ones", async () => {
+    const [smelly, clean] = await Promise.all([
+      project("refused-inheritance-smelly", ["src/user.ts", "src/ro-user.ts", "src/audit.ts"]),
+      project("refused-inheritance-clean", ["src/account.ts", "src/savings-account.ts"]),
+    ]);
+    const smellyEvaluator = new RecordingEvaluator();
+    const cleanEvaluator = new RecordingEvaluator();
+    const [smellyJudgments, cleanJudgments] = await Promise.all([
+      lint(smelly, "src/ro-user.ts", smellyEvaluator),
+      lint(clean, "src/savings-account.ts", cleanEvaluator),
+    ]);
+
+    expect(smellyEvaluator.probabilities[0]).toBeGreaterThanOrEqual(0.8);
+    expect(cleanEvaluator.probabilities[0]).toBeLessThan(0.5);
+    expect(smellyJudgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-refused-inheritance"]);
+    expect(cleanJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+  });
+});

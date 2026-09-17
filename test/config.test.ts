@@ -43,6 +43,10 @@ describe("loadConfig", () => {
       "jev/no-unsafe-retry",
       "jev/no-hidden-partial-failure",
       "jev/no-feature-envy",
+      "jev/no-low-cohesion-class",
+      "jev/no-divergent-change",
+      "jev/no-divergent-sibling-interfaces",
+      "jev/no-refused-inheritance",
     ]);
   });
 

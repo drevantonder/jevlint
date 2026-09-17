@@ -81,6 +81,7 @@ export function extractCandidates(filePath: string, source: string): Candidate[]
     ArrowFunctionExpression: addFunction,
     FunctionDeclaration: addFunction,
     FunctionExpression: addFunction,
+    ClassDeclaration: addAbstraction,
     TSInterfaceDeclaration: addAbstraction,
     TSTypeAliasDeclaration: addAbstraction,
   }).visit(result.program);

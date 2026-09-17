@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- Thirty-two bundled Jev rules
+- Thirty-six bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:

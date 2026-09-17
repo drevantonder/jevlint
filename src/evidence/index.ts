@@ -7,6 +7,8 @@ import { buildConditionallyValidStateEvidence } from "./conditionally-valid-stat
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
+import { buildDivergentChangeEvidence } from "./divergent-change.js";
+import { buildDivergentSiblingInterfacesEvidence } from "./divergent-sibling-interfaces.js";
 import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
@@ -17,12 +19,14 @@ import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
+import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
+import { buildRefusedInheritanceEvidence } from "./refused-inheritance.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
@@ -162,6 +166,24 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildHiddenPartialFailureEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-low-cohesion-class") {
+    return { handled: true, evidence: buildLowCohesionClassEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-divergent-change") {
+    return {
+      handled: true,
+      evidence: buildDivergentChangeEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-divergent-sibling-interfaces") {
+    return {
+      handled: true,
+      evidence: buildDivergentSiblingInterfacesEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-refused-inheritance") {
+    return { handled: true, evidence: buildRefusedInheritanceEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

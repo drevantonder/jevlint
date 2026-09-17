@@ -850,5 +850,113 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This behavior appears to belong with the data it inspects.",
     },
+    "jev/no-low-cohesion-class": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this class bundle members that share little state or purpose and would be clearer as separate units?",
+          inspect: "Compare each method's field usage and import sources with the computed field-sharing clusters and the per-method caller sets in the supplied evidence.",
+          focus: "Judge whether the methods serve distinct audiences over disjoint state, not whether the class is merely large.",
+          decision_boundary: [
+            "Clusters of methods that share no fields, use distinct collaborators, and serve disjoint caller sets are strong evidence of bundled responsibilities.",
+            "A large class whose methods all operate on one shared field set is big but coherent.",
+            "A constructor touching many fields, lifecycle hooks, and one coordinating facade method do not by themselves establish separate responsibilities.",
+            "Two methods alone sharing nothing is weak evidence unless the caller sets also show distinct audiences.",
+            "If the evidence does not establish disjoint state together with distinct collaborators or callers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The class serves two or more unrelated audiences over disjoint state, so each cluster could live behind its own boundary",
+            remedy: "Split the class along the field-disjoint clusters so each unit owns one responsibility",
+          },
+          false: {
+            what: "The methods share state, collaborators, or one audience, or the evidence does not establish distinct responsibilities",
+          },
+        },
+      },
+      message: "This class bundles unrelated responsibilities over disjoint state.",
+    },
+    "jev/no-divergent-change": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Is this module changed for unrelated reasons, so edits that should be independent keep colliding in one file?",
+          inspect: "Compare the per-hunk declaration fingerprints within each touched module, whether same-file hunks touch disjoint member sets, and the caller sets exercising the touched declarations in the supplied evidence.",
+          focus: "Judge whether one change mixes independent reasons in one module, not whether the diff is large or spans files.",
+          decision_boundary: [
+            "Multiple hunks in one file touching disjoint members for distinct caller sets are strong evidence of unrelated reasons colliding.",
+            "A multi-hunk change where every hunk serves one rename, one feature, or one fix across the module's members is one reason, not divergence.",
+            "Spread across many files for one concept belongs to shotgun change, not this rule; this rule scores many concepts colliding in one file.",
+            "Hunks that share declarations or serve the same callers are related edits even when they look far apart in the file.",
+            "If the coverage metadata shows omitted modules or the hunks do not map to distinct declarations, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One module absorbs edits for unrelated reasons with disjoint member sets and distinct audiences, forcing independent changes to collide",
+            remedy: "Split the module so each responsibility can change independently",
+          },
+          false: {
+            what: "The hunks serve one reason, share members or callers, spread one concept across files, or lack enough evidence of unrelated motives",
+          },
+        },
+      },
+      message: "This module is changed for unrelated reasons that should live apart.",
+    },
+    "jev/no-divergent-sibling-interfaces": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Do these sibling implementations expose needlessly different interfaces for the same operation, so clients must learn each one?",
+          inspect: "Compare the candidate's member inventory with each sibling's, the analogous member pairs with matching arity but different names, and the shared clients calling across siblings in the supplied evidence.",
+          focus: "Judge inconsistency in the caller-facing interface for the same operation, not whether bodies legitimately differ.",
+          decision_boundary: [
+            "Analogous members with the same arity and parameter shape but different names across siblings, called by shared clients, are strong evidence of divergence.",
+            "Siblings whose analogous methods take genuinely different parameters for different cases diverge for a reason.",
+            "One divergent name with no shared clients is weak evidence; clients branching on a discriminant before calling strengthen the case.",
+            "Common verbs from different domains or lifecycle stages are not the same operation merely because arities match.",
+            "If the evidence does not establish that the paired members perform the same operation for shared clients, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Siblings name the same operation differently or shape it inconsistently, forcing clients to learn each variant",
+            remedy: "Align the sibling interfaces so the same operation has one name and shape",
+          },
+          false: {
+            what: "The differences reflect genuinely different cases, no shared clients pay the learning cost, or the operations are not shown to be analogous",
+          },
+        },
+      },
+      message: "These siblings expose needlessly different interfaces for the same operation.",
+    },
+    "jev/no-refused-inheritance": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this subclass discard or neutralize behavior it inherits, so the inheritance link misleads readers about what it does?",
+          inspect: "Compare each override body with the inherited contract, the unused inherited members, and the instantiation and supertype-typed usage sites in the supplied evidence.",
+          focus: "Judge whether the subclass keeps the extends link while rejecting the behavior, and whether callers relying on the superclass type feel the refusal.",
+          decision_boundary: [
+            "Overrides that only throw, return constants, or sit empty while callers hold the subclass as the superclass type are strong evidence of refused inheritance.",
+            "An override that specializes one method while using the rest of the inherited surface refines the contract rather than refusing it.",
+            "Super-delegating overrides and unused helpers that no caller exercises through the supertype are weak evidence on their own.",
+            "Composition-friendly narrowing at construction or documented non-support with no supertype-typed callers limits the misleading surface.",
+            "If the evidence does not show discarded behavior that matters to callers of the inherited contract, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The subclass inherits a contract it neutralizes while callers can still rely on the superclass type, so the link promises behavior it does not deliver",
+            remedy: "Replace the inheritance link with composition or a narrower type that states only the behavior kept",
+          },
+          false: {
+            what: "The overrides specialize rather than discard, the unused members do not reach supertype-typed callers, or the refusal is not established",
+          },
+        },
+      },
+      message: "This subclass discards behavior its inheritance link still promises.",
+    },
   },
 };
