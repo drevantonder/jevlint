@@ -268,6 +268,7 @@ import { buildUnmigratedSchemaChangeEvidence } from "./unmigrated-schema-change.
 import { buildUnnamedParameterObjectEvidence } from "./unnamed-parameter-object.js";
 import { buildUnownedFeatureFlagEvidence } from "./unowned-feature-flag.js";
 import { buildUnpinnedBoundaryBranchEvidence } from "./unpinned-boundary-branch.js";
+import { buildUnpinnedCompatQuirkEvidence } from "./unpinned-compat-quirk.js";
 import { buildUnpinnedFailurePathEvidence } from "./unpinned-failure-path.js";
 import { buildUnreachableGuardEvidence } from "./unreachable-guard.js";
 import { buildUnreleasedSubscriptionEvidence } from "./unreleased-subscription.js";
@@ -566,6 +567,7 @@ type EvidenceRegistry = {
   "jev/no-unnamed-parameter-object": EvidenceBuilder;
   "jev/no-unowned-feature-flag": EvidenceBuilder;
   "jev/no-unpinned-boundary-branch": EvidenceBuilder;
+  "jev/no-unpinned-compat-quirk": EvidenceBuilder;
   "jev/no-unpinned-failure-path": EvidenceBuilder;
   "jev/no-unreachable-guard": EvidenceBuilder;
   "jev/no-unreleased-subscription": EvidenceBuilder;
@@ -1120,6 +1122,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildUnownedFeatureFlagEvidence(candidate, changes, projectFiles),
   "jev/no-unpinned-boundary-branch": (candidate, projectFiles) =>
     buildUnpinnedBoundaryBranchEvidence(candidate, projectFiles),
+  "jev/no-unpinned-compat-quirk": (candidate, projectFiles) =>
+    buildUnpinnedCompatQuirkEvidence(candidate, projectFiles),
   "jev/no-unpinned-failure-path": (candidate, projectFiles) =>
     buildUnpinnedFailurePathEvidence(candidate, projectFiles),
   "jev/no-unreachable-guard": (candidate, projectFiles) =>

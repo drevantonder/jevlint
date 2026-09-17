@@ -301,6 +301,7 @@ describe("loadConfig", () => {
       "jev/no-cross-context-test-reach",
       "jev/no-twin-gateway-emergence",
       "jev/no-unwrapped-service-edge",
+      "jev/no-unpinned-compat-quirk",
       // END GENERATED: rule-keys
     ]);
   });

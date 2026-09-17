@@ -271,6 +271,7 @@ const extractedRules = [
   ["jev/no-unnamed-parameter-object", "function"],
   ["jev/no-unowned-feature-flag", "change"],
   ["jev/no-unpinned-boundary-branch", "function"],
+  ["jev/no-unpinned-compat-quirk", "function"],
   ["jev/no-unpinned-failure-path", "function"],
   ["jev/no-unreachable-guard", "function"],
   ["jev/no-unreleased-subscription", "function"],

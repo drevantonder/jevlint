@@ -7727,7 +7727,34 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This change calls a new external service host outside the established client wrapper.",
+    },
 
+    "jev/no-unpinned-compat-quirk": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function contain behavior that looks redundant or wrong on its face — a special case, redundant path, or unusual return — that existing in-repo callers actually depend on, with no comment or test pinning the dependency, so a well-meaning cleanup would silently break them?",
+          inspect: "Use the quirk spans with their source, the observed callers with their argument lists, which callers exercise each quirk, and the pinning signals in the supplied evidence.",
+          focus: "Judge whether removal of the odd-looking span would silently break current callers. Undocumented-or-apparently-wrong does not make change harmless.",
+          decision_boundary: [
+            "A special case or unusual return that callers demonstrably exercise, with no comment or test naming the compatibility obligation, is strong evidence of an unpinned quirk.",
+            "A span no caller exercises is dead weight, not a compat quirk.",
+            "A comment above the function or a test referencing the quirky behavior pins the obligation and answers the question negatively.",
+            "A span that states the module's documented convention is not a quirk merely because it looks unusual in isolation.",
+            "If the function has no observable in-repo callers, dependence cannot be established; answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An odd-looking span that current callers depend on survives on convention alone, with nothing pinning the obligation for the next cleanup",
+            remedy: "Name the compatibility obligation in a comment and pin the quirky value in a regression test",
+          },
+          false: {
+            what: "The span is dead, already pinned by a comment or test, the module's stated convention, or caller dependence cannot be established",
+          },
+        },
+      },
+      message: "This function keeps an odd-looking span alive only because current callers depend on it.",
     },
   },
 };
