@@ -16,6 +16,7 @@ export { buildDomainPolicyInAdapterEvidence } from "./evidence/domain-policy-in-
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildHiddenInputMutationEvidence } from "./evidence/hidden-input-mutation.js";
 export { buildHiddenIoEvidence } from "./evidence/hidden-io.js";
+export { buildHiddenInitializationOrderEvidence } from "./evidence/hidden-initialization-order.js";
 export { buildHiddenRuntimeInputEvidence } from "./evidence/hidden-runtime-input.js";
 export { buildInterchangeableDomainPrimitivesEvidence } from "./evidence/interchangeable-domain-primitives.js";
 export { buildLossySentinelReturnEvidence } from "./evidence/lossy-sentinel-return.js";

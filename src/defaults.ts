@@ -569,6 +569,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function depends on a runtime input that its contract does not expose.",
     },
+    "jev/no-hidden-initialization-order": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does using this function correctly require a separate initializer to run first, while that prerequisite is absent from the function's type and ownership API?",
+          inspect: "Compare the function's reads of uninitialized module state with the functions that assign that state, their callers, and complete caller-module source.",
+          focus: "Judge whether callers can invoke the function in a type-correct but invalid order because initialization is a hidden precondition.",
+          decision_boundary: [
+            "An application operation that reads a module dependency assigned only by a separate configure or initialize call is strong evidence of hidden initialization order.",
+            "A runtime guard or error message may explain the failure but does not by itself make an invalid call order unrepresentable.",
+            "Paired lifecycle commands such as start and stop can state their ordering contract clearly, especially when one orchestrator owns the sequence.",
+            "A callback-scoped context API can make dynamic extent explicit by placing dependent work inside the initializer's callback.",
+            "If framework ownership or actual call order is not clear from the supplied modules, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function accepts a call before required shared state exists, and callers must separately know which initializer to invoke first",
+            remedy: "Pass the initialized dependency explicitly, return an initialized capability, or place dependent work inside an owning lifecycle object",
+          },
+          false: {
+            what: "The order is explicit in a lifecycle or callback contract, the dependency is caller-supplied, or the evidence does not establish a hidden prerequisite",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This function has an initialization prerequisite that its API does not express.",
+    },
     "jev/no-complexity-displacement": {
       scope: "change",
       question: {

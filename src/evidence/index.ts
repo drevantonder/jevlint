@@ -11,6 +11,7 @@ import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.j
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
@@ -99,6 +100,12 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hidden-runtime-input") {
     return { handled: true, evidence: buildHiddenRuntimeInputEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hidden-initialization-order") {
+    return {
+      handled: true,
+      evidence: buildHiddenInitializationOrderEvidence(candidate, projectFiles),
+    };
   }
   if (ruleId === "jev/no-complexity-displacement") {
     return {
