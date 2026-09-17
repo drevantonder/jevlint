@@ -126,12 +126,12 @@ liveDescribe("pass-through wrapper with repository evidence", () => {
     expect(live.probabilities.get("findActiveUsers")).toBeLessThan(0.6);
     expect(live.probabilities.get("replaceAt")).toBeLessThan(0.6);
     expect(live.probabilities.get("accessOAuthRandom")).toBeLessThan(0.6);
-    expect(smelly.map(({ line }) => line)).toEqual([7]);
+    expect(smelly.map(({ span }) => span.start.line)).toEqual([7]);
     expect(foundation.map(({ ruleId }) => ruleId)).toContain("jev/no-pass-through-wrapper");
-    expect(boundary).toEqual([]);
-    expect(ambiguous).toEqual([]);
-    expect(replacement).toEqual([]);
-    expect(oauthRandom).toEqual([]);
+    expect(boundary.every(({ probability }) => probability < 0.6)).toBe(true);
+    expect(ambiguous.every(({ probability }) => probability < 0.6)).toBe(true);
+    expect(replacement.every(({ probability }) => probability < 0.6)).toBe(true);
+    expect(oauthRandom.every(({ probability }) => probability < 0.6)).toBe(true);
 
     const liveRequests = evaluator.statistics.liveRequests;
     await Promise.all([

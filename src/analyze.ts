@@ -1,20 +1,21 @@
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
 import { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
-import { deduplicateDiagnostics } from "./deduplicate.js";
 import { buildRuleEvidence } from "./evidence/index.js";
 import type {
   AnalysisResult,
   Candidate,
-  Diagnostic,
+  CandidateKind,
   EvaluationCandidate,
   EvaluationFailure,
   EvaluationRequest,
   Evaluator,
   JevLintConfig,
+  Judgment,
   LineRange,
   ProjectFile,
   RuleConfig,
   SourceFile,
+  StructuralAbstentionCount,
 } from "./types.js";
 
 export const EVALUATION_REQUEST_BUDGET_CHARS = 48_000;
@@ -53,6 +54,11 @@ interface PreparedQuestion {
   rule: RuleConfig;
   evidence?: JsonValue;
   moduleSource?: string;
+}
+
+interface PreparedAnalysis {
+  questions: PreparedQuestion[];
+  abstentions: StructuralAbstentionCount[];
 }
 
 interface PendingQuestion {
@@ -125,8 +131,29 @@ function compactEvidence(evidence: JsonValue): CompactedEvidence {
   return result;
 }
 
-function prepareQuestions(input: AnalyzeCandidatesInput): PreparedQuestion[] {
-  const prepared: PreparedQuestion[] = [];
+function abstentionKey(ruleId: string, candidateKind: CandidateKind): string {
+  return `${ruleId}\u0000${candidateKind}`;
+}
+
+export function sortAbstentions(
+  abstentions: StructuralAbstentionCount[],
+): StructuralAbstentionCount[] {
+  const counts = new Map<string, StructuralAbstentionCount>();
+  for (const abstention of abstentions) {
+    const key = abstentionKey(abstention.ruleId, abstention.candidateKind);
+    const existing = counts.get(key);
+    if (existing) existing.count += abstention.count;
+    else counts.set(key, { ...abstention });
+  }
+  return [...counts.values()].sort((left, right) =>
+    left.ruleId.localeCompare(right.ruleId)
+    || left.candidateKind.localeCompare(right.candidateKind)
+  );
+}
+
+function prepareQuestions(input: AnalyzeCandidatesInput): PreparedAnalysis {
+  const questions: PreparedQuestion[] = [];
+  const abstentions: StructuralAbstentionCount[] = [];
   for (const candidate of input.candidates) {
     const stateCandidate = evaluationCandidate(input.source, candidate);
     for (const [ruleId, rule] of Object.entries(input.config.rules)) {
@@ -140,7 +167,10 @@ function prepareQuestions(input: AnalyzeCandidatesInput): PreparedQuestion[] {
       );
       let compacted: CompactedEvidence | undefined;
       if (evidenceResult.handled) {
-        if (evidenceResult.evidence === undefined) continue;
+        if (evidenceResult.evidence === undefined) {
+          abstentions.push({ ruleId, candidateKind: candidate.kind, count: 1 });
+          continue;
+        }
         compacted = compactEvidence(evidenceResult.evidence);
       }
       const question: PreparedQuestion = {
@@ -150,13 +180,11 @@ function prepareQuestions(input: AnalyzeCandidatesInput): PreparedQuestion[] {
         rule,
       };
       if (compacted !== undefined) question.evidence = compacted.evidence;
-      if (compacted?.moduleSource !== undefined) {
-        question.moduleSource = compacted.moduleSource;
-      }
-      prepared.push(question);
+      if (compacted?.moduleSource !== undefined) question.moduleSource = compacted.moduleSource;
+      questions.push(question);
     }
   }
-  return prepared;
+  return { questions, abstentions: sortAbstentions(abstentions) };
 }
 
 function buildRequest(filePath: string, prepared: PreparedQuestion[]): BuiltRequest {
@@ -259,19 +287,32 @@ function evaluationFailure(
   };
 }
 
-function diagnostic(item: PreparedQuestion, probability: number): Diagnostic | undefined {
-  if (probability < item.rule.threshold) return undefined;
+function judgment(item: PreparedQuestion, probability: number): Judgment {
   return {
-    filePath: item.candidate.filePath,
-    line: item.candidate.startLine,
-    column: item.candidate.startColumn,
-    endLine: item.candidate.endLine,
-    endColumn: item.candidate.endColumn,
-    severity: item.rule.severity,
     ruleId: item.ruleId,
     message: item.rule.message,
     probability,
+    filePath: item.candidate.filePath,
+    span: {
+      start: { line: item.candidate.startLine, column: item.candidate.startColumn },
+      end: { line: item.candidate.endLine, column: item.candidate.endColumn },
+    },
+    candidateKind: item.candidate.kind,
+    evidence: item.evidence ?? null,
   };
+}
+
+export function sortJudgments(judgments: Judgment[]): Judgment[] {
+  return [...judgments].sort((left, right) =>
+    right.probability - left.probability
+    || left.filePath.localeCompare(right.filePath)
+    || left.span.start.line - right.span.start.line
+    || left.span.start.column - right.span.start.column
+    || left.span.end.line - right.span.end.line
+    || left.span.end.column - right.span.end.column
+    || left.ruleId.localeCompare(right.ruleId)
+    || left.candidateKind.localeCompare(right.candidateKind)
+  );
 }
 
 async function evaluateBatch(
@@ -281,6 +322,8 @@ async function evaluateBatch(
   result: AnalysisResult,
 ): Promise<void> {
   const { request, pending } = buildRequest(filePath, prepared);
+  result.statistics.requests += 1;
+  result.statistics.questions += pending.length;
   let answers: Record<string, number>;
   try {
     answers = await evaluator.evaluate(request);
@@ -297,20 +340,31 @@ async function evaluateBatch(
   }
 
   const unanswered: PreparedQuestion[] = [];
+  const invalid: PreparedQuestion[] = [];
   for (const { id, prepared: item } of pending) {
     const probability = answers[id];
     if (probability === undefined) {
       unanswered.push(item);
       continue;
     }
-    const finding = diagnostic(item, probability);
-    if (finding) result.diagnostics.push(finding);
+    if (!Number.isFinite(probability) || probability < 0 || probability > 1) {
+      invalid.push(item);
+      continue;
+    }
+    result.judgments.push(judgment(item, probability));
   }
   if (unanswered.length > 0) {
     result.failures.push(evaluationFailure(
       filePath,
       unanswered,
       `Evaluator omitted ${unanswered.length} answer${unanswered.length === 1 ? "" : "s"}.`,
+    ));
+  }
+  if (invalid.length > 0) {
+    result.failures.push(evaluationFailure(
+      filePath,
+      invalid,
+      `Evaluator returned ${invalid.length} invalid probabilit${invalid.length === 1 ? "y" : "ies"}.`,
     ));
   }
 }
@@ -320,11 +374,16 @@ async function analyzeCandidates(
   evaluator: Evaluator,
 ): Promise<AnalysisResult> {
   const prepared = prepareQuestions(input);
-  const result: AnalysisResult = { diagnostics: [], failures: [] };
-  for (const batch of batches(input.filePath, prepared)) {
+  const result: AnalysisResult = {
+    judgments: [],
+    abstentions: prepared.abstentions,
+    failures: [],
+    statistics: { requests: 0, questions: 0 },
+  };
+  for (const batch of batches(input.filePath, prepared.questions)) {
     await evaluateBatch(input.filePath, batch, evaluator, result);
   }
-  result.diagnostics = deduplicateDiagnostics(result.diagnostics);
+  result.judgments = sortJudgments(result.judgments);
   return result;
 }
 
@@ -362,10 +421,10 @@ function throwEvaluationFailures(failures: EvaluationFailure[]): void {
 export async function analyzeFile(
   input: AnalyzeFileInput,
   evaluator: Evaluator,
-): Promise<Diagnostic[]> {
+): Promise<Judgment[]> {
   const result = await analyzeFileWithFailures(input, evaluator);
   throwEvaluationFailures(result.failures);
-  return result.diagnostics;
+  return result.judgments;
 }
 
 function changeCandidate(change: SourceFile, totalFiles: number): Candidate {
@@ -385,15 +444,24 @@ function changeCandidate(change: SourceFile, totalFiles: number): Candidate {
   };
 }
 
+function emptyAnalysis(): AnalysisResult {
+  return {
+    judgments: [],
+    abstentions: [],
+    failures: [],
+    statistics: { requests: 0, questions: 0 },
+  };
+}
+
 export async function analyzeChangesWithFailures(
   input: AnalyzeChangesInput,
   evaluator: Evaluator,
 ): Promise<AnalysisResult> {
   if (!Object.values(input.config.rules).some(({ scope }) => scope === "change")) {
-    return { diagnostics: [], failures: [] };
+    return emptyAnalysis();
   }
   const anchor = input.changes.find(({ oldSource }) => oldSource !== null) ?? input.changes[0];
-  if (!anchor || anchor.changedLines.length === 0) return { diagnostics: [], failures: [] };
+  if (!anchor || anchor.changedLines.length === 0) return emptyAnalysis();
   return analyzeCandidates({
     filePath: anchor.filePath,
     source: anchor.source,
@@ -407,8 +475,8 @@ export async function analyzeChangesWithFailures(
 export async function analyzeChanges(
   input: AnalyzeChangesInput,
   evaluator: Evaluator,
-): Promise<Diagnostic[]> {
+): Promise<Judgment[]> {
   const result = await analyzeChangesWithFailures(input, evaluator);
   throwEvaluationFailures(result.failures);
-  return result.diagnostics;
+  return result.judgments;
 }

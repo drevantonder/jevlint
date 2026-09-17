@@ -4,14 +4,21 @@ export {
   analyzeFile,
   analyzeFileWithFailures,
   EVALUATION_REQUEST_BUDGET_CHARS,
+  sortAbstentions,
+  sortJudgments,
 } from "./analyze.js";
 export { CachedEvaluator } from "./cache.js";
 export type { CacheMode, CacheStatistics, CachedEvaluatorOptions, EvaluatorIdentity } from "./cache.js";
 export { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
 export { parseChangedLineRanges } from "./changed-lines.js";
 export { defaultConfig, defineConfig, loadConfig } from "./config.js";
-export { deduplicateDiagnostics } from "./deduplicate.js";
-export { formatJson, formatText } from "./format.js";
+export {
+  createReviewReport,
+  formatJson,
+  formatText,
+  MAX_REPORTED_FAILURES,
+} from "./format.js";
+export type { CreateReviewReportInput, DisplayOptions } from "./format.js";
 export { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 export { buildAdHocBranchingEvidence } from "./evidence/ad-hoc-branching.js";
 export { buildAvoidableOrchestrationEvidence } from "./evidence/avoidable-orchestration.js";

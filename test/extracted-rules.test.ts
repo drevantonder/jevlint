@@ -12,8 +12,9 @@ describe("extracted review rules", () => {
   it.each(extractedRules)("ships %s as a %s judgment", (ruleId, scope) => {
     expect(defaultConfig.rules[ruleId]).toMatchObject({
       scope,
-      threshold: expect.any(Number),
-      severity: "warning",
+      message: expect.any(String),
     });
+    expect(defaultConfig.rules[ruleId]).not.toHaveProperty("threshold");
+    expect(defaultConfig.rules[ruleId]).not.toHaveProperty("severity");
   });
 });

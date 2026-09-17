@@ -68,7 +68,7 @@ liveDescribe("interchangeable domain primitives calibration", () => {
       ]),
     ]);
 
-    const [positiveDiagnostics, negativeDiagnostics, exceptionDiagnostics, ambiguousDiagnostics]
+    const [positiveJudgments, negativeJudgments, exceptionJudgments, ambiguousJudgments]
       = await Promise.all([
         lint(positive, "src/domain/transfer-funds.ts"),
         lint(negative, "src/presentation/format-display-name.ts"),
@@ -82,9 +82,9 @@ liveDescribe("interchangeable domain primitives calibration", () => {
       .toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/http/verify-webhook.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/events/assign-seat.ts")).toBeLessThan(0.8);
-    expect(positiveDiagnostics).toHaveLength(1);
-    expect(negativeDiagnostics).toEqual([]);
-    expect(exceptionDiagnostics).toEqual([]);
-    expect(ambiguousDiagnostics).toEqual([]);
+    expect(positiveJudgments).toHaveLength(1);
+    expect(negativeJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(exceptionJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguousJudgments.every(({ probability }) => probability < 0.8)).toBe(true);
   });
 });

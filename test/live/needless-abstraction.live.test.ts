@@ -57,11 +57,11 @@ liveDescribe("needless abstraction with repository evidence", () => {
         "test/fake-payment-gateway.ts",
       ]),
     ]);
-    const [smellyDiagnostics, realDiagnostics] = await Promise.all([lint(smelly), lint(real)]);
+    const [smellyJudgments, realJudgments] = await Promise.all([lint(smelly), lint(real)]);
 
     expect(evaluator.probabilities.get("src/user-name-formatter.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/payment-gateway.ts")).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([1]);
-    expect(realDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ span }) => span.start.line)).toEqual([1]);
+    expect(realJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

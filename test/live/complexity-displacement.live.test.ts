@@ -53,14 +53,14 @@ liveDescribe("complexity displacement with before/after evidence", () => {
     ]);
     const smellyEvaluator = new RecordingEvaluator();
     const realEvaluator = new RecordingEvaluator();
-    const [smellyDiagnostics, realDiagnostics] = await Promise.all([
+    const [smellyJudgments, realJudgments] = await Promise.all([
       lint(smelly, smellyEvaluator),
       lint(real, realEvaluator),
     ]);
 
     expect(smellyEvaluator.probabilities[0]).toBeGreaterThanOrEqual(0.8);
     expect(realEvaluator.probabilities[0]).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-complexity-displacement"]);
-    expect(realDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-complexity-displacement"]);
+    expect(realJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

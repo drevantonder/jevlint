@@ -49,11 +49,11 @@ liveDescribe("avoidable orchestration with dependency evidence", () => {
       project("avoidable-orchestration-smelly", ["src/load-dashboard.ts", "src/page.ts"]),
       project("avoidable-orchestration-required", ["src/place-order.ts", "src/checkout.ts"]),
     ]);
-    const [smellyDiagnostics, requiredDiagnostics] = await Promise.all([lint(smelly), lint(required)]);
+    const [smellyJudgments, requiredJudgments] = await Promise.all([lint(smelly), lint(required)]);
 
     expect(evaluator.probabilities.get("src/load-dashboard.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/place-order.ts")).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([1]);
-    expect(requiredDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ span }) => span.start.line)).toEqual([1]);
+    expect(requiredJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

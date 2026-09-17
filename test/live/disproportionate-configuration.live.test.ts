@@ -53,11 +53,11 @@ liveDescribe("disproportionate configuration with repository evidence", () => {
       ]),
       project("disproportionate-config-real", ["src/request.ts", "src/callers.ts"]),
     ]);
-    const [smellyDiagnostics, realDiagnostics] = await Promise.all([lint(smelly), lint(real)]);
+    const [smellyJudgments, realJudgments] = await Promise.all([lint(smelly), lint(real)]);
 
     expect(evaluator.probabilities.get("src/send-notification.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/request.ts")).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([1]);
-    expect(realDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ span }) => span.start.line)).toEqual([1]);
+    expect(realJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

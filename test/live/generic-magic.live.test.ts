@@ -49,11 +49,11 @@ liveDescribe("generic magic with repository evidence", () => {
       project("generic-magic-smelly", ["src/map-user.ts", "src/load-user.ts"]),
       project("generic-magic-real", ["src/select-fields.ts", "src/views.ts"]),
     ]);
-    const [smellyDiagnostics, realDiagnostics] = await Promise.all([lint(smelly), lint(real)]);
+    const [smellyJudgments, realJudgments] = await Promise.all([lint(smelly), lint(real)]);
 
     expect(evaluator.probabilities.get("src/map-user.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/select-fields.ts")).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([1]);
-    expect(realDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ span }) => span.start.line)).toEqual([1]);
+    expect(realJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

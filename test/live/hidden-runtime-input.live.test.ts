@@ -52,7 +52,7 @@ liveDescribe("hidden runtime input calibration", () => {
       project("hidden-runtime-input-exception", ["src/load-shipping-environment.ts", "src/bootstrap.ts"]),
       project("hidden-runtime-input-ambiguous", ["src/create-trial.ts", "src/signup.ts"]),
     ]);
-    const [positiveDiagnostics, negativeDiagnostics, exceptionDiagnostics, ambiguousDiagnostics] =
+    const [positiveJudgments, negativeJudgments, exceptionJudgments, ambiguousJudgments] =
       await Promise.all([
         lint(positive, evaluator),
         lint(negative, evaluator),
@@ -64,9 +64,9 @@ liveDescribe("hidden runtime input calibration", () => {
     expect(evaluator.probabilities.has("src/quote-shipping-with-policy.ts")).toBe(false);
     expect(evaluator.probabilities.get("src/load-shipping-environment.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/create-trial.ts")).toBeLessThan(0.85);
-    expect(positiveDiagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-runtime-input"]);
-    expect(negativeDiagnostics).toEqual([]);
-    expect(exceptionDiagnostics).toEqual([]);
-    expect(ambiguousDiagnostics).toEqual([]);
+    expect(positiveJudgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-runtime-input"]);
+    expect(negativeJudgments).toEqual([]);
+    expect(exceptionJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguousJudgments.every(({ probability }) => probability < 0.85)).toBe(true);
   });
 });

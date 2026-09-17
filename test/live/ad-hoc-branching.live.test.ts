@@ -49,14 +49,14 @@ liveDescribe("ad-hoc branching with structural evidence", () => {
       project("ad-hoc-branching-smelly", "src/route-order.ts"),
       project("ad-hoc-branching-cohesive", "src/route-order-by-state.ts"),
     ]);
-    const [smellyDiagnostics, cohesiveDiagnostics] = await Promise.all([
+    const [smellyJudgments, cohesiveJudgments] = await Promise.all([
       lint(smelly),
       lint(cohesive),
     ]);
 
     expect(evaluator.probabilities.get("src/route-order.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/route-order-by-state.ts")).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([1]);
-    expect(cohesiveDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ span }) => span.start.line)).toEqual([1]);
+    expect(cohesiveJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

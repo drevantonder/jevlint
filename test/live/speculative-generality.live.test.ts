@@ -65,14 +65,14 @@ liveDescribe("speculative generality with repository evidence", () => {
       ]),
     ]);
 
-    const [smellyDiagnostics, realDiagnostics] = await Promise.all([
+    const [smellyJudgments, realJudgments] = await Promise.all([
       lint(smelly, "src/format-user-name.ts"),
       lint(real, "src/serialize-report.ts"),
     ]);
 
     expect(evaluator.probabilities.get("src/format-user-name.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/serialize-report.ts")).toBeLessThan(0.5);
-    expect(smellyDiagnostics.map(({ line }) => line)).toEqual([8]);
-    expect(realDiagnostics).toEqual([]);
+    expect(smellyJudgments.map(({ span }) => span.start.line)).toEqual([8]);
+    expect(realJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
   });
 });

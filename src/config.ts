@@ -28,11 +28,9 @@ const ruleConfigSchema = z.object({
       true: entryTypeSchema.optional(),
       false: entryTypeSchema.optional(),
     }).optional(),
-  }),
-  threshold: z.number().min(0).max(1),
-  severity: z.enum(["warning", "error"]),
+  }).strict(),
   message: z.string().min(1),
-}).transform((parsed): RuleConfig => {
+}).strict().transform((parsed): RuleConfig => {
   const question: RuleQuestion = { instructions: parsed.question.instructions };
   if (parsed.question.criteria !== undefined) {
     const criteria: NonNullable<RuleQuestion["criteria"]> = {};
@@ -43,8 +41,6 @@ const ruleConfigSchema = z.object({
   return {
     scope: parsed.scope,
     question,
-    threshold: parsed.threshold,
-    severity: parsed.severity,
     message: parsed.message,
   };
 });

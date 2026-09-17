@@ -57,7 +57,7 @@ liveDescribe("hidden initialization order calibration", () => {
     const negativeEvaluator = new RecordingEvaluator();
     const exceptionEvaluator = new RecordingEvaluator();
     const ambiguousEvaluator = new RecordingEvaluator();
-    const [positiveDiagnostics, negativeDiagnostics, exceptionDiagnostics, ambiguousDiagnostics] =
+    const [positiveJudgments, negativeJudgments, exceptionJudgments, ambiguousJudgments] =
       await Promise.all([
         lint(positive, "chargeOrder", positiveEvaluator),
         lint(negative, "chargeOrderExplicit", negativeEvaluator),
@@ -69,9 +69,9 @@ liveDescribe("hidden initialization order calibration", () => {
     expect(negativeEvaluator.probabilities.has("src/charge-order-explicit.ts")).toBe(false);
     expect(exceptionEvaluator.probabilities.get("src/server-lifecycle.ts")).toBeLessThan(0.5);
     expect(ambiguousEvaluator.probabilities.get("src/request-context.ts")).toBeLessThan(0.85);
-    expect(positiveDiagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-initialization-order"]);
-    expect(negativeDiagnostics).toEqual([]);
-    expect(exceptionDiagnostics).toEqual([]);
-    expect(ambiguousDiagnostics).toEqual([]);
+    expect(positiveJudgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-initialization-order"]);
+    expect(negativeJudgments).toEqual([]);
+    expect(exceptionJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguousJudgments.every(({ probability }) => probability < 0.85)).toBe(true);
   });
 });

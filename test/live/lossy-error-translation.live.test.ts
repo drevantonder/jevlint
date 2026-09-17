@@ -32,19 +32,19 @@ async function calibrate(name: string, paths: string[]) {
   const rule = defaultConfig.rules["jev/no-lossy-error-translation"];
   expect(changed).toBeDefined();
   expect(rule).toBeDefined();
-  if (!changed || !rule) return { diagnostics: [], probability: undefined };
+  if (!changed || !rule) return { judgments: [], probability: undefined };
   const config: JevLintConfig = {
     rules: { "jev/no-lossy-error-translation": rule },
   };
   const evaluator = new RecordingEvaluator();
-  const diagnostics = await analyzeFile({
+  const judgments = await analyzeFile({
     filePath: changed.filePath,
     source: changed.source,
     changedLines: [{ start: 1, end: changed.source.split("\n").length }],
     config,
     projectFiles,
   }, evaluator);
-  return { diagnostics, probability: evaluator.probability };
+  return { judgments, probability: evaluator.probability };
 }
 
 liveDescribe("lossy error translation calibration", () => {
@@ -76,11 +76,11 @@ liveDescribe("lossy error translation calibration", () => {
     expect(negative.probability).toBeLessThan(0.5);
     expect(legitimate.probability).toBeLessThan(0.5);
     expect(ambiguous.probability).toBeLessThan(0.85);
-    expect(positive.diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+    expect(positive.judgments.map(({ ruleId }) => ruleId)).toEqual([
       "jev/no-lossy-error-translation",
     ]);
-    expect(negative.diagnostics).toEqual([]);
-    expect(legitimate.diagnostics).toEqual([]);
-    expect(ambiguous.diagnostics).toEqual([]);
+    expect(negative.judgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(legitimate.judgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguous.judgments.every(({ probability }) => probability < 0.85)).toBe(true);
   });
 });

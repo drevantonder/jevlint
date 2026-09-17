@@ -1,28 +1,46 @@
 #!/usr/bin/env node
 
 import { pathToFileURL } from "node:url";
-import { analyzeChangesWithFailures, analyzeFileWithFailures } from "./analyze.js";
+import {
+  analyzeChangesWithFailures,
+  analyzeFileWithFailures,
+} from "./analyze.js";
 import { CachedEvaluator } from "./cache.js";
 import type { CacheMode } from "./cache.js";
 import { loadConfig } from "./config.js";
-import { deduplicateDiagnostics } from "./deduplicate.js";
-import { formatJson, formatText } from "./format.js";
+import {
+  createReviewReport,
+  formatJson,
+  formatText,
+  MAX_REPORTED_FAILURES,
+} from "./format.js";
+import type { CreateReviewReportInput, DisplayOptions } from "./format.js";
 import { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
 import { TypeSafeEvaluator } from "./typesafe-evaluator.js";
-import type { Diagnostic, EvaluationFailure, Evaluator } from "./types.js";
+import type {
+  EvaluationFailure,
+  EvaluationStatistics,
+  Evaluator,
+  Judgment,
+  StructuralAbstentionCount,
+} from "./types.js";
 
-const MAX_REPORTED_FAILURES = 20;
+const USAGE = `Usage: jevlint review [options]
 
-const USAGE = `Usage: jevlint diff [options]
+Commands:
+  review            Review changed code and report probability scores
+  diff              Compatibility alias for review
 
 Options:
-  --staged          Analyze staged changes
-  --format <format> Output text or json
-  --config <path>   Use a specific config file
-  --no-cache        Bypass the local Jev response cache
-  --refresh-cache   Re-evaluate and replace matching cache entries
-  --verbose         Report cache hits, misses, and live requests
-  --help            Show this help
+  --staged           Review staged changes
+  --format <format>  Output text or json
+  --config <path>    Use a specific config file
+  --min-score <n>    Display scores at or above n (0 to 1)
+  --limit <n>        Display at most n judgments
+  --no-cache         Bypass the local Jev response cache
+  --refresh-cache    Re-evaluate and replace matching cache entries
+  --verbose          Report cache hits, misses, and live requests
+  --help             Show this help
 `;
 
 interface CliDependencies {
@@ -36,17 +54,30 @@ interface CliOptions {
   staged: boolean;
   format: "text" | "json";
   configPath?: string;
+  minScore: number;
+  limit?: number;
   cacheMode: CacheMode;
   verbose: boolean;
   help: boolean;
 }
 
+function score(value: string): number | undefined {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : undefined;
+}
+
+function limit(value: string): number | undefined {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
 function parseArgs(args: string[]): CliOptions | undefined {
-  if (args[0] !== "diff") return undefined;
+  if (args[0] !== "review" && args[0] !== "diff") return undefined;
 
   const options: CliOptions = {
     staged: false,
     format: "text",
+    minScore: 0,
     cacheMode: "read-write",
     verbose: false,
     help: false,
@@ -61,22 +92,39 @@ function parseArgs(args: string[]): CliOptions | undefined {
       if (cacheModeSet) return undefined;
       options.cacheMode = argument === "--no-cache" ? "disabled" : "refresh";
       cacheModeSet = true;
-    }
-    else if (argument === "--format" || argument === "--config") {
+    } else if (
+      argument === "--format"
+      || argument === "--config"
+      || argument === "--min-score"
+      || argument === "--limit"
+    ) {
       const value = args[index + 1];
       if (!value) return undefined;
       index += 1;
       if (argument === "--format") {
         if (value !== "text" && value !== "json") return undefined;
         options.format = value;
-      } else {
+      } else if (argument === "--config") {
         options.configPath = value;
+      } else if (argument === "--min-score") {
+        const parsed = score(value);
+        if (parsed === undefined) return undefined;
+        options.minScore = parsed;
+      } else {
+        const parsed = limit(value);
+        if (parsed === undefined) return undefined;
+        options.limit = parsed;
       }
     } else {
       return undefined;
     }
   }
   return options;
+}
+
+function addStatistics(target: EvaluationStatistics, source: EvaluationStatistics): void {
+  target.requests += source.requests;
+  target.questions += source.questions;
 }
 
 export async function runCli(args: string[], dependencies: CliDependencies = {}): Promise<number> {
@@ -105,6 +153,7 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
     ]);
     let cachedEvaluator: CachedEvaluator | undefined;
     let evaluator = dependencies.evaluator;
+    if (evaluator instanceof CachedEvaluator) cachedEvaluator = evaluator;
     if (!evaluator) {
       const liveEvaluator = new TypeSafeEvaluator();
       if (options.cacheMode === "disabled") {
@@ -119,8 +168,10 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
         evaluator = cachedEvaluator;
       }
     }
-    const diagnostics: Diagnostic[] = [];
+    const judgments: Judgment[] = [];
+    const abstentions: StructuralAbstentionCount[] = [];
     const failures: EvaluationFailure[] = [];
+    const statistics: EvaluationStatistics = { requests: 0, questions: 0 };
 
     for (const file of files) {
       const result = await analyzeFileWithFailures(
@@ -133,21 +184,34 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
         },
         evaluator,
       );
-      diagnostics.push(...result.diagnostics);
+      judgments.push(...result.judgments);
+      abstentions.push(...result.abstentions);
       failures.push(...result.failures);
+      addStatistics(statistics, result.statistics);
     }
     const changeResult = await analyzeChangesWithFailures(
       { changes: files, config, projectFiles },
       evaluator,
     );
-    diagnostics.push(...changeResult.diagnostics);
+    judgments.push(...changeResult.judgments);
+    abstentions.push(...changeResult.abstentions);
     failures.push(...changeResult.failures);
+    addStatistics(statistics, changeResult.statistics);
 
-    const finalDiagnostics = deduplicateDiagnostics(diagnostics);
-    const output = options.format === "json"
-      ? formatJson(finalDiagnostics)
-      : formatText(finalDiagnostics);
-    if (output.length > 0 || options.format === "json") stdout(`${output}\n`);
+    const reportInput: CreateReviewReportInput = {
+      judgments,
+      abstentions,
+      failures,
+      statistics,
+    };
+    if (cachedEvaluator !== undefined) reportInput.cacheStatistics = cachedEvaluator.statistics;
+    const display: DisplayOptions = { minScore: options.minScore };
+    if (options.limit !== undefined) display.limit = options.limit;
+    reportInput.display = display;
+    const report = createReviewReport(reportInput);
+    const output = options.format === "json" ? formatJson(report) : formatText(report);
+    stdout(`${output}\n`);
+
     for (const failure of failures.slice(0, MAX_REPORTED_FAILURES)) {
       stderr(
         `jevlint: ${failure.filePath}: ${failure.questionCount} evaluation question${failure.questionCount === 1 ? "" : "s"} failed (${failure.ruleIds.join(", ")}): ${failure.message}\n`,
@@ -166,8 +230,7 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
         stderr("jevlint cache: disabled\n");
       }
     }
-    if (failures.length > 0) return 2;
-    return finalDiagnostics.some((diagnostic) => diagnostic.severity === "error") ? 1 : 0;
+    return failures.length > 0 ? 2 : 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     stderr(`jevlint: ${message}\n`);

@@ -1,11 +1,20 @@
 import type { EntryType, JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
 
 export type CandidateKind = "comment" | "function" | "abstraction" | "change";
-export type Severity = "error" | "warning";
 
 export interface LineRange {
   start: number;
   end: number;
+}
+
+export interface SourcePosition {
+  line: number;
+  column: number;
+}
+
+export interface SourceSpan {
+  start: SourcePosition;
+  end: SourcePosition;
 }
 
 export interface Candidate {
@@ -29,8 +38,6 @@ export interface RuleQuestion {
 export interface RuleConfig {
   scope: CandidateKind;
   question: RuleQuestion;
-  threshold: number;
-  severity: Severity;
   message: string;
 }
 
@@ -79,21 +86,67 @@ export interface EvaluationFailure {
   message: string;
 }
 
-export interface AnalysisResult {
-  diagnostics: Diagnostic[];
-  failures: EvaluationFailure[];
+export interface StructuralAbstentionCount {
+  ruleId: string;
+  candidateKind: CandidateKind;
+  count: number;
 }
 
-export interface Diagnostic {
-  filePath: string;
-  line: number;
-  column: number;
-  endLine: number;
-  endColumn: number;
-  severity: Severity;
+export interface EvaluationStatistics {
+  requests: number;
+  questions: number;
+}
+
+export interface AnalysisResult {
+  judgments: Judgment[];
+  abstentions: StructuralAbstentionCount[];
+  failures: EvaluationFailure[];
+  statistics: EvaluationStatistics;
+}
+
+export interface Judgment {
   ruleId: string;
   message: string;
   probability: number;
+  filePath: string;
+  span: SourceSpan;
+  candidateKind: CandidateKind;
+  evidence: JsonValue | null;
+}
+
+export interface ReviewSummary {
+  evaluated: number;
+  displayed: number;
+  abstained: number;
+  failed: number;
+  complete: boolean;
+}
+
+export interface ReviewFailureSummary {
+  total: number;
+  omitted: number;
+  items: EvaluationFailure[];
+}
+
+export interface ReviewStatistics {
+  evaluation: EvaluationStatistics;
+  cache?: {
+    hits: number;
+    misses: number;
+    writes: number;
+    recoveries: number;
+    errors: number;
+    liveRequests: number;
+  };
+}
+
+export interface ReviewReport {
+  version: 1;
+  summary: ReviewSummary;
+  judgments: Judgment[];
+  abstentions: StructuralAbstentionCount[];
+  failures: ReviewFailureSummary;
+  statistics: ReviewStatistics;
 }
 
 export interface SourceFile {

@@ -1,10 +1,10 @@
 # Jev response cache
 
-Jevlint keeps a local content-addressed cache of Jev judgments. It does not cache parsing, changed-line filtering, candidate discovery, evidence collection, thresholding, or diagnostic formatting. Those deterministic steps run on every invocation.
+Jevlint keeps a local content-addressed cache of Jev judgments. It does not cache parsing, changed-line filtering, candidate discovery, evidence collection, or report formatting. Those deterministic steps run on every invocation.
 
 ## Cache boundary
 
-A **candidate** is a structural source span found by Oxc. A **judgment** is one Noul question evaluated by Jev against the evaluation state. A **diagnostic** is local policy applied to a judgment, including its threshold, severity, and message.
+A **candidate** is a structural source span found by Oxc. A **judgment** is one Noul question evaluated by Jev against the evaluation state. Jevlint reports every completed judgment with its probability, message, span, and evidence; it applies no local pass/fail policy to the score.
 
 The cache stores judgments at the `Evaluator` boundary. TypeSafe documents that questions in one System One request see the same state and run independently. Jevlint therefore caches each question separately while still batching misses into one live request. Adding or removing another question does not invalidate an otherwise identical judgment.
 
@@ -23,7 +23,7 @@ Each SHA-256 key uses canonical JSON with sorted object keys and ordered arrays.
 - the exact state sent to TypeSafe, including repository-relative file path, compact module context, normalized candidate source and nearby source, source kind and lines, and rule-specific evidence
 - the exact Noul question, including rule ID, evaluation schema version, prompt instructions, and criteria
 
-Question map IDs are excluded because TypeSafe does not send them to the model. Rule IDs remain part of the question instructions and key. Threshold, severity, and diagnostic message are excluded because they are local policy applied after Jev returns a probability. Changing those values reuses the semantic judgment and reapplies the new policy.
+Question map IDs are excluded because TypeSafe does not send them to the model. Rule IDs remain part of the question instructions and key. Rule messages are excluded because they are presentation applied after Jev returns a probability. Changing a message reuses the semantic judgment and reapplies the new wording.
 
 Jevlint pins a versioned model instead of the moving `jev-latest` alias. Model, SDK, evaluator, schema, prompt, candidate, and evidence changes all produce misses.
 
@@ -50,9 +50,9 @@ Jevlint writes a unique temporary file in the destination directory and atomical
 Caching is on by default.
 
 ```sh
-jevlint diff --no-cache
-jevlint diff --refresh-cache
-jevlint diff --verbose
+jevlint review --no-cache
+jevlint review --refresh-cache
+jevlint review --verbose
 ```
 
 `--no-cache` bypasses reads and writes. `--refresh-cache` bypasses reads, performs live evaluations, and atomically replaces matching entries. `--verbose` writes one cache summary to stderr after analysis. Normal output stays unchanged.

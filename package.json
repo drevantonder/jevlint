@@ -1,7 +1,7 @@
 {
   "name": "jevlint",
   "version": "0.1.0",
-  "description": "A Jev-powered semantic linter built on Oxc",
+  "description": "Probabilistic code review powered by Jev and Oxc",
   "type": "module",
   "bin": {
     "jevlint": "./dist/cli.js"

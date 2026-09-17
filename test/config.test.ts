@@ -46,7 +46,7 @@ describe("loadConfig", () => {
     ]);
   });
 
-  it("rejects malformed rule settings at the config boundary", async () => {
+  it("rejects retired threshold and severity settings", async () => {
     const directory = await mkdtemp(join(tmpdir(), "jevlint-config-"));
     await writeFile(
       join(directory, "jevlint.config.ts"),
@@ -77,9 +77,7 @@ describe("loadConfig", () => {
           "personal/suspicious-name": {
             scope: "function",
             question: { instructions: "Is this function misleadingly named?" },
-            threshold: 0.9,
-            severity: "error",
-            message: "Function name is misleading."
+            message: "Function name does not match its behavior."
           }
         }
       }`,
@@ -91,9 +89,10 @@ describe("loadConfig", () => {
     expect(config.rules["jev/no-pass-through-wrapper"]).toEqual(
       defaultConfig.rules["jev/no-pass-through-wrapper"],
     );
-    expect(config.rules["personal/suspicious-name"]).toMatchObject({
+    expect(config.rules["personal/suspicious-name"]).toEqual({
       scope: "function",
-      severity: "error",
+      question: { instructions: "Is this function misleadingly named?" },
+      message: "Function name does not match its behavior.",
     });
   });
 });

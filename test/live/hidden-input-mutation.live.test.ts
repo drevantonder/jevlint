@@ -32,17 +32,17 @@ async function calibrate(name: string, paths: string[]) {
   const rule = defaultConfig.rules["jev/no-hidden-input-mutation"];
   expect(changed).toBeDefined();
   expect(rule).toBeDefined();
-  if (!changed || !rule) return { diagnostics: [], probability: undefined };
+  if (!changed || !rule) return { judgments: [], probability: undefined };
   const config: JevLintConfig = { rules: { "jev/no-hidden-input-mutation": rule } };
   const evaluator = new RecordingEvaluator();
-  const diagnostics = await analyzeFile({
+  const judgments = await analyzeFile({
     filePath: changed.filePath,
     source: changed.source,
     changedLines: [{ start: 1, end: changed.source.split("\n").length }],
     config,
     projectFiles: files,
   }, evaluator);
-  return { diagnostics, probability: evaluator.probability };
+  return { judgments, probability: evaluator.probability };
 }
 
 liveDescribe("hidden input mutation calibration", () => {
@@ -56,12 +56,12 @@ liveDescribe("hidden input mutation calibration", () => {
     const ambiguous = await calibrate("hidden-input-mutation-ambiguous", ["src/apply-patch.ts"]);
 
     expect(positive.probability).toBeGreaterThanOrEqual(0.85);
-    expect(positive.diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-input-mutation"]);
+    expect(positive.judgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-input-mutation"]);
     expect(negative.probability).toBeUndefined();
-    expect(negative.diagnostics).toEqual([]);
+    expect(negative.judgments).toEqual([]);
     expect(exception.probability).toBeLessThan(0.5);
-    expect(exception.diagnostics).toEqual([]);
+    expect(exception.judgments.every(({ probability }) => probability < 0.5)).toBe(true);
     expect(ambiguous.probability).toBeLessThan(0.85);
-    expect(ambiguous.diagnostics).toEqual([]);
+    expect(ambiguous.judgments.every(({ probability }) => probability < 0.85)).toBe(true);
   });
 });

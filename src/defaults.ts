@@ -27,8 +27,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function mutates caller-owned input without making that behavior clear.",
     },
     "jev/no-hidden-io": {
@@ -56,8 +54,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This API hides a material I/O boundary and its cost.",
     },
     "jev/no-lossy-sentinel-return": {
@@ -85,8 +81,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This sentinel return collapses caller-relevant outcomes.",
     },
     "jev/no-query-side-effect": {
@@ -114,8 +108,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This query-shaped API also performs a hidden state-changing command.",
     },
     "jev/no-narrating-comment": {
@@ -136,8 +128,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Comment restates nearby code.",
     },
     "jev/no-pass-through-wrapper": {
@@ -176,8 +166,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.7,
-      severity: "warning",
       message: "This function appears to be an unnecessary delegation layer.",
     },
     "jev/no-mysterious-name": {
@@ -197,8 +185,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Names obscure this function's purpose.",
     },
     "jev/no-speculative-generality": {
@@ -228,8 +214,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function contains flexibility not justified by its observed uses.",
     },
     "jev/no-ad-hoc-branching": {
@@ -257,8 +241,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function appears to accumulate unrelated special-case policies.",
     },
     "jev/no-mixed-responsibilities": {
@@ -286,8 +268,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function combines responsibilities with different reasons to change.",
     },
     "jev/no-data-clump": {
@@ -315,8 +295,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "These parameters repeatedly travel together as an unnamed domain concept.",
     },
     "jev/no-scattered-policy": {
@@ -344,8 +322,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This business policy appears to be encoded independently in multiple modules.",
     },
     "jev/no-correlated-state-booleans": {
@@ -372,8 +348,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Correlated booleans make contradictory states representable.",
     },
     "jev/no-unconstrained-state-string": {
@@ -400,8 +374,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "A closed state is represented by an unconstrained string.",
     },
     "jev/no-conditionally-valid-state": {
@@ -428,8 +400,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This state type permits invalid discriminant and payload combinations.",
     },
     "jev/no-needless-abstraction": {
@@ -456,8 +426,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This abstraction appears to add ceremony without reducing coupling.",
     },
     "jev/no-generic-magic": {
@@ -484,8 +452,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Dynamic machinery obscures a simpler concrete operation.",
     },
     "jev/no-disproportionate-configuration": {
@@ -512,8 +478,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This configuration surface is disproportionate to its observed uses.",
     },
     "jev/no-avoidable-orchestration": {
@@ -540,8 +504,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function serializes work without a visible dependency.",
     },
     "jev/no-hidden-runtime-input": {
@@ -568,8 +530,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function depends on a runtime input that its contract does not expose.",
     },
     "jev/no-hidden-initialization-order": {
@@ -597,8 +557,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This function has an initialization prerequisite that its API does not express.",
     },
     "jev/no-implicit-atomicity": {
@@ -627,8 +585,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This operation has an all-or-nothing constraint that the code does not express.",
     },
     "jev/no-complexity-displacement": {
@@ -656,8 +612,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.8,
-      severity: "warning",
       message: "This change appears to move complexity rather than reduce it.",
     },
     "jev/no-transport-coupled-domain": {
@@ -685,8 +639,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Domain behavior is coupled to transport details.",
     },
     "jev/no-persistence-model-leak": {
@@ -714,8 +666,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "A persistence-owned model leaks across its boundary.",
     },
     "jev/no-interchangeable-domain-primitives": {
@@ -743,8 +693,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Bare primitives erase distinct domain meanings in this API.",
     },
     "jev/no-domain-policy-in-adapter": {
@@ -772,8 +720,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This adapter owns domain policy.",
     },
     "jev/no-swallowed-error": {
@@ -802,8 +748,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This handler hides a failure from its caller.",
     },
     "jev/no-lossy-error-translation": {
@@ -831,8 +775,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This error translation discards failure information needed by its caller.",
     },
     "jev/no-unsafe-retry": {
@@ -860,8 +802,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This retry does not show a safe policy for repeating the operation.",
     },
     "jev/no-hidden-partial-failure": {
@@ -890,8 +830,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This batch hides partial failure from its caller.",
     },
     "jev/no-feature-envy": {
@@ -910,8 +848,6 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "This behavior appears to belong with the data it inspects.",
     },
   },

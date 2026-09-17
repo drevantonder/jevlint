@@ -52,7 +52,7 @@ liveDescribe("correlated state booleans with repository evidence", () => {
       project("correlated-state-booleans-ambiguous", ["src/session-state.ts"]),
     ]);
     const evaluator = new RecordingEvaluator();
-    const diagnostics = await Promise.all(cases.map((files) => lint(files, evaluator)));
+    const judgments = await Promise.all(cases.map((files) => lint(files, evaluator)));
 
     const positive = evaluator.probabilities.get("src/upload-state.ts");
     const negative = evaluator.probabilities.get("src/export-capabilities.ts");
@@ -62,11 +62,18 @@ liveDescribe("correlated state booleans with repository evidence", () => {
     expect(negative).toBeLessThan(0.5);
     expect(exception).toBeLessThan(0.5);
     expect(ambiguous).toBeLessThan(0.85);
-    expect(diagnostics.map((items) => items.map(({ ruleId }) => ruleId))).toEqual([
-      ["jev/no-correlated-state-booleans"],
-      [],
-      [],
-      [],
-    ]);
+    const [positiveJudgments, negativeJudgments, exceptionJudgments, ambiguousJudgments] = judgments;
+    expect(positiveJudgments).toBeDefined();
+    expect(negativeJudgments).toBeDefined();
+    expect(exceptionJudgments).toBeDefined();
+    expect(ambiguousJudgments).toBeDefined();
+    if (!positiveJudgments || !negativeJudgments || !exceptionJudgments || !ambiguousJudgments) return;
+    expect(positiveJudgments.some(({ probability }) => probability >= 0.85)).toBe(true);
+    expect(negativeJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(exceptionJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguousJudgments.every(({ probability }) => probability < 0.85)).toBe(true);
+    expect(negativeJudgments.length).toBeGreaterThan(0);
+    expect(exceptionJudgments.length).toBeGreaterThan(0);
+    expect(ambiguousJudgments.length).toBeGreaterThan(0);
   });
 });

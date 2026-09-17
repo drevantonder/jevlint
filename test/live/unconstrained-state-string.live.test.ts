@@ -52,17 +52,24 @@ liveDescribe("unconstrained state strings with repository evidence", () => {
       project("unconstrained-state-string-ambiguous", ["src/job.ts"]),
     ]);
     const evaluator = new RecordingEvaluator();
-    const diagnostics = await Promise.all(cases.map((files) => lint(files, evaluator)));
+    const judgments = await Promise.all(cases.map((files) => lint(files, evaluator)));
 
     expect(evaluator.probabilities.get("src/order-process.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/localization-request.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/provider-event.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/job.ts")).toBeLessThan(0.85);
-    expect(diagnostics.map((items) => items.map(({ ruleId }) => ruleId))).toEqual([
-      ["jev/no-unconstrained-state-string"],
-      [],
-      [],
-      [],
-    ]);
+    const [positiveJudgments, negativeJudgments, exceptionJudgments, ambiguousJudgments] = judgments;
+    expect(positiveJudgments).toBeDefined();
+    expect(negativeJudgments).toBeDefined();
+    expect(exceptionJudgments).toBeDefined();
+    expect(ambiguousJudgments).toBeDefined();
+    if (!positiveJudgments || !negativeJudgments || !exceptionJudgments || !ambiguousJudgments) return;
+    expect(positiveJudgments.some(({ probability }) => probability >= 0.85)).toBe(true);
+    expect(negativeJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(exceptionJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguousJudgments.every(({ probability }) => probability < 0.85)).toBe(true);
+    expect(negativeJudgments.length).toBeGreaterThan(0);
+    expect(exceptionJudgments.length).toBeGreaterThan(0);
+    expect(ambiguousJudgments.length).toBeGreaterThan(0);
   });
 });

@@ -32,17 +32,17 @@ async function calibrate(name: string, paths: string[]) {
   const rule = defaultConfig.rules["jev/no-hidden-io"];
   expect(changed).toBeDefined();
   expect(rule).toBeDefined();
-  if (!changed || !rule) return { diagnostics: [], probability: undefined };
+  if (!changed || !rule) return { judgments: [], probability: undefined };
   const config: JevLintConfig = { rules: { "jev/no-hidden-io": rule } };
   const evaluator = new RecordingEvaluator();
-  const diagnostics = await analyzeFile({
+  const judgments = await analyzeFile({
     filePath: changed.filePath,
     source: changed.source,
     changedLines: [{ start: 1, end: changed.source.split("\n").length }],
     config,
     projectFiles: files,
   }, evaluator);
-  return { diagnostics, probability: evaluator.probability };
+  return { judgments, probability: evaluator.probability };
 }
 
 liveDescribe("hidden I/O calibration", () => {
@@ -57,12 +57,12 @@ liveDescribe("hidden I/O calibration", () => {
     const ambiguous = await calibrate("hidden-io-ambiguous", ["src/resolve-tax.ts"]);
 
     expect(positive.probability).toBeGreaterThanOrEqual(0.85);
-    expect(positive.diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-io"]);
+    expect(positive.judgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-hidden-io"]);
     expect(negative.probability).toBeUndefined();
-    expect(negative.diagnostics).toEqual([]);
+    expect(negative.judgments).toEqual([]);
     expect(exception.probability).toBeLessThan(0.5);
-    expect(exception.diagnostics).toEqual([]);
+    expect(exception.judgments.every(({ probability }) => probability < 0.5)).toBe(true);
     expect(ambiguous.probability).toBeLessThan(0.85);
-    expect(ambiguous.diagnostics).toEqual([]);
+    expect(ambiguous.judgments.every(({ probability }) => probability < 0.85)).toBe(true);
   });
 });

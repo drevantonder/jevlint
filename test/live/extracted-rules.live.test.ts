@@ -38,7 +38,7 @@ liveDescribe("live extracted-rule calibration", () => {
     const config: JevLintConfig = { rules: { [ruleId]: rule } };
     const lineCount = source.split("\n").length;
 
-    const diagnostics = await analyzeFile(
+    const judgments = await analyzeFile(
       {
         filePath: fixture,
         source,
@@ -48,6 +48,6 @@ liveDescribe("live extracted-rule calibration", () => {
       evaluator,
     );
 
-    expect(diagnostics.map(({ line }) => line)).toEqual([expectedLine]);
+    expect(judgments.map(({ span }) => span.start.line)).toEqual([expectedLine]);
   });
 });

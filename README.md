@@ -1,6 +1,6 @@
 # jevlint
 
-A diff-aware semantic linter for JavaScript and TypeScript. Oxc discovers candidates and builds rule-specific repository evidence. [Jev](https://docs.typesafe.ai/introduction) makes narrow semantic judgments and returns probabilities that jevlint turns into diagnostics.
+A diff-aware probabilistic code review tool for JavaScript and TypeScript. Oxc discovers candidates and builds rule-specific repository evidence. [Jev](https://docs.typesafe.ai/introduction) makes narrow semantic judgments and returns probabilities. Jevlint reports every judgment with its evidence and does not decide pass or fail.
 
 ## Status
 
@@ -11,16 +11,15 @@ This first slice supports:
 - Function, comment, abstraction, and whole-change rules
 - Repository-aware evidence from imports, same-file and cross-file callers, implementations, and option usage
 - Before/after evidence for change-level judgments
-- Root-cause deduplication for overlapping accidental-complexity findings
 - Token-budgeted evaluation batches with recursive token-limit recovery
-- Partial diagnostics when an individual evaluation cannot complete
+- Bounded failure summaries when an individual evaluation cannot complete
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
-- Text and JSON diagnostics
+- Ranked text and versioned JSON review reports
 - Thirty-two bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
-The bundled Jev rules flag:
+The bundled Jev rules judge:
 
 - mutation of caller-owned inputs that the function contract does not disclose
 - network, disk, database, or process I/O hidden behind local-looking APIs
@@ -75,30 +74,43 @@ pnpm build
 
 ## Usage
 
-Analyze staged and unstaged changes relative to `HEAD`, plus untracked source files:
+Review staged and unstaged changes relative to `HEAD`, plus untracked source files:
 
 ```sh
-pnpm jevlint diff
+pnpm jevlint review
 ```
 
-Analyze only staged changes:
+Review only staged changes:
 
 ```sh
-pnpm jevlint diff --staged
+pnpm jevlint review --staged
 ```
 
 Produce machine-readable output:
 
 ```sh
-pnpm jevlint diff --format json
+pnpm jevlint review --format json
 ```
+
+`jevlint diff` remains as a compatibility alias for `jevlint review` with identical score output.
+
+Every evaluated rule/candidate pair is reported as a judgment with a probability, the rule's proposition, the candidate's file and span, its kind, and the bounded evidence behind the score. Text output ranks judgments by descending probability with deterministic tie-breaks and ends with a summary line that distinguishes evaluated judgments from displayed ones:
+
+```text
+0.920  src/checkout.ts:12:3-12:40  function  jev/no-hidden-io  This API hides a material I/O boundary and its cost.
+0.180  src/cart.ts:5:1-5:22  function  jev/no-narrating-comment  Comment restates nearby code.
+
+2 evaluated; 2 displayed; 0 structurally abstained; 0 failed
+```
+
+`--min-score` and `--limit` filter only what is displayed; evaluation always covers every candidate, and the JSON report includes every completed judgment regardless of display filters. Candidates that are structurally ineligible for a rule are summarized as abstention counts, never as zero scores.
 
 Jev judgments are cached by default in the current worktree's Git metadata. Candidate discovery and repository evidence collection still run every time. Inspect a run, force fresh judgments, or bypass the cache with:
 
 ```sh
-pnpm jevlint diff --verbose
-pnpm jevlint diff --refresh-cache
-pnpm jevlint diff --no-cache
+pnpm jevlint review --verbose
+pnpm jevlint review --refresh-cache
+pnpm jevlint review --no-cache
 ```
 
 Normal runs print no cache status. See [Jev response cache](docs/caching.md) for the cache boundary, key inputs, storage, and security properties.
@@ -106,10 +118,10 @@ Normal runs print no cache status. See [Jev response cache](docs/caching.md) for
 When using a globally linked binary, wrap it directly:
 
 ```sh
-varlock run -- jevlint diff
+varlock run -- jevlint review
 ```
 
-Warnings do not fail the command. Diagnostics configured as errors produce exit code 1. Invalid arguments, configuration failures, Git failures, and API failures produce exit code 2. Jevlint keeps diagnostics from completed batches when an evaluation fails, writes those diagnostics in the requested format, reports a bounded failure summary on stderr, and exits 2 to mark the run as incomplete.
+Scores never fail the command: a completed review exits 0 no matter how high the probabilities are. Invalid arguments, configuration failures, Git failures, and API failures produce exit code 2. Jevlint keeps judgments from completed batches when an evaluation fails, writes the report in the requested format, reports a bounded failure summary on stderr, and exits 2 to mark the run as incomplete.
 
 ## Known limitations
 
@@ -134,15 +146,13 @@ export default defineConfig({
           false: "The name accurately summarizes the function's responsibility",
         },
       },
-      threshold: 0.9,
-      severity: "error",
       message: "Function name does not match its behavior.",
     },
   },
 });
 ```
 
-Each rule uses a Jev Noul question. A result at or above `threshold` creates a diagnostic at the Oxc candidate's source span. Bundled accidental-complexity rules first apply structural gates, so Jev is called only when Oxc finds the relevant mechanism. Repository evidence is bounded and rule-specific rather than a generic whole-project prompt. Jevlint pins the versioned `jev-1.13.0` model so cached judgments cannot silently outlive a moving model alias.
+Each rule uses a Jev Noul question, and every completed evaluation is reported as a probability at the Oxc candidate's source span. Bundled accidental-complexity rules first apply structural gates, so Jev is called only when Oxc finds the relevant mechanism. Repository evidence is bounded and rule-specific rather than a generic whole-project prompt. Jevlint pins the versioned `jev-1.13.0` model so cached judgments cannot silently outlive a moving model alias.
 
 ## Development
 

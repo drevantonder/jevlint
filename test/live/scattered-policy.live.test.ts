@@ -66,24 +66,25 @@ liveDescribe("scattered policy with repository evidence", () => {
       const files = await loadProject(entry.name, entry.paths);
       const owner = files.find(({ filePath }) => filePath === entry.filePath);
       expect(owner).toBeDefined();
-      if (!owner) return { expected: entry.expected, diagnostics: [] };
-      const diagnostics = await analyzeFile({
+      if (!owner) return { expected: entry.expected, judgments: [] };
+      const judgments = await analyzeFile({
         filePath: owner.filePath,
         source: owner.source,
         changedLines: [{ start: 1, end: owner.source.split("\n").length }],
         config,
         projectFiles: files,
       }, evaluator);
-      return { expected: entry.expected, diagnostics };
+      return { expected: entry.expected, judgments };
     }));
 
     expect(evaluator.probabilities.get("src/route-support.ts")).toBeGreaterThanOrEqual(0.85);
     expect(evaluator.probabilities.get("src/tax-report.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/payments-adapter.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/refresh-workspace.ts")).toBeLessThan(0.85);
-    expect(results.find(({ expected }) => expected === "positive")?.diagnostics)
+    expect(results.find(({ expected }) => expected === "positive")?.judgments)
       .toEqual([expect.objectContaining({ ruleId: "jev/no-scattered-policy" })]);
     expect(results.filter(({ expected }) => expected !== "positive")
-      .flatMap(({ diagnostics }) => diagnostics)).toEqual([]);
+      .flatMap(({ judgments }) => judgments).every(({ probability }) => probability < 0.85))
+      .toBe(true);
   });
 });

@@ -36,8 +36,6 @@ const config: JevLintConfig = {
           false: "Adds meaningful behavior",
         },
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Pass-through wrapper adds no meaningful behavior.",
     },
     "jev/no-narrating-comment": {
@@ -45,8 +43,6 @@ const config: JevLintConfig = {
       question: {
         instructions: "Does this comment narrate obvious code?",
       },
-      threshold: 0.85,
-      severity: "warning",
       message: "Comment restates nearby code.",
     },
   },
@@ -57,8 +53,6 @@ const functionConfig: JevLintConfig = {
     "test/function": {
       scope: "function",
       question: { instructions: "Is this a function?" },
-      threshold: 0.8,
-      severity: "warning",
       message: "Function found.",
     },
   },
@@ -89,11 +83,11 @@ function forgeSizedChanges(): SourceFile[] {
 }
 
 describe("analyzeFile", () => {
-  it("batches matching rules and reports judgments above their thresholds", async () => {
+  it("reports every completed judgment, including low scores", async () => {
     const source = await readFile(new URL("./fixtures/sloppy.ts", import.meta.url), "utf8");
     const evaluator = new RecordingEvaluator();
 
-    const diagnostics = await analyzeFile(
+    const judgments = await analyzeFile(
       {
         filePath: "src/sloppy.ts",
         source,
@@ -115,12 +109,20 @@ describe("analyzeFile", () => {
         { kind: "function", startLine: 4 },
       ],
     });
-    expect(diagnostics).toEqual([
+    expect(judgments).toEqual([
       expect.objectContaining({
         filePath: "src/sloppy.ts",
-        line: 4,
+        span: { start: { line: 4, column: 8 }, end: expect.any(Object) },
+        candidateKind: "function",
         ruleId: "jev/no-pass-through-wrapper",
         probability: 0.91,
+        evidence: expect.any(Object),
+      }),
+      expect.objectContaining({
+        candidateKind: "comment",
+        ruleId: "jev/no-narrating-comment",
+        probability: 0.2,
+        evidence: null,
       }),
     ]);
   });
@@ -141,7 +143,7 @@ describe("analyzeFile", () => {
     expect(evaluator.requests.every((request) =>
       JSON.stringify(request).length <= EVALUATION_REQUEST_BUDGET_CHARS
     )).toBe(true);
-    expect(result.diagnostics).toHaveLength(0);
+    expect(result.judgments).toHaveLength(36);
     expect(result.failures).toEqual([]);
   });
 
@@ -165,8 +167,6 @@ describe("analyzeFile", () => {
         "jev/no-complexity-displacement": {
           scope: "change",
           question: { instructions: "Does the whole change displace complexity?" },
-          threshold: 0.8,
-          severity: "warning",
           message: "Complexity moved.",
         },
       },
@@ -206,11 +206,11 @@ describe("analyzeFile", () => {
         },
       });
     expect(first).toMatchObject({
-      diagnostics: [expect.objectContaining({ ruleId: "jev/no-complexity-displacement" })],
+      judgments: [expect.objectContaining({ ruleId: "jev/no-complexity-displacement" })],
       failures: [],
     });
     expect(second).toMatchObject({
-      diagnostics: [expect.objectContaining({ ruleId: "jev/no-complexity-displacement" })],
+      judgments: [expect.objectContaining({ ruleId: "jev/no-complexity-displacement" })],
       failures: [],
     });
     expect(evaluator.statistics).toMatchObject({
@@ -266,10 +266,10 @@ describe("analyzeFile", () => {
     }, splittingEvaluator);
 
     expect(normalRequests).toHaveLength(2);
-    expect(normal.diagnostics).toHaveLength(36);
+    expect(normal.judgments).toHaveLength(36);
     expect(normal.failures).toEqual([]);
     expect(splitRequestSizes).toEqual([8, 4, 2, 2, 4, 2, 2]);
-    expect(split.diagnostics).toHaveLength(8);
+    expect(split.judgments).toHaveLength(8);
     expect(split.failures).toEqual([]);
   });
 
@@ -285,8 +285,6 @@ describe("analyzeFile", () => {
         "jev/no-avoidable-orchestration": {
           scope: "function",
           question: { instructions: "Is this avoidable orchestration?" },
-          threshold: 0.8,
-          severity: "warning",
           message: "Avoidable orchestration.",
         },
       },
@@ -326,11 +324,11 @@ describe("analyzeFile", () => {
     }, evaluator);
 
     expect(requestSizes).toEqual([8, 4, 2, 2, 4, 2, 2]);
-    expect(result.diagnostics).toHaveLength(8);
+    expect(result.judgments).toHaveLength(8);
     expect(result.failures).toEqual([]);
   });
 
-  it("preserves completed diagnostics when one question remains too large", async () => {
+  it("preserves completed judgments when one question remains too large", async () => {
     const source = [
       "export function first() { return 1; }",
       "export function second() { return 2; }",
@@ -356,7 +354,7 @@ describe("analyzeFile", () => {
     }, evaluator);
 
     expect(requestSizes).toEqual([4, 2, 2, 1, 1]);
-    expect(result.diagnostics).toHaveLength(3);
+    expect(result.judgments).toHaveLength(3);
     expect(result.failures).toEqual([expect.objectContaining({
       filePath: "src/partial.ts",
       questionCount: 1,
@@ -383,7 +381,7 @@ describe("analyzeFile", () => {
     }, evaluator);
 
     expect(requests).toBe(1);
-    expect(result.diagnostics).toEqual([]);
+    expect(result.judgments).toEqual([]);
     expect(result.failures).toEqual([expect.objectContaining({
       filePath: "src/unavailable.ts",
       questionCount: 10,
@@ -409,11 +407,31 @@ describe("analyzeFile", () => {
     expect(evaluator.requests[0]?.state.candidates[0]?.nearbySource).not.toContain("\r");
   });
 
+  it("summarizes structural ineligibility without assigning a score", async () => {
+    const source = "export function calculate() { return 1; }\n";
+    const evaluator = new RecordingEvaluator();
+
+    const result = await analyzeFileWithFailures({
+      filePath: "src/calculate.ts",
+      source,
+      changedLines: [{ start: 1, end: 1 }],
+      config: { rules: { "jev/no-pass-through-wrapper": config.rules["jev/no-pass-through-wrapper"]! } },
+    }, evaluator);
+
+    expect(result.judgments).toEqual([]);
+    expect(result.abstentions).toEqual([{
+      ruleId: "jev/no-pass-through-wrapper",
+      candidateKind: "function",
+      count: 1,
+    }]);
+    expect(evaluator.requests).toEqual([]);
+  });
+
   it("does not call Jev when no changed candidate matches a rule", async () => {
     const source = "const answer = 42;\n";
     const evaluator = new RecordingEvaluator();
 
-    const diagnostics = await analyzeFile(
+    const judgments = await analyzeFile(
       {
         filePath: "src/value.ts",
         source,
@@ -423,7 +441,7 @@ describe("analyzeFile", () => {
       evaluator,
     );
 
-    expect(diagnostics).toEqual([]);
+    expect(judgments).toEqual([]);
     expect(evaluator.requests).toEqual([]);
   });
 });

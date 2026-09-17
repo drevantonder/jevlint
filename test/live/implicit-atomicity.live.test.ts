@@ -52,7 +52,7 @@ liveDescribe("implicit atomicity calibration", () => {
       project("implicit-atomicity-exception", ["src/transfer-funds-transactional.ts", "src/api.ts"]),
       project("implicit-atomicity-ambiguous", ["src/place-order-saga.ts", "src/checkout.ts"]),
     ]);
-    const [positiveDiagnostics, negativeDiagnostics, exceptionDiagnostics, ambiguousDiagnostics] =
+    const [positiveJudgments, negativeJudgments, exceptionJudgments, ambiguousJudgments] =
       await Promise.all([
         lint(positive, evaluator),
         lint(negative, evaluator),
@@ -64,9 +64,9 @@ liveDescribe("implicit atomicity calibration", () => {
     expect(evaluator.probabilities.get("src/save-profile-and-track.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/transfer-funds-transactional.ts")).toBeLessThan(0.5);
     expect(evaluator.probabilities.get("src/place-order-saga.ts")).toBeLessThan(0.85);
-    expect(positiveDiagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-implicit-atomicity"]);
-    expect(negativeDiagnostics).toEqual([]);
-    expect(exceptionDiagnostics).toEqual([]);
-    expect(ambiguousDiagnostics).toEqual([]);
+    expect(positiveJudgments.map(({ ruleId }) => ruleId)).toEqual(["jev/no-implicit-atomicity"]);
+    expect(negativeJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(exceptionJudgments.every(({ probability }) => probability < 0.5)).toBe(true);
+    expect(ambiguousJudgments.every(({ probability }) => probability < 0.85)).toBe(true);
   });
 });
