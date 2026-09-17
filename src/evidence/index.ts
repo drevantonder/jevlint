@@ -45,6 +45,7 @@ import { buildConventionBreakingAdditionEvidence } from "./convention-breaking-a
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildCrossAreaExportBreakEvidence } from "./cross-area-export-break.js";
+import { buildCrossContextTestReachEvidence } from "./cross-context-test-reach.js";
 import { buildCrossModuleCallOrderEvidence } from "./cross-module-call-order.js";
 import { buildCrypticAbbreviationEvidence } from "./cryptic-abbreviation.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
@@ -54,6 +55,7 @@ import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js"
 import { buildDeploymentCoupledAssumptionEvidence } from "./deployment-coupled-assumption.js";
 import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDevDependencyRuntimeLeakEvidence } from "./dev-dependency-runtime-leak.js";
+import { buildDirectionReversingEdgeEvidence } from "./direction-reversing-edge.js";
 import { buildDisabledTlsVerificationEvidence } from "./disabled-tls-verification.js";
 import { buildDiscardedTransformationEvidence } from "./discarded-transformation.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
@@ -204,6 +206,7 @@ import { buildSensitiveDataInLogEvidence } from "./sensitive-data-in-log.js";
 import { buildSequentialStepSoupEvidence } from "./sequential-step-soup.js";
 import { buildShadowedMeaningEvidence } from "./shadowed-meaning.js";
 import { buildShallowConvenienceLayerEvidence } from "./shallow-convenience-layer.js";
+import { buildSharedKernelNewConsumerEvidence } from "./shared-kernel-new-consumer.js";
 import { buildSharedMutableDefaultEvidence } from "./shared-mutable-default.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
@@ -234,6 +237,7 @@ import { buildTimezoneNaiveArithmeticEvidence } from "./timezone-naive-arithmeti
 import { buildTransitivePlumbingEvidence } from "./transitive-plumbing.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildTruncatingNumericParseEvidence } from "./truncating-numeric-parse.js";
+import { buildTwinGatewayEmergenceEvidence } from "./twin-gateway-emergence.js";
 import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
 import { buildUnanchoredDomainCheckEvidence } from "./unanchored-domain-check.js";
@@ -278,6 +282,7 @@ import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
 import { buildUnverifiedMockContractEvidence } from "./unverified-mock-contract.js";
 import { buildUnversionedEnvelopeChangeEvidence } from "./unversioned-envelope-change.js";
 import { buildUnwieldySignatureEvidence } from "./unwieldy-signature.js";
+import { buildUnwrappedServiceEdgeEvidence } from "./unwrapped-service-edge.js";
 import { buildUtilityModuleGrabBagEvidence } from "./utility-module-grab-bag.js";
 import { buildUtilsGrabBagGrowthEvidence } from "./utils-grab-bag-growth.js";
 import { buildVariantPartitionedHelperEvidence } from "./variant-partitioned-helper.js";
@@ -338,6 +343,7 @@ type EvidenceRegistry = {
   "jev/no-convergent-twin-types": EvidenceBuilder;
   "jev/no-correlated-state-booleans": EvidenceBuilder;
   "jev/no-cross-area-export-break": EvidenceBuilder;
+  "jev/no-cross-context-test-reach": EvidenceBuilder;
   "jev/no-cross-module-call-order": EvidenceBuilder;
   "jev/no-cryptic-abbreviation": EvidenceBuilder;
   "jev/no-data-clump": EvidenceBuilder;
@@ -347,6 +353,7 @@ type EvidenceRegistry = {
   "jev/no-deployment-coupled-assumption": EvidenceBuilder;
   "jev/no-detached-async-work": EvidenceBuilder;
   "jev/no-dev-dependency-runtime-leak": EvidenceBuilder;
+  "jev/no-direction-reversing-edge": EvidenceBuilder;
   "jev/no-disabled-tls-verification": EvidenceBuilder;
   "jev/no-discarded-transformation": EvidenceBuilder;
   "jev/no-disproportionate-configuration": EvidenceBuilder;
@@ -497,6 +504,7 @@ type EvidenceRegistry = {
   "jev/no-sequential-step-soup": EvidenceBuilder;
   "jev/no-shadowed-meaning": EvidenceBuilder;
   "jev/no-shallow-convenience-layer": EvidenceBuilder;
+  "jev/no-shared-kernel-new-consumer": EvidenceBuilder;
   "jev/no-shared-mutable-default": EvidenceBuilder;
   "jev/no-shared-mutable-module-state": EvidenceBuilder;
   "jev/no-shotgun-change": EvidenceBuilder;
@@ -527,6 +535,7 @@ type EvidenceRegistry = {
   "jev/no-transitive-plumbing": EvidenceBuilder;
   "jev/no-transport-coupled-domain": EvidenceBuilder;
   "jev/no-truncating-numeric-parse": EvidenceBuilder;
+  "jev/no-twin-gateway-emergence": EvidenceBuilder;
   "jev/no-type-checker-escape": EvidenceBuilder;
   "jev/no-type-code-dispatch": EvidenceBuilder;
   "jev/no-unanchored-domain-check": EvidenceBuilder;
@@ -571,6 +580,7 @@ type EvidenceRegistry = {
   "jev/no-unverified-mock-contract": EvidenceBuilder;
   "jev/no-unversioned-envelope-change": EvidenceBuilder;
   "jev/no-unwieldy-signature": EvidenceBuilder;
+  "jev/no-unwrapped-service-edge": EvidenceBuilder;
   "jev/no-utility-module-grab-bag": EvidenceBuilder;
   "jev/no-utils-grab-bag-growth": EvidenceBuilder;
   "jev/no-variant-partitioned-helper": EvidenceBuilder;
@@ -664,6 +674,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildCorrelatedStateBooleansEvidence(candidate, projectFiles),
   "jev/no-cross-area-export-break": (candidate, projectFiles, changes) =>
     buildCrossAreaExportBreakEvidence(candidate, projectFiles, changes),
+  "jev/no-cross-context-test-reach": (candidate, projectFiles, changes) =>
+    buildCrossContextTestReachEvidence(candidate, projectFiles, changes),
   "jev/no-cross-module-call-order": (candidate, projectFiles) =>
     buildCrossModuleCallOrderEvidence(candidate, projectFiles),
   "jev/no-cryptic-abbreviation": (candidate, projectFiles) =>
@@ -682,6 +694,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildDetachedAsyncWorkEvidence(candidate, projectFiles),
   "jev/no-dev-dependency-runtime-leak": (candidate, projectFiles) =>
     buildDevDependencyRuntimeLeakEvidence(candidate, projectFiles),
+  "jev/no-direction-reversing-edge": (candidate, projectFiles, changes) =>
+    buildDirectionReversingEdgeEvidence(candidate, projectFiles, changes),
   "jev/no-disabled-tls-verification": (candidate, projectFiles) =>
     buildDisabledTlsVerificationEvidence(candidate, projectFiles),
   "jev/no-discarded-transformation": (candidate, projectFiles) =>
@@ -982,6 +996,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildShadowedMeaningEvidence(candidate, projectFiles),
   "jev/no-shallow-convenience-layer": (candidate, projectFiles) =>
     buildShallowConvenienceLayerEvidence(candidate, projectFiles),
+  "jev/no-shared-kernel-new-consumer": (candidate, projectFiles, changes) =>
+    buildSharedKernelNewConsumerEvidence(candidate, projectFiles, changes),
   "jev/no-shared-mutable-default": (candidate, projectFiles) =>
     buildSharedMutableDefaultEvidence(candidate, projectFiles),
   "jev/no-shared-mutable-module-state": (candidate, projectFiles) =>
@@ -1042,6 +1058,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildTransportCoupledDomainEvidence(candidate, projectFiles),
   "jev/no-truncating-numeric-parse": (candidate, projectFiles) =>
     buildTruncatingNumericParseEvidence(candidate, projectFiles),
+  "jev/no-twin-gateway-emergence": (candidate, projectFiles, changes) =>
+    buildTwinGatewayEmergenceEvidence(candidate, projectFiles, changes),
   "jev/no-type-checker-escape": (candidate, projectFiles) =>
     buildTypeCheckerEscapeEvidence(candidate, projectFiles),
   "jev/no-type-code-dispatch": (candidate, projectFiles) =>
@@ -1130,6 +1148,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildUnversionedEnvelopeChangeEvidence(candidate, changes, projectFiles),
   "jev/no-unwieldy-signature": (candidate, projectFiles) =>
     buildUnwieldySignatureEvidence(candidate, projectFiles),
+  "jev/no-unwrapped-service-edge": (candidate, projectFiles, changes) =>
+    buildUnwrappedServiceEdgeEvidence(candidate, projectFiles, changes),
   "jev/no-utility-module-grab-bag": (candidate, projectFiles, changes) =>
     buildUtilityModuleGrabBagEvidence(candidate, changes, projectFiles),
   "jev/no-utils-grab-bag-growth": (candidate, projectFiles, changes) =>

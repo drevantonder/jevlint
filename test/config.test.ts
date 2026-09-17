@@ -296,6 +296,11 @@ describe("loadConfig", () => {
       "jev/no-efferent-coupling-burst",
       "jev/no-stable-to-volatile-edge",
       "jev/no-new-foreign-state-write-edge",
+      "jev/no-shared-kernel-new-consumer",
+      "jev/no-direction-reversing-edge",
+      "jev/no-cross-context-test-reach",
+      "jev/no-twin-gateway-emergence",
+      "jev/no-unwrapped-service-edge",
       // END GENERATED: rule-keys
     ]);
   });
