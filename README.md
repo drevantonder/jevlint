@@ -116,7 +116,7 @@ The bundled Jev rules judge:
 - filesystem paths incorporating unvalidated segments that can escape their directory
 - member accesses that name something the owning module never defines
 - fallbacks that launder a contract breach into ordinary emptiness
-- comments that perform doubt instead of stating a contract
+- comments that assert behavior no test or caller pins
 - additions that follow a different convention than their owning module
 - handlers that repeat failure handling the module already owns once
 - guards that narrow nothing the flow had not already settled

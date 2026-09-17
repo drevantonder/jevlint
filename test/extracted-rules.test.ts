@@ -70,7 +70,7 @@ const extractedRules = [
   ["jev/no-path-traversal-join", "function"],
   ["jev/no-phantom-member-access", "function"],
   ["jev/no-laundered-absence", "function"],
-  ["jev/no-hedging-comment", "comment"],
+  ["jev/no-unverified-claim", "comment"],
   ["jev/no-convention-breaking-addition", "function"],
   ["jev/no-repeated-handler-preamble", "function"],
   ["jev/no-non-narrowing-guard", "function"],

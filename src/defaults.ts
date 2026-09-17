@@ -2552,19 +2552,19 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This fallback launders a contract breach into ordinary emptiness.",
     },
-    "jev/no-hedging-comment": {
+    "jev/no-unverified-claim": {
       scope: "comment",
       question: {
         instructions: {
-          question: "Does this comment assert uncertainty about nearby code instead of stating its contract, so readers inherit the doubt without any handle to resolve it?",
-          inspect: "Read the comment text against the adjoined code, what the hedge attaches to, and whether any test or caller pins the hedged behavior.",
-          focus: "Judge whether the doubt marks a genuinely open question the team tracks or an unverified guess shipped as documentation.",
+          question: "Does this comment assert behavior about nearby code that no test or caller pins, so readers cannot tell confidence from knowledge?",
+          inspect: "Read the claimed behavior against the adjoined code, then weigh the claim-specificity, test and caller pinning, tracked-work pointer, and tone signals in the supplied evidence.",
+          focus: "Judge whether the prose claims knowledge no test, caller, or tracked issue backs, rather than whether the wording sounds hedged.",
           decision_boundary: [
-            "Hedges such as should work, probably, hopefully, seems to, might, just in case, or not sure above untested logic are strong evidence of performed doubt.",
+            "A comment naming exact behavior, such as backoff or edge-case handling, above code with no such mechanism and no pinning test or caller is strong evidence of an unverified claim, whether the wording is hedged or confident.",
+            "Confident vagueness without hedge words, such as handles edge cases gracefully, counts the same as hedged doubt when nothing pins the claimed behavior.",
             "A hedge naming a concrete upstream uncertainty beside tests pinning current behavior records a real open question.",
-            "Reassurances that wave away a dropped failure in prose instead of handling it inherit the same doubt.",
-            "A single hedged integration note with a tracked issue differs from a pattern of hedges across a module.",
-            "If the comment states a verifiable contract or points at tracked work with pinned behavior, answer no.",
+            "Hedge or reassurance tone breaks ties only and is never sufficient on its own.",
+            "If the comment states a verifiable contract, points at tracked work with pinned behavior, or states intent, constraints, or tradeoffs rather than behavior, answer no.",
           ],
         },
         criteria: {
@@ -2577,7 +2577,7 @@ export const defaultConfig: JevLintConfig = {
           },
         },
       },
-      message: "This comment performs doubt instead of stating a contract.",
+      message: "This comment asserts behavior no test or caller pins.",
     },
     "jev/no-convention-breaking-addition": {
       scope: "function",
