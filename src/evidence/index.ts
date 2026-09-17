@@ -13,6 +13,8 @@ import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
 import { buildDiscardedTransformationEvidence } from "./discarded-transformation.js";
+import { buildDivergentChangeEvidence } from "./divergent-change.js";
+import { buildDivergentSiblingInterfacesEvidence } from "./divergent-sibling-interfaces.js";
 import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
 import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
 import { buildForeignMutationEvidence } from "./foreign-mutation.js";
@@ -28,6 +30,7 @@ import { buildInappropriateIntimacyEvidence } from "./inappropriate-intimacy.js"
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLoadBearingAsyncEvidence } from "./load-bearing-async.js";
+import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
@@ -37,6 +40,7 @@ import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
+import { buildRefusedInheritanceEvidence } from "./refused-inheritance.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
@@ -301,6 +305,24 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-temporary-field") {
     return { handled: true, evidence: buildTemporaryFieldEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-low-cohesion-class") {
+    return { handled: true, evidence: buildLowCohesionClassEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-divergent-change") {
+    return {
+      handled: true,
+      evidence: buildDivergentChangeEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-divergent-sibling-interfaces") {
+    return {
+      handled: true,
+      evidence: buildDivergentSiblingInterfacesEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-refused-inheritance") {
+    return { handled: true, evidence: buildRefusedInheritanceEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

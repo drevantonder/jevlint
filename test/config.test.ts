@@ -71,6 +71,10 @@ describe("loadConfig", () => {
       "jev/no-inappropriate-intimacy",
       "jev/no-anemic-type",
       "jev/no-temporary-field",
+      "jev/no-low-cohesion-class",
+      "jev/no-divergent-change",
+      "jev/no-divergent-sibling-interfaces",
+      "jev/no-refused-inheritance",
     ]);
   });
 
