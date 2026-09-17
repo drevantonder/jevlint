@@ -163,6 +163,7 @@ import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildNegativeBooleanNameEvidence } from "./negative-boolean-name.js";
 import { buildNestedConditionalExpressionEvidence } from "./nested-conditional-expression.js";
 import { buildNewForeignStateWriteEdgeEvidence } from "./new-foreign-state-write-edge.js";
+import { buildNonExhaustiveDomainHandlingEvidence } from "./non-exhaustive-domain-handling.js";
 import { buildNonIdempotentRetryEvidence } from "./non-idempotent-retry.js";
 import { buildNonNarrowingGuardEvidence } from "./non-narrowing-guard.js";
 import { buildNondeterministicTestInputEvidence } from "./nondeterministic-test-input.js";
@@ -469,6 +470,7 @@ type EvidenceRegistry = {
   "jev/no-negative-boolean-name": EvidenceBuilder;
   "jev/no-nested-conditional-expression": EvidenceBuilder;
   "jev/no-new-foreign-state-write-edge": EvidenceBuilder;
+  "jev/no-non-exhaustive-domain-handling": EvidenceBuilder;
   "jev/no-non-idempotent-retry": EvidenceBuilder;
   "jev/no-non-narrowing-guard": EvidenceBuilder;
   "jev/no-nondeterministic-test-input": EvidenceBuilder;
@@ -926,6 +928,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildNestedConditionalExpressionEvidence(candidate, projectFiles, changes),
   "jev/no-new-foreign-state-write-edge": (candidate, projectFiles, changes) =>
     buildNewForeignStateWriteEdgeEvidence(candidate, projectFiles, changes),
+  "jev/no-non-exhaustive-domain-handling": (candidate, projectFiles) =>
+    buildNonExhaustiveDomainHandlingEvidence(candidate, projectFiles),
   "jev/no-non-idempotent-retry": (candidate, projectFiles) =>
     buildNonIdempotentRetryEvidence(candidate, projectFiles),
   "jev/no-non-narrowing-guard": (candidate, projectFiles) =>

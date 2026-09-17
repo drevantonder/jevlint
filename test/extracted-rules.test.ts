@@ -165,6 +165,7 @@ const extractedRules = [
   ["jev/no-negative-boolean-name", "function"],
   ["jev/no-nested-conditional-expression", "function"],
   ["jev/no-new-foreign-state-write-edge", "module"],
+  ["jev/no-non-exhaustive-domain-handling", "function"],
   ["jev/no-non-idempotent-retry", "function"],
   ["jev/no-non-narrowing-guard", "function"],
   ["jev/no-nondeterministic-test-input", "function"],
