@@ -7485,6 +7485,112 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "Distinct domain values flow into this one bare-primitive slot.",
+    },
+
+    "jev/no-cross-area-export-break": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this module's export change break consumers spread across distinct repo areas, so the ripple exceeds what the author can verify from the changed file alone?",
+          inspect: "Compare each removed export with the per-area importer groups, how many distinct top-dir areas hold importers, whether those importers are runtime or test files, which importers the same diff already updates, and whether the barrel re-exports the broken symbol.",
+          focus: "Judge the consumer geography of the break, not whether the export shape changed.",
+          decision_boundary: [
+            "A removed export with runtime importers in several distinct top-dir areas and no same-diff call-site updates is strong evidence of a cross-area break.",
+            "A break whose consumers all live in the owning directory or in tests answers the question negatively.",
+            "A diff that updates every affected importer alongside the break weakens the claim.",
+            "A barrel re-export of the broken symbol widens the reach beyond the direct importer list.",
+            "If no export is removed, or nothing imports the module, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An export removal whose runtime consumers span distinct repo areas the same diff leaves unupdated",
+            remedy: "Keep a compatibility re-export, update every affected importer in the same diff, or split the break into per-area migrations",
+          },
+          false: {
+            what: "The break touches only same-directory or test consumers, every importer moves in the same diff, or no export is removed",
+          },
+        },
+      },
+      message: "This module's export change breaks consumers spread across distinct repo areas.",
+    },
+    "jev/no-efferent-coupling-burst": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this diff scatter the module's outbound dependencies across architectural areas it previously did not touch?",
+          inspect: "Compare each added import edge with its resolved target area, whether the edge crosses the owning top-dir, the target's layer role, whether the import is type-only, and the before/after distinct-area counts against the repo's feature-grouping norm.",
+          focus: "Judge the breadth the diff adds to what the module depends on, not whether any single dependency is justified.",
+          decision_boundary: [
+            "Added first-time edges into several new feature areas in a by-feature repo are strong evidence of a coupling burst.",
+            "New edges that stay inside the owning area or land in shared utilities answer the question negatively.",
+            "Type-only edges and composition roots whose job is wiring carry less weight than runtime edges from a domain module.",
+            "If the diff adds no new outbound edge, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A diff that opens first-time runtime dependencies from the module into several new architectural areas",
+            remedy: "Depend on the owning area's entry point or a shared abstraction instead of reaching directly into each new area",
+          },
+          false: {
+            what: "The new edges stay in-area or in shared utilities, are type-only, belong to a wiring root, or no edge is added",
+          },
+        },
+      },
+      message: "This diff scatters the module's outbound dependencies across areas it previously did not touch.",
+    },
+    "jev/no-stable-to-volatile-edge": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this widely-imported module add a new dependency on a volatile detail, so churn below now threatens the calm surface above?",
+          inspect: "Compare the owner's importer count and area spread with each new edge's target volatility markers: the target's own importer count, test or fixture or internal path markers, @internal documentation, newly-added status, and whether the edge is type-only or runtime.",
+          focus: "Judge the direction of the new edge from a stable surface toward volatility, not the size of the diff.",
+          decision_boundary: [
+            "A heavily imported module newly importing a zero-importer internal helper on an executed path is strong evidence of a stable-to-volatile edge.",
+            "A type-only import, or a target that is version-pinned and calm despite few importers, weakens the claim.",
+            "An owner that is itself internal with a single caller is not a stable surface, so the direction carries little weight.",
+            "If the diff adds no new resolved edge, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A widely-consumed module newly depending at runtime on a volatile detail with no importers of its own",
+            remedy: "Move the shared behavior up beside the stable surface, or depend on a pinned contract the volatile detail already honors",
+          },
+          false: {
+            what: "The new edge is type-only, the target is calm and versioned, the owner is itself internal, or no new edge exists",
+          },
+        },
+      },
+      message: "This widely-imported module adds a new dependency on a volatile detail.",
+    },
+    "jev/no-new-foreign-state-write-edge": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this change open the first cross-module write channel into another module's state?",
+          inspect: "Compare each new import edge with the writes the candidate performs through the imported binding, whether the written binding is mutable state the target owns, and whether the target offers a setter or entry point the change bypassed.",
+          focus: "Judge the precedent the diff sets — the first write channel between the two modules — not whether writes are ever acceptable.",
+          decision_boundary: [
+            "A first-ever edge between the modules with a direct assignment to the target's binding and no offered setter is strong evidence of a new foreign write channel.",
+            "A target whose whole purpose is a store, where writing is its contract, answers the question negatively.",
+            "A long-standing edge that merely adds another write beside existing ones belongs to foreign-mutation, not to this question.",
+            "If the new edge carries no write, or the write travels through the target's own setter, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A diff that first connects two modules and writes the target's state outside any setter the target offers",
+            remedy: "Write through a setter or entry point the target offers, or keep the state beside the module that mutates it",
+          },
+          false: {
+            what: "The edge is long-standing, the target is a store by contract, the write uses the target's setter, or no write crosses the new edge",
+          },
+        },
+      },
+      message: "This change opens the first cross-module write channel into another module's state.",
 
     },
   },

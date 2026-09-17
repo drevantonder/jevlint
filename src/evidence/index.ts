@@ -44,6 +44,7 @@ import { buildContractSignatureDriftEvidence } from "./contract-signature-drift.
 import { buildConventionBreakingAdditionEvidence } from "./convention-breaking-addition.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
+import { buildCrossAreaExportBreakEvidence } from "./cross-area-export-break.js";
 import { buildCrossModuleCallOrderEvidence } from "./cross-module-call-order.js";
 import { buildCrypticAbbreviationEvidence } from "./cryptic-abbreviation.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
@@ -71,6 +72,7 @@ import { buildDuplicatedFixtureDriftEvidence } from "./duplicated-fixture-drift.
 import { buildDuplicatedLogicEvidence } from "./duplicated-logic.js";
 import { buildDuplicatedStyleObjectEvidence } from "./duplicated-style-object.js";
 import { buildDynamicCodeExecutionEvidence } from "./dynamic-code-execution.js";
+import { buildEfferentCouplingBurstEvidence } from "./efferent-coupling-burst.js";
 import { buildEnglishOnlyPluralizationEvidence } from "./english-only-pluralization.js";
 import { buildEntangledMechanicalChangeEvidence } from "./entangled-mechanical-change.js";
 import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
@@ -154,6 +156,7 @@ import { buildMysteryLiteralArgumentEvidence } from "./mystery-literal-argument.
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildNegativeBooleanNameEvidence } from "./negative-boolean-name.js";
 import { buildNestedConditionalExpressionEvidence } from "./nested-conditional-expression.js";
+import { buildNewForeignStateWriteEdgeEvidence } from "./new-foreign-state-write-edge.js";
 import { buildNonIdempotentRetryEvidence } from "./non-idempotent-retry.js";
 import { buildNonNarrowingGuardEvidence } from "./non-narrowing-guard.js";
 import { buildNondeterministicTestInputEvidence } from "./nondeterministic-test-input.js";
@@ -214,6 +217,7 @@ import { buildSkippedLevelImportEvidence } from "./skipped-level-import.js";
 import { buildSleepInTestEvidence } from "./sleep-in-test.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildStabilityInversionEvidence } from "./stability-inversion.js";
+import { buildStableToVolatileEdgeEvidence } from "./stable-to-volatile-edge.js";
 import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildStaleFeatureFlagEvidence } from "./stale-feature-flag.js";
@@ -333,6 +337,7 @@ type EvidenceRegistry = {
   "jev/no-convention-breaking-addition": EvidenceBuilder;
   "jev/no-convergent-twin-types": EvidenceBuilder;
   "jev/no-correlated-state-booleans": EvidenceBuilder;
+  "jev/no-cross-area-export-break": EvidenceBuilder;
   "jev/no-cross-module-call-order": EvidenceBuilder;
   "jev/no-cryptic-abbreviation": EvidenceBuilder;
   "jev/no-data-clump": EvidenceBuilder;
@@ -360,6 +365,7 @@ type EvidenceRegistry = {
   "jev/no-duplicated-logic": EvidenceBuilder;
   "jev/no-duplicated-style-object": EvidenceBuilder;
   "jev/no-dynamic-code-execution": EvidenceBuilder;
+  "jev/no-efferent-coupling-burst": EvidenceBuilder;
   "jev/no-english-only-pluralization": EvidenceBuilder;
   "jev/no-entangled-mechanical-change": EvidenceBuilder;
   "jev/no-excess-context-parameter": EvidenceBuilder;
@@ -443,6 +449,7 @@ type EvidenceRegistry = {
   "jev/no-needless-abstraction": EvidenceBuilder;
   "jev/no-negative-boolean-name": EvidenceBuilder;
   "jev/no-nested-conditional-expression": EvidenceBuilder;
+  "jev/no-new-foreign-state-write-edge": EvidenceBuilder;
   "jev/no-non-idempotent-retry": EvidenceBuilder;
   "jev/no-non-narrowing-guard": EvidenceBuilder;
   "jev/no-nondeterministic-test-input": EvidenceBuilder;
@@ -503,6 +510,7 @@ type EvidenceRegistry = {
   "jev/no-sleep-in-test": EvidenceBuilder;
   "jev/no-speculative-generality": EvidenceBuilder;
   "jev/no-stability-inversion": EvidenceBuilder;
+  "jev/no-stable-to-volatile-edge": EvidenceBuilder;
   "jev/no-stale-binding-use": EvidenceBuilder;
   "jev/no-stale-comment": EvidenceBuilder;
   "jev/no-stale-feature-flag": EvidenceBuilder;
@@ -654,6 +662,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildConvergentTwinTypesEvidence(candidate, projectFiles),
   "jev/no-correlated-state-booleans": (candidate, projectFiles) =>
     buildCorrelatedStateBooleansEvidence(candidate, projectFiles),
+  "jev/no-cross-area-export-break": (candidate, projectFiles, changes) =>
+    buildCrossAreaExportBreakEvidence(candidate, projectFiles, changes),
   "jev/no-cross-module-call-order": (candidate, projectFiles) =>
     buildCrossModuleCallOrderEvidence(candidate, projectFiles),
   "jev/no-cryptic-abbreviation": (candidate, projectFiles) =>
@@ -708,6 +718,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildDuplicatedStyleObjectEvidence(candidate, projectFiles),
   "jev/no-dynamic-code-execution": (candidate, projectFiles) =>
     buildDynamicCodeExecutionEvidence(candidate, projectFiles),
+  "jev/no-efferent-coupling-burst": (candidate, projectFiles, changes) =>
+    buildEfferentCouplingBurstEvidence(candidate, projectFiles, changes),
   "jev/no-english-only-pluralization": (candidate, projectFiles) =>
     buildEnglishOnlyPluralizationEvidence(candidate, projectFiles),
   "jev/no-entangled-mechanical-change": (candidate, projectFiles, changes) =>
@@ -874,6 +886,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildNegativeBooleanNameEvidence(candidate, projectFiles),
   "jev/no-nested-conditional-expression": (candidate, projectFiles, changes) =>
     buildNestedConditionalExpressionEvidence(candidate, projectFiles, changes),
+  "jev/no-new-foreign-state-write-edge": (candidate, projectFiles, changes) =>
+    buildNewForeignStateWriteEdgeEvidence(candidate, projectFiles, changes),
   "jev/no-non-idempotent-retry": (candidate, projectFiles) =>
     buildNonIdempotentRetryEvidence(candidate, projectFiles),
   "jev/no-non-narrowing-guard": (candidate, projectFiles) =>
@@ -994,6 +1008,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildSpeculativeGeneralityEvidence(candidate, projectFiles),
   "jev/no-stability-inversion": (candidate, projectFiles) =>
     buildStabilityInversionEvidence(candidate, projectFiles),
+  "jev/no-stable-to-volatile-edge": (candidate, projectFiles, changes) =>
+    buildStableToVolatileEdgeEvidence(candidate, projectFiles, changes),
   "jev/no-stale-binding-use": (candidate, projectFiles) =>
     buildStaleBindingUseEvidence(candidate, projectFiles),
   "jev/no-stale-comment": (candidate, projectFiles, changes) =>

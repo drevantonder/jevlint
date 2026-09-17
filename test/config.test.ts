@@ -292,6 +292,10 @@ describe("loadConfig", () => {
       "jev/no-unit-ambiguous-quantity",
       "jev/no-partially-narrowed-nullable",
       "jev/no-heterogeneous-primitive-callers",
+      "jev/no-cross-area-export-break",
+      "jev/no-efferent-coupling-burst",
+      "jev/no-stable-to-volatile-edge",
+      "jev/no-new-foreign-state-write-edge",
       // END GENERATED: rule-keys
     ]);
   });
