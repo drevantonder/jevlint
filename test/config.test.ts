@@ -209,6 +209,11 @@ describe("loadConfig", () => {
       "jev/no-impossible-error-branch",
       "jev/no-retained-superseded-implementation",
       "jev/no-doubled-pure-helper",
+      "jev/no-import-cycle-tangle",
+      "jev/no-domain-upward-import",
+      "jev/no-barrel-wide-reexport",
+      "jev/no-utility-module-grab-bag",
+      "jev/no-duplicate-module-role",
     ]);
   });
 

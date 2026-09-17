@@ -173,6 +173,11 @@ const extractedRules = [
   ["jev/no-impossible-error-branch", "function"],
   ["jev/no-retained-superseded-implementation", "function"],
   ["jev/no-doubled-pure-helper", "function"],
+  ["jev/no-import-cycle-tangle", "change"],
+  ["jev/no-domain-upward-import", "function"],
+  ["jev/no-barrel-wide-reexport", "change"],
+  ["jev/no-utility-module-grab-bag", "change"],
+  ["jev/no-duplicate-module-role", "change"],
 ] as const;
 
 describe("extracted review rules", () => {

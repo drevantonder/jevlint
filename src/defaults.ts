@@ -5293,5 +5293,137 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test doubles a pure helper it could call directly.",
     },
+
+    "jev/no-import-cycle-tangle": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change create a module dependency cycle that collapses a layering boundary?",
+          inspect: "Compare the cycle path across the changed file, whether each edge carries value imports or type-only imports, the directory segments of each file on the cycle, and whether the changed lines introduce the closing edge in the supplied evidence.",
+          focus: "Judge whether the cycle merges two layers' change fates, not whether the imported symbols resolve correctly today.",
+          decision_boundary: [
+            "A changed file adding a value import that closes a cycle across distinct layer directories is strong evidence of a collapsed boundary.",
+            "A cycle carried only by type-only edges, or a cycle within one directory, answers the question negatively.",
+            "A cycle that predates the change, where the changed lines touch none of its edges, weakens the claim.",
+            "If no cycle passes through the changed file, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A module dependency cycle through the changed file that joins separately layered modules into one change unit",
+            remedy: "Break the cycle by moving the shared dependency into the lower layer or a shared module both sides may import",
+          },
+          false: {
+            what: "No cycle through the changed file, a type-only or same-directory cycle, or a pre-existing cycle the change does not touch",
+          },
+        },
+      },
+      message: "This change creates a module dependency cycle that collapses a layering boundary.",
+    },
+    "jev/no-domain-upward-import": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this domain-owned function depend directly on an outer-layer module?",
+          inspect: "Compare the function's domain ownership with each resolved upward import, the outer layer each target lives in, whether the edge is a value or type-only import, and the repository callers in the supplied evidence.",
+          focus: "Judge the direction of the dependency arrow from inner to outer layer, not the content of what is imported.",
+          decision_boundary: [
+            "A domain function value-importing an adapter, infrastructure, UI, route, or app module is strong evidence of an upward dependency.",
+            "Imports of shared-kernel value objects or same-layer modules answer the question negatively.",
+            "A type-only upward edge weakens the claim, since no runtime fate is shared.",
+            "If the function lives outside domain-owned paths, or no outer-layer import exists, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A domain-owned function depending directly on an outer-layer module at runtime",
+            remedy: "Invert the dependency by passing the outer capability in as a parameter or interface the domain owns",
+          },
+          false: {
+            what: "The function lives outside the domain, imports only shared or same-layer modules, or reaches outward by type alone",
+          },
+        },
+      },
+      message: "This domain-owned function depends directly on an outer-layer module.",
+    },
+    "jev/no-barrel-wide-reexport": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this barrel change widen one module's public surface across unrelated responsibilities?",
+          inspect: "Compare each added re-export with the owning directory of its target, how many distinct directories the additions span, whether each addition is a wildcard or named re-export, and the importer counts in the supplied evidence.",
+          focus: "Judge whether the aggregation merges consumers of unrelated responsibilities, not whether any internal detail escapes.",
+          decision_boundary: [
+            "An index barrel adding wildcard re-exports from several unrelated directories is strong evidence of a widened surface.",
+            "A barrel adding one sibling component from its own feature directory answers the question negatively.",
+            "Named re-exports of a single responsibility, even across a directory line, weaken the claim.",
+            "If no re-export is added on the changed lines, or the file is not a barrel, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A barrel change aggregating unrelated responsibilities behind one public surface",
+            remedy: "Keep one barrel per responsibility, or re-export only the cohesive sibling surface the barrel owns",
+          },
+          false: {
+            what: "The additions stay within one responsibility, the file is not a barrel, or no re-export is added",
+          },
+        },
+      },
+      message: "This barrel change widens one module's public surface across unrelated responsibilities.",
+    },
+    "jev/no-utility-module-grab-bag": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this new export land in a shared utility module whose existing exports serve unrelated responsibilities?",
+          inspect: "Compare the new export with the module's existing export inventory, the per-export importer footprints and how disjoint they are, and the disjoint importer-pair count in the supplied evidence.",
+          focus: "Judge whether the module's exports form one cohesive responsibility the newcomer joins, not whether the new export is useful.",
+          decision_boundary: [
+            "A new export joining existing exports with fully disjoint importer footprints is strong evidence of a grab bag.",
+            "A newcomer sharing importers and subject matter with cohesive siblings answers the question negatively.",
+            "A module with only one or two existing exports weakens the claim, since no grab-bag shape is established.",
+            "If the file is not a shared utility module, or no new export is added, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A new export landing in a shared utility module whose exports serve unrelated responsibilities with disjoint callers",
+            remedy: "Place the export beside the responsibility it serves, or split the module so each part owns one cohesive surface",
+          },
+          false: {
+            what: "The newcomer joins a cohesive export family, the module is not a shared utility, or no new export is added",
+          },
+        },
+      },
+      message: "This new export lands in a shared utility module whose existing exports serve unrelated responsibilities.",
+    },
+    "jev/no-duplicate-module-role": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this added file duplicate the responsibility already owned by an existing module?",
+          inspect: "Compare the new file's export inventory with each same-directory sibling, the overlapping export names, the filename token similarity, whether either side is a platform variant, and the importer split in the supplied evidence.",
+          focus: "Judge whether two modules now own one role even when their implementations differ, not whether any code span is copied.",
+          decision_boundary: [
+            "A new file beside a same-directory sibling exporting the same operations under a near-synonym name is strong evidence of a duplicated role.",
+            "A platform-specific variant or test-adjacent file beside the shared implementation answers the question negatively.",
+            "Overlapping generic names with no filename resemblance weakens the claim.",
+            "If the change is not an added file, or no sibling shares exports or name tokens, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An added file taking on a responsibility a same-directory sibling already owns",
+            remedy: "Extend the owning module instead, or remove the superseded sibling and move its importers to the new file",
+          },
+          false: {
+            what: "The file extends no owned role, is a platform variant, or shares neither exports nor naming with any sibling",
+          },
+        },
+      },
+      message: "This added file duplicates the responsibility already owned by an existing module.",
+
+    },
   },
 };
