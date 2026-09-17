@@ -148,6 +148,11 @@ import { buildHandRolledDebounceEvidence } from "./hand-rolled-debounce.js";
 import { buildHandRolledCsvSplitEvidence } from "./hand-rolled-csv-split.js";
 import { buildKnobMultiplicityEvidence } from "./knob-multiplicity.js";
 import { buildParallelEnumerationsEvidence } from "./parallel-enumerations.js";
+import { buildMysteryLiteralArgumentEvidence } from "./mystery-literal-argument.js";
+import { buildUnexplainedDomainThresholdEvidence } from "./unexplained-domain-threshold.js";
+import { buildVerblessFunctionNameEvidence } from "./verbless-function-name.js";
+import { buildMisdirectingErrorMessageEvidence } from "./misdirecting-error-message.js";
+import { buildAmbiguousPositionalSiblingsEvidence } from "./ambiguous-positional-siblings.js";
 import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildSynonymVocabularyEvidence } from "./synonym-vocabulary.js";
@@ -1285,6 +1290,24 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-string-hash") {
     return { handled: true, evidence: buildHandRolledStringHashEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mystery-literal-argument") {
+    return {
+      handled: true,
+      evidence: buildMysteryLiteralArgumentEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unexplained-domain-threshold") {
+    return { handled: true, evidence: buildUnexplainedDomainThresholdEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-verbless-function-name") {
+    return { handled: true, evidence: buildVerblessFunctionNameEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-misdirecting-error-message") {
+    return { handled: true, evidence: buildMisdirectingErrorMessageEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-ambiguous-positional-siblings") {
+    return { handled: true, evidence: buildAmbiguousPositionalSiblingsEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

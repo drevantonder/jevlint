@@ -246,6 +246,11 @@ describe("loadConfig", () => {
       "jev/no-hand-rolled-fetch-wrapper",
       "jev/no-fs-recursive-reinvent",
       "jev/no-hand-rolled-string-hash",
+      "jev/no-mystery-literal-argument",
+      "jev/no-unexplained-domain-threshold",
+      "jev/no-verbless-function-name",
+      "jev/no-misdirecting-error-message",
+      "jev/no-ambiguous-positional-siblings",
     ]);
   });
 

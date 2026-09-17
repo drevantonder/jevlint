@@ -210,6 +210,11 @@ const extractedRules = [
   ["jev/no-hand-rolled-fetch-wrapper", "function"],
   ["jev/no-fs-recursive-reinvent", "function"],
   ["jev/no-hand-rolled-string-hash", "function"],
+  ["jev/no-mystery-literal-argument", "change"],
+  ["jev/no-unexplained-domain-threshold", "function"],
+  ["jev/no-verbless-function-name", "function"],
+  ["jev/no-misdirecting-error-message", "function"],
+  ["jev/no-ambiguous-positional-siblings", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
