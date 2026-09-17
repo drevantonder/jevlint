@@ -85,6 +85,7 @@ const extractedRules = [
   ["jev/no-flaky-order-assertion", "function"],
   ["jev/no-floating-money-arithmetic", "function"],
   ["jev/no-foreign-mutation", "function"],
+  ["jev/no-fragmented-stateful-procedure", "function"],
   ["jev/no-fs-recursive-reinvent", "function"],
   ["jev/no-generic-magic", "function"],
   ["jev/no-giant-test-arrange", "function"],

@@ -84,6 +84,7 @@ import { buildFlagShepherdedControlFlowEvidence } from "./flag-shepherded-contro
 import { buildFlakyOrderAssertionEvidence } from "./flaky-order-assertion.js";
 import { buildFloatingMoneyArithmeticEvidence } from "./floating-money-arithmetic.js";
 import { buildForeignMutationEvidence } from "./foreign-mutation.js";
+import { buildFragmentedStatefulProcedureEvidence } from "./fragmented-stateful-procedure.js";
 import { buildFsRecursiveReinventEvidence } from "./fs-recursive-reinvent.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildGiantTestArrangeEvidence } from "./giant-test-arrange.js";
@@ -385,6 +386,7 @@ type EvidenceRegistry = {
   "jev/no-flaky-order-assertion": EvidenceBuilder;
   "jev/no-floating-money-arithmetic": EvidenceBuilder;
   "jev/no-foreign-mutation": EvidenceBuilder;
+  "jev/no-fragmented-stateful-procedure": EvidenceBuilder;
   "jev/no-fs-recursive-reinvent": EvidenceBuilder;
   "jev/no-generic-magic": EvidenceBuilder;
   "jev/no-giant-test-arrange": EvidenceBuilder;
@@ -758,6 +760,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildFloatingMoneyArithmeticEvidence(candidate, projectFiles),
   "jev/no-foreign-mutation": (candidate, projectFiles) =>
     buildForeignMutationEvidence(candidate, projectFiles),
+  "jev/no-fragmented-stateful-procedure": (candidate, projectFiles) =>
+    buildFragmentedStatefulProcedureEvidence(candidate, projectFiles),
   "jev/no-fs-recursive-reinvent": (candidate, projectFiles) =>
     buildFsRecursiveReinventEvidence(candidate, projectFiles),
   "jev/no-generic-magic": (candidate, projectFiles) =>

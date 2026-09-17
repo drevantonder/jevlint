@@ -7811,5 +7811,32 @@ export const defaultConfig: JevLintConfig = {
       message: "This function mixes calculation with environmental interaction.",
 
     },
+    "jev/no-fragmented-stateful-procedure": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function scatter one stateful procedure across single-use helpers so the order of its state transitions is only visible by following calls?",
+          inspect: "Use the ordered helper calls in the entry body, each helper's writes and reads of shared bindings, the write-then-read edges between helpers, caller counts with export and re-export signals per helper, the entry's own interleaved state operations, and helper sizes in the supplied evidence.",
+          focus: "Judge whether the reader must chase calls to see the state-transition order, not whether the helpers are small or the code works.",
+          decision_boundary: [
+            "Three or more calls to single-caller same-module helpers in a load-bearing order, each mutating shared state, with at least one write-then-read dependency between helpers, is strong evidence of a fragmented stateful procedure.",
+            "Helpers with several callers, pure helpers with no outer writes, or an entry that interleaves its own state logic between calls weaken the claim toward readable structure.",
+            "A helper that is exported or re-exported through a public entry point is a documented seam rather than fragmentation.",
+            "Fewer than three helpers, or helpers too substantial to read inline without loss, answer the question negatively.",
+            "If the evidence does not establish shared-state mutation across the helpers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The entry scatters one stateful procedure across single-use helpers whose shared-state transitions are ordered only by the call sequence",
+            remedy: "Inline the helper bodies at the call sites so the full state-transition sequence reads in one place",
+          },
+          false: {
+            what: "The helpers are independently reused, pure, separated by real seams, or lack shared-state dependencies that force an invisible order",
+          },
+        },
+      },
+      message: "This function scatters one stateful procedure across single-use helpers.",
+    },
   },
 };

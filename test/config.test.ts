@@ -304,6 +304,7 @@ describe("loadConfig", () => {
       "jev/no-unpinned-compat-quirk",
       "jev/no-hidden-collaborator-read",
       "jev/no-mixed-calculation-and-interaction",
+      "jev/no-fragmented-stateful-procedure",
       // END GENERATED: rule-keys
     ]);
   });
