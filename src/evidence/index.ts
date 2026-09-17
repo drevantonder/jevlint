@@ -139,6 +139,11 @@ import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js"
 import { buildBespokeCryptoConstructionEvidence } from "./bespoke-crypto-construction.js";
 import { buildDrilledPropEvidence } from "./drilled-prop.js";
 import { buildDuplicatedStyleObjectEvidence } from "./duplicated-style-object.js";
+import { buildMysteryLiteralArgumentEvidence } from "./mystery-literal-argument.js";
+import { buildUnexplainedDomainThresholdEvidence } from "./unexplained-domain-threshold.js";
+import { buildVerblessFunctionNameEvidence } from "./verbless-function-name.js";
+import { buildMisdirectingErrorMessageEvidence } from "./misdirecting-error-message.js";
+import { buildAmbiguousPositionalSiblingsEvidence } from "./ambiguous-positional-siblings.js";
 import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
@@ -777,6 +782,24 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-duplicated-style-object") {
     return { handled: true, evidence: buildDuplicatedStyleObjectEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mystery-literal-argument") {
+    return {
+      handled: true,
+      evidence: buildMysteryLiteralArgumentEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unexplained-domain-threshold") {
+    return { handled: true, evidence: buildUnexplainedDomainThresholdEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-verbless-function-name") {
+    return { handled: true, evidence: buildVerblessFunctionNameEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-misdirecting-error-message") {
+    return { handled: true, evidence: buildMisdirectingErrorMessageEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-ambiguous-positional-siblings") {
+    return { handled: true, evidence: buildAmbiguousPositionalSiblingsEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

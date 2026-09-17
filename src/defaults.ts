@@ -3942,5 +3942,140 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-mystery-literal-argument": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does a changed call site pass a literal whose meaning a reader cannot recover without opening the callee?",
+          inspect: "Compare each changed call with its literal argument, the resolved parameter name and type, and the callee branches or literal comparisons selecting behavior in the supplied evidence.",
+          focus: "Judge whether the literal selects behavior defined only inside the callee body, forcing readers to leave the call site to understand the call.",
+          decision_boundary: [
+            "A changed literal that selects a disjoint callee path compared against sibling literals is strong evidence of a mystery argument.",
+            "Widely conventional literals such as encodings answer the question negatively even when the callee branches on them.",
+            "Literals passed to parameters the callee never branches on or compares are ordinary data, not behavior selectors.",
+            "Named arguments and options objects already label the value at the call site.",
+            "If no changed call resolves to a callee that selects on the parameter, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A changed call passes an unexplained literal that selects callee behavior defined only inside the callee",
+            remedy: "Pass a named constant or an options object so the call site states its intent",
+          },
+          false: {
+            what: "The literal is conventional, pure data, already labeled, or the callee does not select on it",
+          },
+        },
+      },
+      message: "This call passes a literal only the callee can explain.",
+    },
+    "jev/no-unexplained-domain-threshold": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a comparison, equality check, index, or slice in this function embody domain knowledge no reader can recover?",
+          inspect: "Compare each extracted literal threshold with the value it is tested against, nearby comments, constraining types, sibling named constants, and reuse of the same value elsewhere in the supplied evidence.",
+          focus: "Judge whether a reader can answer why this value and not another without asking the author.",
+          decision_boundary: [
+            "A bare domain cap such as a retry limit with sibling values already named is strong evidence of unexplained knowledge.",
+            "Boundary checks on 0 or 1 with self-evident meaning answer the question negatively.",
+            "Thresholds owned by a configuration source belong to config-shadow reasoning; this question is about values no config owns.",
+            "A named constant on either side of the comparison already explains the value.",
+            "If every extracted threshold carries a nearby rationale or a constraining type, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A bare literal threshold encodes a why-this-value choice no name, comment, or type explains",
+            remedy: "Name the constant or record the rationale beside the comparison",
+          },
+          false: {
+            what: "The value is self-evident, already named, explained nearby, constrained by a type, or no bare threshold exists",
+          },
+        },
+      },
+      message: "This threshold encodes domain knowledge no reader can recover.",
+    },
+    "jev/no-verbless-function-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function name state no action, so callers cannot tell what the call does without reading the body?",
+          inspect: "Compare the function name and its first word with the extracted body effects, branch selection, framework shaping, callers, and verb-aliased callers in the supplied evidence.",
+          focus: "Judge whether the name leaves the action entirely to the implementation while the body performs effects or selection.",
+          decision_boundary: [
+            "A bare noun name over a body with effects and branches, with callers inventing verb aliases, is strong evidence of a missing verb.",
+            "Vague verbs such as process or handle belong to mysterious-name reasoning; this question is about the absence of any verb.",
+            "Conventional noun-named constructors, factories, or framework-mandated components answer the question negatively.",
+            "Pure projections with no effects and no selection need no verb.",
+            "If the name already carries a verb head or boolean-predicate prefix, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A noun-only name hides the action of a body that performs effects or selection",
+            remedy: "Rename with a verb phrase stating what the call does",
+          },
+          false: {
+            what: "The name carries a verb, follows a framework convention, or the body is a pure projection",
+          },
+        },
+      },
+      message: "This function name states no action.",
+    },
+    "jev/no-misdirecting-error-message": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does an error message assert a cause the throwing code cannot establish, sending readers to the wrong fix?",
+          inspect: "Compare each extracted message and its named cause with the checked signals in scope, catch enclosure, and cause linkage in the supplied evidence.",
+          focus: "Judge whether the message invents a specific cause rather than reporting what the code actually verified.",
+          decision_boundary: [
+            "A specific cause such as network failure thrown on a path that never touches the network is strong evidence of misdirection.",
+            "Messages restating the checked precondition that just failed answer the question negatively.",
+            "Empty or generic messages belong to contextless-error reasoning; this question needs an asserted cause.",
+            "Information dropped while translating a caught error belongs to lossy-error-translation; this question is about causes invented at the throw site.",
+            "If the scope checks the named cause or links it via cause or interpolation, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The message names a specific cause the throwing code never checked or linked",
+            remedy: "Report what the code verified and attach the underlying cause",
+          },
+          false: {
+            what: "The message restates a checked precondition, carries no specific cause, or the cause is verified and linked",
+          },
+        },
+      },
+      message: "This error message asserts a cause the code never established.",
+    },
+    "jev/no-ambiguous-positional-siblings": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do adjacent same-type parameters stay silently swappable at every call site, so readers cannot verify order without the callee open?",
+          inspect: "Compare each adjacent same-type pair with its conventional ordering, the positional call sites and their argument shapes, and the object-argument callers in the supplied evidence.",
+          focus: "Judge whether a reader at any call site can tell which value is which without opening the callee.",
+          decision_boundary: [
+            "Adjacent independent same-type parameters with computed same-shape arguments at every call site is strong evidence of order opacity.",
+            "Same-type pairs with an established domain order and named callers answer the question negatively.",
+            "Long signatures in general belong to unwieldy-signature reasoning and trailing growth to positional-extension-drift; this question is about one swappable adjacent pair.",
+            "A coherent parameter group that wants an object belongs to unnamed-parameter-object reasoning; this question covers independent values with no object to name.",
+            "If callers already pass an object or the types are branded apart, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Adjacent same-type parameters are positionally interchangeable at every call site with nothing distinguishing the order",
+            remedy: "Introduce distinct brands, an options object, or names that make the order self-evident",
+          },
+          false: {
+            what: "The order follows an established convention, callers label their values, or the types already distinguish the positions",
+          },
+        },
+      },
+      message: "These adjacent parameters are silently swappable at every call site.",
+    },
   },
 };
