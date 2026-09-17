@@ -3042,5 +3042,161 @@ export const defaultConfig: JevLintConfig = {
       message: "This shared memory is accessed across workers without atomic coordination.",
 
     },
+    "jev/no-timezone-naive-arithmetic": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this date computation assume fixed-length days or local fields that shift under daylight saving and zone changes?",
+          inspect: "Compare the naive date shapes, fixed day-step literals, ambiguous parses, and locale round-trips with the timezone-aware imports, sibling aware arithmetic, and repository callers in the supplied evidence.",
+          focus: "Judge calendar semantics, not naming: a well-named constant can still be wrong across a DST boundary.",
+          decision_boundary: [
+            "Daily scheduling via date + 86400000 with user-facing times and no timezone-aware library on the path is strong evidence of drift.",
+            "Millisecond arithmetic on monotonic durations never rendered as wall time weakens the claim.",
+            "Temporal, luxon, or date-fns-tz arithmetic on the path weakens the claim.",
+            "If no naive field access, fixed day step, ambiguous parse, or locale round-trip is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function shifts calendar dates with fixed-length steps or local-field arithmetic that drifts across DST and zone changes",
+            remedy: "Compute the shift with a timezone-aware calendar API over the IANA zone of the rendered wall time",
+          },
+          false: {
+            what: "Durations stay monotonic, a timezone-aware library covers the path, or no naive date shape is established",
+          },
+        },
+      },
+      message: "This date computation assumes fixed-length days that shift under daylight saving and zone changes.",
+    },
+    "jev/no-floating-money-arithmetic": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this monetary amount pass through binary floating arithmetic that accumulates representational error?",
+          inspect: "Compare the money-named float operations and toFixed comparisons with the decimal-library import, minor-unit handling, sibling integer-cents usage, and repository callers in the supplied evidence.",
+          focus: "Judge precision within one monetary identity, not whether distinct identities share a primitive.",
+          decision_boundary: [
+            "Accumulating total += price * qty over floats while sibling code carries integer cents is strong evidence of drift.",
+            "Float arithmetic on already-rounded display values never fed back into balances weakens the claim.",
+            "A decimal library or integer minor-unit arithmetic on the path weakens the claim.",
+            "If no money-named floating operation is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A monetary amount flows through binary floating operations whose representational error accumulates into balances",
+            remedy: "Carry the amount in integer minor units or a decimal type and round only at display",
+          },
+          false: {
+            what: "Amounts use integer minor units or a decimal type, floats stay display-only, or no money arithmetic is established",
+          },
+        },
+      },
+      message: "This monetary amount passes through binary floating arithmetic that accumulates error.",
+    },
+    "jev/no-offset-pagination-drift": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this listing paginate by offset over data that changes between pages, so items shift, repeat, or vanish?",
+          inspect: "Compare the offset and limit parameters with the stable-ordering evidence, the unused cursor parameter, sibling cursor pagination, and writer callers in the supplied evidence.",
+          focus: "Judge pagination stability across requests, not whether any single page validates.",
+          decision_boundary: [
+            "skip and take without orderBy over a table with concurrent writer callers is strong evidence of drift.",
+            "Offset paging over an append-only, insertion-ordered log consumed once weakens the claim.",
+            "A stable ordering key or cursor pagination on the path weakens the claim.",
+            "If no offset-style pagination parameters are established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The listing windows mutable data by offset with no stable ordering key, so rows shift between fetches",
+            remedy: "Page by a stable keyset cursor over a unique ordering column",
+          },
+          false: {
+            what: "Pagination is cursor-based, the collection is append-only and consumed once, or no offset paging is established",
+          },
+        },
+      },
+      message: "This listing paginates by offset over changing data, so pages drift.",
+    },
+    "jev/no-unit-scale-mismatch": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this call mix unit scales the surrounding convention distinguishes, so the value is off by orders of magnitude?",
+          inspect: "Compare the scale-factor conversions and unit-suffixed names with the named-conversion evidence and the sibling call-site arguments in the supplied evidence.",
+          focus: "Judge scale against the callee convention, not identifier choice: the right binding in the wrong unit still drifts.",
+          decision_boundary: [
+            "Passing seconds to a timeoutMs parameter while sibling call sites pass milliseconds is strong evidence of mismatch.",
+            "An explicit named conversion at the boundary weakens the claim.",
+            "Scale factors applied consistently with the callee unit weaken the claim.",
+            "If no scale conversion or unit-carrying argument is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A value crosses a call boundary in a unit scale the callee convention does not expect, shifting it by orders of magnitude",
+            remedy: "Convert explicitly at the boundary with a named helper and suffix the unit on the binding",
+          },
+          false: {
+            what: "Units match the callee convention, a named conversion guards the boundary, or no scale mixing is established",
+          },
+        },
+      },
+      message: "This call mixes unit scales the surrounding convention distinguishes.",
+    },
+    "jev/no-truncating-numeric-parse": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this parse silently truncate or coerce input at the edges, so malformed input looks valid?",
+          inspect: "Compare the parse shapes and radix evidence with the NaN and range guards, the external-input provenance, and sibling validated parsing in the supplied evidence.",
+          focus: "Judge what the parse manufactures before any check runs, not whether a later check exists downstream.",
+          decision_boundary: [
+            "parseInt on request input compared numerically with no NaN guard is strong evidence of silent truncation.",
+            "Parsing beside an explicit finite-and-range validation weakens the claim.",
+            "Parsing closed constants with no external provenance weakens the claim.",
+            "If no truncating parse shape is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The parse cuts decimals, drops the radix, or coerces empty input to zero, manufacturing a valid-looking number",
+            remedy: "Parse with an explicit radix and reject non-finite and out-of-range input before use",
+          },
+          false: {
+            what: "The parse carries a radix with NaN and range validation, or the input is a closed constant rather than external",
+          },
+        },
+      },
+      message: "This parse silently truncates input at the edges, so malformed values look valid.",
+    },
+    "jev/no-locale-date-serialization": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this date cross a persistence or wire boundary in a locale-rendered form that cannot round-trip outside the writer locale?",
+          inspect: "Compare the locale-rendered date forms with the boundary-sink evidence, the ISO-form presence, sibling ISO serialization, and repository callers in the supplied evidence.",
+          focus: "Judge representation fidelity at the boundary, not model layering: perfect layering still loses the instant in a locale string.",
+          decision_boundary: [
+            "toLocaleString persisted to a timestamp column read by another service is strong evidence of a broken round-trip.",
+            "Locale rendering at the final display component with ISO kept underneath weakens the claim.",
+            "toISOString, epoch, or an explicit interchange format on the path weakens the claim.",
+            "If no locale-rendered date form is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A date reaches storage, a response, or a message payload as a locale-rendered string that loses the instant",
+            remedy: "Serialize the instant as ISO 8601 or epoch at the boundary and render locale forms only for display",
+          },
+          false: {
+            what: "The boundary carries ISO or epoch form, locale rendering stays display-only, or no locale date form is established",
+          },
+        },
+      },
+      message: "This date crosses a boundary in locale-rendered form and cannot round-trip.",
+    },
   },
 };
