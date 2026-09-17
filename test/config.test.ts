@@ -124,6 +124,10 @@ describe("loadConfig", () => {
       "jev/no-promise-combinator-mismatch",
       "jev/no-orphaned-timer",
       "jev/no-unsynchronized-shared-memory",
+      "jev/no-overload-resolution-ambiguity",
+      "jev/no-sync-async-sibling-ambiguity",
+      "jev/no-leaky-internal-export",
+      "jev/no-weak-crypto-primitive",
     ]);
   });
 

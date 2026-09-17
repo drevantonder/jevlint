@@ -3042,5 +3042,113 @@ export const defaultConfig: JevLintConfig = {
       message: "This shared memory is accessed across workers without atomic coordination.",
 
     },
+    "jev/no-overload-resolution-ambiguity": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do these overload signatures admit the same call shape for different meanings, so callers cannot tell which behavior they get?",
+          inspect: "Compare each overload's arity and parameter types, the ambiguous pairs and their overlapping positions, whether the implementation accepts every shape, separately named variants, and callers whose argument counts match more than one overload in the supplied evidence.",
+          focus: "Judge whether one call shape can resolve to overloads with different meanings, not whether any single signature is long or complex.",
+          decision_boundary: [
+            "Overloads with the same arity and overlapping middle-parameter types, with callers matching two of them, are strong evidence of ambiguous resolution.",
+            "Overloads distinguished by arity with every call site matching exactly one weaken the claim.",
+            "Overloads differing only in return type while accepting identical arguments strengthen the claim.",
+            "An implementation signature wider than every overload suggests callers already rely on unadvertised shapes.",
+            "If callers consistently match exactly one overload or the set separates cleanly by arity, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "One call shape resolves to overloads with different meanings, leaving callers unable to tell which behavior runs",
+            remedy: "Separate the variants into distinctly named functions or narrow the overload types so each call shape matches exactly one",
+          },
+          false: {
+            what: "Each call shape matches exactly one overload, the set separates by arity, or no caller evidence shows dual matching",
+          },
+        },
+      },
+      message: "These overloads admit the same call shape for different meanings.",
+    },
+    "jev/no-sync-async-sibling-ambiguity": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do these same-stem siblings mix blocking and asynchronous behavior without naming the difference, so callers await what never suspends or block on what never resolves inline?",
+          inspect: "Compare the candidate's async shape and suffix with each same-stem sibling's async shape, suffix, sync-I/O use, awaited versus bare uses, excerpts, and callers in the supplied evidence.",
+          focus: "Judge whether the pair convention hides which member suspends, not whether one name alone reads well.",
+          decision_boundary: [
+            "An async member beside a synchronous same-stem member over disk or process I/O, used inconsistently by callers, is strong evidence of a hidden suspension difference.",
+            "A consistently suffixed pair following the platform Sync and Async convention weakens the claim.",
+            "A suffix that contradicts the behavior, such as an async member carrying Sync or a sync member carrying Async, strengthens the claim.",
+            "Sync I/O inside the synchronous member of a serving path raises the cost of the confusion.",
+            "If the pair follows a consistent suffix convention and callers handle each member accordingly, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Same-stem siblings mix blocking and asynchronous behavior while the names hide which member suspends",
+            remedy: "Name the difference explicitly with Sync and Async suffixes following the platform convention",
+          },
+          false: {
+            what: "The pair follows a consistent suffix convention, both members share timing behavior, or callers handle each member accordingly",
+          },
+        },
+      },
+      message: "These same-stem siblings hide which member suspends.",
+    },
+    "jev/no-leaky-internal-export": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this barrel or index re-export internals its clients were never meant to depend on, widening the supported surface by accident?",
+          inspect: "Compare each barrel re-export and its internal path or symbol markers with the owner module's internal documentation, which outside modules import the leaked symbols through the barrel, and the anchoring abstraction in the supplied evidence.",
+          focus: "Judge whether the re-exported surface was meant for external dependence, not whether the barrel abstraction itself earns its keep.",
+          decision_boundary: [
+            "An export-all of an internal engine module with outside importers reaching engine helpers through the package root is strong evidence of a leak.",
+            "A barrel re-exporting one documented utility alongside the public API with no internal markers weakens the claim.",
+            "An owner module marked internal or private while the barrel still exposes it strengthens the claim.",
+            "Test helpers, fixtures, or mocks reachable through the shipping barrel strengthen the claim.",
+            "If no re-export carries internal markers or no outside importer reaches the symbols through the barrel, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A barrel re-exports internal helpers its clients were never meant to depend on, freezing future refactors",
+            remedy: "Remove the internal re-export from the barrel and import the helpers directly where they belong",
+          },
+          false: {
+            what: "The re-exported surface is documented public API, carries no internal markers, or never reaches outside importers through the barrel",
+          },
+        },
+      },
+      message: "This barrel re-exports internals its clients were never meant to depend on.",
+    },
+    "jev/no-weak-crypto-primitive": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this code protect data with a hash or cipher the industry no longer accepts for that purpose?",
+          inspect: "Compare each weak hash, HMAC, cipher, digest, or fallback-import call with its algorithm, the position it guards, whether the output feeds a stored comparison, the crypto import source, a stronger primitive nearby, and callers in the supplied evidence.",
+          focus: "Judge the algorithm choice at an acknowledged crypto call for the purpose it serves, not the quality of the input sourcing.",
+          decision_boundary: [
+            "A password or token digest built with MD5 or SHA-1 and compared against a stored value is strong evidence of an unacceptable primitive.",
+            "The same weak digest over a cache key or checksum that never guards a security decision weakens the claim.",
+            "A pure-JavaScript MD5 or SHA-1 fallback import used where the platform crypto module is available strengthens the claim.",
+            "A stronger primitive already used nearby for the same concept suggests the weak call is legacy rather than deliberate.",
+            "If the digest never guards a security decision, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Data is protected with a hash or cipher the industry no longer accepts for that purpose",
+            remedy: "Replace the primitive with a currently accepted one such as SHA-256 or bcrypt for passwords and an authenticated cipher for encryption",
+          },
+          false: {
+            what: "The digest serves a non-security checksum or cache key, the primitive is currently accepted, or no security decision depends on the output",
+          },
+        },
+      },
+      message: "This code protects data with a hash or cipher the industry no longer accepts.",
+    },
   },
 };
