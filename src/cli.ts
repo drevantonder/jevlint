@@ -13,7 +13,7 @@ import {
 import type { AnalyzeAuditInput } from "./analyze.js";
 import { CachedEvaluator } from "./cache.js";
 import type { CacheMode } from "./cache.js";
-import { loadConfig } from "./config.js";
+import { defaultConfig, loadConfig } from "./config.js";
 import {
   createReviewReport,
   formatJson,
@@ -50,26 +50,32 @@ const OPTIONS_SHARED = `Shared options:
                      Exit 0 with an empty report when PATH scope matches nothing
   --debug=<mode>     files, timings, cache (comma-separated)
   --print-config     Print effective config as JSON and exit
+  --rules            List bundled rule keys and exit
   --help             Show this help
 
+--rules prints every bundled rule key, one per line (a JSON array with
+--format json), and exits without evaluating.
 --debug=files prints the resolved scope file list to stderr and exits without
 evaluating. --debug=timings prints a per-rule timing table to stderr after the
 report. --debug=cache prints cache statistics to stderr. Stdout carries only
 the report or config JSON.
 `;
 
-const USAGE_GENERAL = `Usage: jevlint review [PATH]... [options]
+const USAGE_GENERAL = `Usage: jevlint [PATH]... [options]
+       jevlint review [PATH]... [options]
        jevlint audit [PATH]... [options]
 
 Commands:
+  (none)            Audit the full tree; bare jevlint is audit with no subcommand
   review            Review changed code and report probability scores
   audit             Survey the whole codebase and report probability scores
 
-  review scores changed code only: the working-tree or staged diff against
-  HEAD. On a clean tree there is nothing changed, so there is nothing to
-  score. audit scores the whole codebase without needing a diff and runs
-  to completion by default: every candidate/rule pair is prepared unless
-  you opt into a limit below. Both commands report probabilities only: no
+  With no subcommand, jevlint audits the full tree, or the given files or
+  directories when PATHs are given. review stays explicit for change-scoped
+  runs (working tree, --staged, hooks). audit surveys the whole codebase
+  without needing a diff and runs to completion by default: every
+  candidate/rule pair is prepared unless you opt into a limit below.
+  Bare, review, and audit all report probabilities only: no
   pass/fail, no thresholds, no bands.
 
 Review defaults to changed files; audit defaults to the full tree. PATH filters
@@ -95,7 +101,8 @@ const USAGE_REVIEW = `Usage: jevlint review [PATH]... [options]
 Review changed code and report probability scores. Defaults to changed files;
 PATH filters scope to files or directories. Unknown paths follow the
 unmatched-pattern rule: an error unless --no-error-on-unmatched-pattern
-is given. See also jevlint audit, which surveys the whole codebase.
+is given. See also bare jevlint and jevlint audit, which survey the whole
+codebase.
 
 Options:
   --staged           Review staged changes
@@ -107,7 +114,8 @@ Survey the whole codebase and report probability scores. Runs to completion
 by default; every candidate/rule pair is prepared unless you opt into a limit
 below. Defaults to every source file; PATH filters scope to files or
 directories. Unknown paths follow the unmatched-pattern rule: an error unless
---no-error-on-unmatched-pattern is given. See also jevlint review, which
+--no-error-on-unmatched-pattern is given. The bare form jevlint [PATH]...
+runs this command with no subcommand. See also jevlint review, which
 scores changed code only.
 
 Options:
@@ -141,6 +149,7 @@ interface CliOptions {
   noErrorOnUnmatchedPattern: boolean;
   debug: DebugMode[];
   printConfig: boolean;
+  listRules: boolean;
   help: boolean;
   maxQuestions?: number;
   evidenceBudgetMs?: number;
@@ -176,13 +185,8 @@ function parseDebugModes(raw: string): DebugMode[] | undefined {
   return [...new Set(modes)];
 }
 
-function parseArgs(args: string[]): ParsedArgs {
-  if (args.length === 0) return { ok: false };
-  if (args[0] === "--help" && args.length === 1) return { ok: false, help: "general" };
-  const command = args[0];
-  if (command !== "review" && command !== "audit") return { ok: false };
-
-  const options: CliOptions = {
+function baseOptions(command: "review" | "audit"): CliOptions {
+  return {
     command,
     paths: [],
     staged: false,
@@ -192,12 +196,16 @@ function parseArgs(args: string[]): ParsedArgs {
     noErrorOnUnmatchedPattern: false,
     debug: [],
     printConfig: false,
+    listRules: false,
     help: false,
     dryRun: false,
   };
+}
+
+function parseFlags(args: string[], start: number, options: CliOptions): boolean {
   let cacheModeSet = false;
   let endOfFlags = false;
-  for (let index = 1; index < args.length; index += 1) {
+  for (let index = start; index < args.length; index += 1) {
     const argument = args[index] ?? "";
     if (!endOfFlags && argument === "--") {
       endOfFlags = true;
@@ -205,30 +213,31 @@ function parseArgs(args: string[]): ParsedArgs {
     }
     if (!endOfFlags && argument.startsWith("--")) {
       if (argument === "--staged") {
-        if (options.command === "audit") return { ok: false };
+        if (options.command === "audit") return false;
         options.staged = true;
       } else if (argument === "--help") options.help = true;
       else if (argument === "--print-config") options.printConfig = true;
+      else if (argument === "--rules") options.listRules = true;
       else if (argument === "--dry-run") {
-        if (options.command !== "audit") return { ok: false };
+        if (options.command !== "audit") return false;
         options.dryRun = true;
       } else if (argument === "--no-error-on-unmatched-pattern") {
         options.noErrorOnUnmatchedPattern = true;
       } else if (argument === "--no-cache" || argument === "--refresh-cache") {
-        if (cacheModeSet) return { ok: false };
+        if (cacheModeSet) return false;
         options.cacheMode = argument === "--no-cache" ? "disabled" : "refresh";
         cacheModeSet = true;
       } else if (argument === "--debug" || argument.startsWith("--debug=")) {
         let raw: string | undefined;
         if (argument === "--debug") {
           raw = args[index + 1];
-          if (raw === undefined) return { ok: false };
+          if (raw === undefined) return false;
           index += 1;
         } else {
           raw = argument.slice("--debug=".length);
         }
         const modes = parseDebugModes(raw);
-        if (modes === undefined) return { ok: false };
+        if (modes === undefined) return false;
         for (const mode of modes) {
           if (!options.debug.includes(mode)) options.debug.push(mode);
         }
@@ -241,40 +250,56 @@ function parseArgs(args: string[]): ParsedArgs {
         || argument === "--evidence-budget-ms"
       ) {
         const value = args[index + 1];
-        if (value === undefined) return { ok: false };
+        if (value === undefined) return false;
         index += 1;
         if (argument === "--format") {
-          if (value !== "text" && value !== "json") return { ok: false };
+          if (value !== "text" && value !== "json") return false;
           options.format = value;
         } else if (argument === "--config") {
           options.configPath = value;
         } else if (argument === "--min-score") {
           const parsed = score(value);
-          if (parsed === undefined) return { ok: false };
+          if (parsed === undefined) return false;
           options.minScore = parsed;
         } else if (argument === "--max-questions") {
-          if (options.command !== "audit") return { ok: false };
+          if (options.command !== "audit") return false;
           const parsed = count(value, 1);
-          if (parsed === undefined) return { ok: false };
+          if (parsed === undefined) return false;
           options.maxQuestions = parsed;
         } else if (argument === "--evidence-budget-ms") {
-          if (options.command !== "audit") return { ok: false };
+          if (options.command !== "audit") return false;
           const parsed = count(value, 0);
-          if (parsed === undefined) return { ok: false };
+          if (parsed === undefined) return false;
           options.evidenceBudgetMs = parsed;
         } else {
           const parsed = limit(value);
-          if (parsed === undefined) return { ok: false };
+          if (parsed === undefined) return false;
           options.limit = parsed;
         }
       } else {
-        return { ok: false };
+        return false;
       }
     } else {
       options.paths.push(argument);
     }
   }
-  if (options.help) return { ok: false, help: command };
+  return true;
+}
+
+function parseArgs(args: string[]): ParsedArgs {
+  if (args.length === 0) return { ok: true, options: baseOptions("audit") };
+  if (args[0] === "--help" && args.length === 1) return { ok: false, help: "general" };
+  const command = args[0];
+  if (command === "review" || command === "audit") {
+    const options = baseOptions(command);
+    if (!parseFlags(args, 1, options)) return { ok: false };
+    if (options.help) return { ok: false, help: command };
+    return { ok: true, options };
+  }
+  if (command === "diff") return { ok: false };
+  const options = baseOptions("audit");
+  if (!parseFlags(args, 0, options)) return { ok: false };
+  if (options.help) return { ok: false, help: "general" };
   return { ok: true, options };
 }
 
@@ -455,6 +480,16 @@ async function resolveEvaluator(
   return { evaluator, cachedEvaluator };
 }
 
+function printRules(options: CliOptions, stdout: (text: string) => void): number {
+  const keys = Object.keys(defaultConfig.rules);
+  if (options.format === "json") {
+    stdout(`${JSON.stringify(keys)}\n`);
+  } else {
+    for (const key of keys) stdout(`${key}\n`);
+  }
+  return 0;
+}
+
 async function runAudit(
   cwd: string,
   options: CliOptions,
@@ -462,6 +497,7 @@ async function runAudit(
   stdout: (text: string) => void,
   stderr: (text: string) => void,
 ): Promise<number> {
+  if (options.listRules) return printRules(options, stdout);
   const configPromise = options.configPath === undefined
     ? loadConfig({ cwd })
     : loadConfig({ cwd, configPath: options.configPath });
@@ -537,6 +573,7 @@ async function runReview(
   stdout: (text: string) => void,
   stderr: (text: string) => void,
 ): Promise<number> {
+  if (options.listRules) return printRules(options, stdout);
   const configPromise = options.configPath === undefined
     ? loadConfig({ cwd })
     : loadConfig({ cwd, configPath: options.configPath });

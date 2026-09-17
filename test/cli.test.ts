@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { runCli } from "../src/cli.js";
+import { defaultConfig } from "../src/defaults.js";
 import type { EvaluationRequest, Evaluator } from "../src/types.js";
 
 const execFile = promisify(execFileCallback);
@@ -211,7 +212,7 @@ describe("runCli", () => {
     const capture = await invoke(["diff"], { cwd: process.cwd(), evaluator });
 
     expect(capture.exitCode).toBe(2);
-    expect(capture.stderr).toContain("Usage: jevlint review");
+    expect(capture.stderr).toContain("Usage: jevlint [PATH]...");
     expect(evaluator.calls).toBe(0);
   });
 
@@ -223,7 +224,7 @@ describe("runCli", () => {
     });
 
     expect(capture.exitCode).toBe(2);
-    expect(capture.stderr).toContain("Usage: jevlint review");
+    expect(capture.stderr).toContain("Usage: jevlint [PATH]...");
     expect(evaluator.calls).toBe(0);
   });
 
@@ -258,22 +259,16 @@ describe("runCli", () => {
     });
 
     expect(exitCode).toBe(2);
-    expect(stderr).toContain("Usage: jevlint review");
+    expect(stderr).toContain("Usage: jevlint [PATH]...");
   });
 
-  it("rejects unsupported commands without calling the evaluator", async () => {
-    let stderr = "";
-    const exitCode = await runCli(["wat"], {
-      cwd: process.cwd(),
-      evaluator: new PassThroughEvaluator(),
-      stdout: () => undefined,
-      stderr: (text) => {
-        stderr += text;
-      },
-    });
+  it("treats an unknown bare word as a path under the unmatched-pattern rule", async () => {
+    const evaluator = new CountingEvaluator();
+    const capture = await invoke(["wat"], { cwd: process.cwd(), evaluator });
 
-    expect(exitCode).toBe(2);
-    expect(stderr).toContain("Usage: jevlint");
+    expect(capture.exitCode).toBe(2);
+    expect(capture.stderr).toContain("no files matched");
+    expect(evaluator.calls).toBe(0);
   });
 
   it("rejects command-scoped flags on the wrong command", async () => {
@@ -593,5 +588,147 @@ describe("runCli", () => {
     expect(general.exitCode).toBe(0);
     expect(general.stdout).toContain("jevlint review [PATH]...");
     expect(general.stdout).toContain("jevlint audit [PATH]...");
+    expect(general.stdout).toContain("Usage: jevlint [PATH]...");
+  });
+
+  it("runs a full-tree audit with no subcommand and no args", async () => {
+    const cwd = await repositoryWith("jevlint-cli-bare-", {
+      "tracked.ts": "export function tracked() { return 0; }\n",
+      "other.ts": "export function other() { return 0; }\n",
+    });
+    await writeFile(join(cwd, "tracked.ts"), "export function tracked() { return 1; }\n");
+
+    const bare = await invoke(["--format", "json"], { cwd, evaluator: new CountingEvaluator() });
+    expect(bare.exitCode).toBe(0);
+    // SAFETY: runCli only prints the report object produced by createReviewReport.
+    const bareReport = JSON.parse(bare.stdout) as {
+      judgments: Array<{ filePath: string }>;
+      coverage: { filesEnumerated: number; complete: boolean };
+    };
+    const bareFiles = new Set(bareReport.judgments.map((judgment) => judgment.filePath));
+    expect(bareFiles).toContain("tracked.ts");
+    expect(bareFiles).toContain("other.ts");
+    expect(bareReport.coverage.filesEnumerated).toBe(2);
+    expect(bareReport.coverage.complete).toBe(true);
+
+    const audit = await invoke(["audit", "--format", "json"], {
+      cwd,
+      evaluator: new CountingEvaluator(),
+    });
+    // SAFETY: runCli only prints the report object produced by createReviewReport.
+    const auditReport = JSON.parse(audit.stdout) as {
+      judgments: Array<{ filePath: string }>;
+    };
+    const auditFiles = new Set(auditReport.judgments.map((judgment) => judgment.filePath));
+    expect(auditFiles).toEqual(bareFiles);
+  });
+
+  it("scopes bare positional paths like audit", async () => {
+    const cwd = await repositoryWith("jevlint-cli-bare-scope-", {
+      "tracked.ts": "export function tracked() { return 0; }\n",
+      "sub/other.ts": "export function other() { return 0; }\n",
+    });
+
+    const capture = await invoke(["sub", "--format", "json"], {
+      cwd,
+      evaluator: new CountingEvaluator(),
+    });
+    expect(capture.exitCode).toBe(0);
+    // SAFETY: runCli only prints the report object produced by createReviewReport.
+    const report = JSON.parse(capture.stdout) as {
+      judgments: Array<{ filePath: string }>;
+      coverage: { filesEnumerated: number };
+    };
+    expect(report.coverage.filesEnumerated).toBe(1);
+    expect(report.judgments.length).toBeGreaterThan(0);
+    for (const judgment of report.judgments) {
+      expect(judgment.filePath).toBe("sub/other.ts");
+    }
+  });
+
+  it("lists bare scope with debug files without evaluating", async () => {
+    const cwd = await repositoryWith("jevlint-cli-bare-files-", {
+      "tracked.ts": "export function tracked() { return 0; }\n",
+      "other.ts": "export function other() { return 0; }\n",
+    });
+    const evaluator = new CountingEvaluator();
+
+    const capture = await invoke(["--debug=files"], { cwd, evaluator });
+    expect(capture.exitCode).toBe(0);
+    expect(capture.stdout).toBe("");
+    expect(capture.stderr).toBe("other.ts\ntracked.ts\n");
+    expect(evaluator.calls).toBe(0);
+  });
+
+  it("applies the unmatched-pattern rule to bare paths", async () => {
+    const cwd = await repositoryWith("jevlint-cli-bare-unmatched-", {
+      "tracked.ts": "export function tracked() { return 0; }\n",
+    });
+
+    const missing = await invoke(["nope.ts"], {
+      cwd,
+      evaluator: new CountingEvaluator(),
+    });
+    expect(missing.exitCode).toBe(2);
+    expect(missing.stderr).toContain("no files matched");
+
+    const empty = await invoke(["nope.ts", "--no-error-on-unmatched-pattern", "--format", "json"], {
+      cwd,
+      evaluator: new CountingEvaluator(),
+    });
+    expect(empty.exitCode).toBe(0);
+    // SAFETY: runCli only prints the report object produced by createReviewReport.
+    const report = JSON.parse(empty.stdout) as {
+      summary: { evaluated: number; displayed: number };
+      judgments: unknown[];
+    };
+    expect(report.summary.evaluated).toBe(0);
+    expect(report.summary.displayed).toBe(0);
+    expect(report.judgments).toEqual([]);
+  });
+
+  it("rejects staged and unknown flags with no subcommand", async () => {
+    for (const args of [["--staged"], ["--verbose"]]) {
+      const evaluator = new CountingEvaluator();
+      const capture = await invoke(args, { cwd: process.cwd(), evaluator });
+      expect(capture.exitCode).toBe(2);
+      expect(capture.stderr).toContain("Usage: jevlint");
+      expect(evaluator.calls).toBe(0);
+    }
+  });
+
+  it("shows general usage for bare help without evaluating", async () => {
+    const evaluator = new CountingEvaluator();
+    const capture = await invoke(["sub", "--help"], {
+      cwd: process.cwd(),
+      evaluator,
+    });
+    expect(capture.exitCode).toBe(0);
+    expect(capture.stdout).toContain("Usage: jevlint [PATH]...");
+    expect(evaluator.calls).toBe(0);
+  });
+
+  it("lists bundled rule keys with --rules on bare, review, and audit", async () => {
+    const expected = `${Object.keys(defaultConfig.rules).join("\n")}\n`;
+    expect(Object.keys(defaultConfig.rules).length).toBeGreaterThan(0);
+    for (const args of [["--rules"], ["review", "--rules"], ["audit", "--rules"]]) {
+      const evaluator = new CountingEvaluator();
+      const capture = await invoke(args, { cwd: process.cwd(), evaluator });
+      expect(capture.exitCode).toBe(0);
+      expect(capture.stdout).toBe(expected);
+      expect(capture.stderr).toBe("");
+      expect(evaluator.calls).toBe(0);
+    }
+  });
+
+  it("prints bundled rule keys as a JSON array with --format json", async () => {
+    const expected = Object.keys(defaultConfig.rules);
+    const capture = await invoke(["--rules", "--format", "json"], {
+      cwd: process.cwd(),
+      evaluator: new CountingEvaluator(),
+    });
+    expect(capture.exitCode).toBe(0);
+    // SAFETY: --rules only prints the bundled rule keys from the defaults registry.
+    expect(JSON.parse(capture.stdout)).toEqual(expected);
   });
 });

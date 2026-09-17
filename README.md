@@ -2,6 +2,8 @@
 
 A diff-aware probabilistic code review tool for JavaScript and TypeScript. Oxc discovers candidates and builds rule-specific repository evidence. [Jev](https://docs.typesafe.ai/introduction) makes narrow semantic judgments and returns probabilities. Jevlint reports every judgment with its evidence and does not decide pass or fail.
 
+Run it with `pnpm jevlint` (run `pnpm build` first). With no subcommand it audits the full tree.
+
 ## Status
 
 This first slice supports:
@@ -39,11 +41,17 @@ pnpm env:check
 pnpm build
 ```
 
+`pnpm jevlint` runs the built CLI through Varlock (`varlock run -- node dist/cli.js`, the `jevlint` script in `package.json`).
+
 `pnpm env:check` prints only redacted values.
 
 ## Usage
 
-Jevlint has two modes. `review` scores changed code only; `audit` surveys the whole codebase. Both report probabilities only: no pass/fail, no thresholds, no bands.
+Jevlint has two modes. `review` scores changed code only; `audit` surveys the whole codebase. Bare `jevlint` with no subcommand is `audit`: it surveys the full tree, or the given files or directories when paths are given. All three report probabilities only: no pass/fail, no thresholds, no bands.
+
+```sh
+pnpm jevlint
+```
 
 ### review: changed code
 
@@ -69,13 +77,13 @@ Survey every source file in the repository without needing a diff. An audit runs
 pnpm jevlint audit
 ```
 
-Limit a run explicitly when you want a bounded survey instead of a full one:
+Bound a run with explicit limits:
 
 ```sh
 pnpm jevlint audit --max-questions 2000
 ```
 
-Count the cost before spending it: `--dry-run` prepares and counts questions without calling Jev, so it reports coverage with zero live requests. Nothing is sampled and nothing is cut by score; what was not scored is listed in the report's `coverage` object with `complete: false`. Omission counts are candidate/rule pairs: prepared plus abstained plus omitted always equals the total pair count, so a truncated run states exactly which kinds and rules were never reached.
+`--dry-run` prepares and counts questions without calling Jev, reporting coverage with zero live requests. Nothing is sampled and nothing is cut by score; what was not scored is listed in the report's `coverage` object with `complete: false`. Omission counts are candidate/rule pairs: prepared plus abstained plus omitted always equals the total pair count, so a truncated run states exactly which kinds and rules were never reached.
 
 ```sh
 pnpm jevlint audit --max-questions 2000 --dry-run
@@ -91,9 +99,10 @@ Change-scope rules (for example `jev/no-complexity-displacement`) need before/af
 
 ### Scoping runs to paths
 
-`review` defaults to changed files; `audit` defaults to every source file. Positional paths filter either scope to files or directories:
+`review` defaults to changed files; bare `jevlint` and `audit` default to every source file. Positional paths filter any scope to files or directories:
 
 ```sh
+pnpm jevlint src/checkout
 pnpm jevlint review src/checkout
 pnpm jevlint audit src/checkout
 ```
@@ -103,13 +112,14 @@ A scope that matches nothing is an error, unless `--no-error-on-unmatched-patter
 Inspect the resolved scope, timings, or cache behavior without disturbing stdout. Stdout carries only the report or config JSON; all human chatter goes to stderr:
 
 ```sh
+pnpm jevlint --rules
 pnpm jevlint review --debug=files
 pnpm jevlint review --debug=timings
 pnpm jevlint review --debug=cache
 pnpm jevlint review --print-config
 ```
 
-`--debug=files` prints the resolved scope file list and exits without evaluating. `--debug=timings` prints a per-rule timing table after the report. `--debug=cache` prints cache statistics. `--print-config` prints the effective config as JSON and exits without evaluating. Per-command help is available via `jevlint review --help` and `jevlint audit --help`.
+`--rules` prints every bundled rule key, one per line (a JSON array with `--format json`), and exits without evaluating. It works with no subcommand and with `review` or `audit`. `--debug=files` prints the resolved scope file list and exits without evaluating. `--debug=timings` prints a per-rule timing table after the report. `--debug=cache` prints cache statistics. `--print-config` prints the effective config as JSON and exits without evaluating. Bare `jevlint --help` shows the general usage. Per-command help is available via `jevlint review --help` and `jevlint audit --help`.
 
 Produce machine-readable output:
 
