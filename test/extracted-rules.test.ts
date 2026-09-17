@@ -98,6 +98,9 @@ const extractedRules = [
   ["jev/no-sync-async-sibling-ambiguity", "function"],
   ["jev/no-leaky-internal-export", "abstraction"],
   ["jev/no-weak-crypto-primitive", "function"],
+  ["jev/no-disabled-tls-verification", "function"],
+  ["jev/no-dynamic-code-execution", "function"],
+  ["jev/no-locale-blind-ordering", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

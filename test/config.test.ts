@@ -134,6 +134,9 @@ describe("loadConfig", () => {
       "jev/no-sync-async-sibling-ambiguity",
       "jev/no-leaky-internal-export",
       "jev/no-weak-crypto-primitive",
+      "jev/no-disabled-tls-verification",
+      "jev/no-dynamic-code-execution",
+      "jev/no-locale-blind-ordering",
     ]);
   });
 

@@ -3308,5 +3308,86 @@ export const defaultConfig: JevLintConfig = {
       message: "This code protects data with a hash or cipher the industry no longer accepts.",
 
     },
+    "jev/no-disabled-tls-verification": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this connection disable the identity check that makes the encrypted channel trustworthy?",
+          inspect: "Compare each TLS bypass shape and its scope, the client imports, whether the option sits in test-only setup or a shipped request path, and the caller context in the supplied evidence.",
+          focus: "Judge whether the flag voids transport trust on a real connection, not whether TLS options are configured at all.",
+          decision_boundary: [
+            "A rejectUnauthorized false flag on a client used from production handlers is strong evidence of disabled verification.",
+            "The same flag inside a local-development-only harness never imported by shipped code weakens the claim.",
+            "A process-wide TLS-reject override weakens further because it disables verification for every connection in the process.",
+            "A checkServerIdentity override that skips verification voids the same guarantee as the boolean.",
+            "If no bypass shape reaches a real connection, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A connection disables certificate identity verification through a flag, an environment override, or an identity-check stub",
+            remedy: "Remove the bypass, pin the expected certificate or CA in test harnesses, and scope any insecure flag to local-only setup",
+          },
+          false: {
+            what: "Verification stays enabled, or the bypass lives only in test-only setup that shipped code never imports",
+          },
+        },
+      },
+      message: "This connection disables TLS identity verification.",
+    },
+    "jev/no-dynamic-code-execution": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this code compile text into behavior at runtime from a source no static reader can audit?",
+          inspect: "Compare each eval, Function, or vm sink with the compiled text's source traced toward caller input or module constants, the literal-versus-flowing shape, and any fixed-function dispatch map in the supplied evidence.",
+          focus: "Judge whether runtime compilation defeats static reading, not whether the surrounding code looks clever.",
+          decision_boundary: [
+            "An eval of a parameter arriving from a network handler is strong evidence of unauditable compilation.",
+            "A Function constructor over string literals in a test helper keeps every behavior on the page and scores low.",
+            "A closed template with no holes weakens the claim; a flowing identifier traced to request input strengthens it.",
+            "A same-module registry of fixed functions that callers could use instead confirms the sink was a choice.",
+            "If no eval, Function, or vm sink compiles text, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Runtime text is compiled into behavior from a source callers can shape",
+            remedy: "Replace the sink with a registry of fixed functions or a parser that never compiles caller text",
+          },
+          false: {
+            what: "The compiled text is a closed constant, or no compilation sink is present",
+          },
+        },
+      },
+      message: "This code compiles runtime text into behavior.",
+    },
+    "jev/no-locale-blind-ordering": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this ordering use code-unit comparison for human-visible text, so sort order is wrong across locales?",
+          inspect: "Compare each sort call and its comparator kind, the locale-awareness signals, the compared values' path toward user-visible surfaces, and sibling collator use in the supplied evidence.",
+          focus: "Judge whether human-visible ordering ignores locale, not whether a comparator exists.",
+          decision_boundary: [
+            "A bare sort over user display names rendered in a list is strong evidence of locale-blind ordering.",
+            "A collator or localeCompare with an explicit locale weakens the claim.",
+            "A bare sort over ASCII identifiers used only for deterministic snapshot output scores low.",
+            "A subtraction comparator orders numbers, not text; on string values it still ignores locale.",
+            "If every ordering path uses a locale-aware comparator, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Human-visible values are ordered by code-unit comparison without locale awareness",
+            remedy: "Sort display text with Intl.Collator or localeCompare using the user's locale",
+          },
+          false: {
+            what: "Ordering is locale-aware, numeric-only, or confined to internal deterministic output",
+          },
+        },
+      },
+      message: "This ordering compares human-visible text without locale awareness.",
+    },
   },
 };
