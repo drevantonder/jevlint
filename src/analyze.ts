@@ -44,12 +44,20 @@ interface AnalyzeCandidatesInput {
   changes: SourceFile[];
 }
 
+const EVALUATION_SCHEMA = "jevlint-semantic-judgment-v1";
+
 interface QuestionInstructions {
   [key: string]: JsonValue;
+  schema: typeof EVALUATION_SCHEMA;
+  ruleId: string;
   question: RuleConfig["question"]["instructions"];
   inspect: string;
   context: string;
   evidence: string | null;
+}
+
+function normalizeSource(source: string): string {
+  return source.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
 }
 
 function nearbySource(source: string, candidate: Candidate): string {
@@ -64,8 +72,8 @@ function evaluationCandidate(source: string, candidate: Candidate): EvaluationCa
   return {
     id: candidate.id,
     kind: candidate.kind,
-    source: candidate.source,
-    nearbySource: nearbySource(source, candidate),
+    source: normalizeSource(candidate.source),
+    nearbySource: normalizeSource(nearbySource(source, candidate)),
     startLine: candidate.startLine,
     endLine: candidate.endLine,
   };
@@ -107,6 +115,8 @@ async function analyzeCandidates(
 
       const questionId = `q${pending.size}`;
       const instructions: QuestionInstructions = {
+        schema: EVALUATION_SCHEMA,
+        ruleId,
         question: rule.question.instructions,
         inspect: `candidates[${candidateIndex}]`,
         context: `candidates[${candidateIndex}].nearbySource`,
