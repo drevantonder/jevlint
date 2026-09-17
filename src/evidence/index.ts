@@ -1,6 +1,7 @@
 import type { JsonValue } from "@typesafe-ai/sdk";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
+import { buildAnemicTypeEvidence } from "./anemic-type.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
@@ -15,6 +16,7 @@ import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
+import { buildInappropriateIntimacyEvidence } from "./inappropriate-intimacy.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
@@ -26,9 +28,11 @@ import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
+import { buildTemporaryFieldEvidence } from "./temporary-field.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
+import { buildUnwieldySignatureEvidence } from "./unwieldy-signature.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -162,6 +166,18 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildHiddenPartialFailureEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-unwieldy-signature") {
+    return { handled: true, evidence: buildUnwieldySignatureEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-inappropriate-intimacy") {
+    return { handled: true, evidence: buildInappropriateIntimacyEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-anemic-type") {
+    return { handled: true, evidence: buildAnemicTypeEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-temporary-field") {
+    return { handled: true, evidence: buildTemporaryFieldEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

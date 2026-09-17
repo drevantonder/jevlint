@@ -43,6 +43,10 @@ describe("loadConfig", () => {
       "jev/no-unsafe-retry",
       "jev/no-hidden-partial-failure",
       "jev/no-feature-envy",
+      "jev/no-unwieldy-signature",
+      "jev/no-inappropriate-intimacy",
+      "jev/no-anemic-type",
+      "jev/no-temporary-field",
     ]);
   });
 
