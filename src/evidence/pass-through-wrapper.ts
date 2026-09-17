@@ -72,6 +72,31 @@ function hasTopLevelBinding(program: Program, name: string): boolean {
   return false;
 }
 
+function hasTopLevelType(program: Program, name: string): boolean {
+  return program.body.some((statement) => {
+    const declaration = statement.type === "ExportNamedDeclaration"
+      ? statement.declaration
+      : statement;
+    return (
+      declaration?.type === "TSInterfaceDeclaration"
+      || declaration?.type === "TSTypeAliasDeclaration"
+    ) && declaration.id.name === name;
+  });
+}
+
+function parameterTypeName(
+  fn: FunctionNode,
+  targetRoot: string,
+  ownerSource: string,
+): string | undefined {
+  const typePattern = new RegExp(`^${targetRoot}\\s*:\\s*([A-Za-z_$][\\w$]*)`);
+  for (const parameter of fn.params) {
+    const match = typePattern.exec(ownerSource.slice(parameter.start, parameter.end).trim());
+    if (match?.[1]) return match[1];
+  }
+  return undefined;
+}
+
 export function buildPassThroughWrapperEvidence(
   candidate: Candidate,
   projectFiles: ProjectFile[],
@@ -90,12 +115,21 @@ export function buildPassThroughWrapperEvidence(
   const targetRoot = rootIdentifier(call.callee);
   if (!targetRoot) return undefined;
 
-  const importedTarget = moduleImports(parsed.program).find(({ local }) => local === targetRoot);
-  const targetFile = importedTarget
-    ? resolveModule(owner.filePath, importedTarget.source, projectFiles)
-    : hasTopLevelBinding(parsed.program, targetRoot) ? owner : undefined;
-  const ownership = importedTarget
-    ? importedTarget.source.startsWith(".") ? "project-module" : "external-package"
+  const imports = moduleImports(parsed.program);
+  const importedTarget = imports.find(({ local }) => local === targetRoot);
+  const targetTypeName = parameterTypeName(fn, targetRoot, owner.source);
+  const importedTargetType = targetTypeName === undefined
+    ? undefined
+    : imports.find(({ local }) => local === targetTypeName);
+  const targetImport = importedTarget ?? importedTargetType;
+  const targetFile = targetImport
+    ? resolveModule(owner.filePath, targetImport.source, projectFiles)
+    : hasTopLevelBinding(parsed.program, targetRoot)
+      || (targetTypeName !== undefined && hasTopLevelType(parsed.program, targetTypeName))
+      ? owner
+      : undefined;
+  const ownership = targetImport
+    ? targetImport.source.startsWith(".") ? "project-module" : "external-package"
     : targetFile ? "same-module" : "unresolved";
 
   return {
@@ -108,7 +142,7 @@ export function buildPassThroughWrapperEvidence(
     delegation: {
       call: owner.source.slice(call.start, call.end),
       targetRoot,
-      importedFrom: importedTarget?.source ?? null,
+      importedFrom: targetImport?.source ?? null,
       ownership,
       targetModule: targetFile
         ? { filePath: targetFile.filePath, source: targetFile.source.slice(0, 12_000) }

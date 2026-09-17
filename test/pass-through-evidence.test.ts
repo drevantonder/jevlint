@@ -64,6 +64,10 @@ describe("pass-through wrapper evidence", () => {
 
     expect(evidence).toMatchObject({
       function: { name: "readFoundation" },
+      delegation: {
+        ownership: "same-module",
+        targetModule: { filePath },
+      },
       callers: [{
         filePath,
         call: "readFoundation(operations, props, policy, true)",
