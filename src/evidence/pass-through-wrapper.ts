@@ -26,6 +26,7 @@ export type PassThroughWrapperEvidence = {
   delegation: {
     call: string;
     targetRoot: string;
+    targetType: string | null;
     importedFrom: string | null;
     ownership: "same-module" | "project-module" | "external-package" | "unresolved";
     targetModule: TargetModuleEvidence | null;
@@ -72,16 +73,22 @@ function hasTopLevelBinding(program: Program, name: string): boolean {
   return false;
 }
 
-function hasTopLevelType(program: Program, name: string): boolean {
-  return program.body.some((statement) => {
+function topLevelTypeSource(
+  program: Program,
+  name: string,
+  ownerSource: string,
+): string | undefined {
+  for (const statement of program.body) {
     const declaration = statement.type === "ExportNamedDeclaration"
       ? statement.declaration
       : statement;
-    return (
-      declaration?.type === "TSInterfaceDeclaration"
-      || declaration?.type === "TSTypeAliasDeclaration"
-    ) && declaration.id.name === name;
-  });
+    if (
+      (declaration?.type === "TSInterfaceDeclaration"
+        || declaration?.type === "TSTypeAliasDeclaration")
+      && declaration.id.name === name
+    ) return ownerSource.slice(declaration.start, declaration.end);
+  }
+  return undefined;
 }
 
 function parameterTypeName(
@@ -122,10 +129,12 @@ export function buildPassThroughWrapperEvidence(
     ? undefined
     : imports.find(({ local }) => local === targetTypeName);
   const targetImport = importedTarget ?? importedTargetType;
+  const localTargetTypeSource = targetTypeName === undefined
+    ? undefined
+    : topLevelTypeSource(parsed.program, targetTypeName, owner.source);
   const targetFile = targetImport
     ? resolveModule(owner.filePath, targetImport.source, projectFiles)
-    : hasTopLevelBinding(parsed.program, targetRoot)
-      || (targetTypeName !== undefined && hasTopLevelType(parsed.program, targetTypeName))
+    : hasTopLevelBinding(parsed.program, targetRoot) || localTargetTypeSource !== undefined
       ? owner
       : undefined;
   const ownership = targetImport
@@ -142,10 +151,14 @@ export function buildPassThroughWrapperEvidence(
     delegation: {
       call: owner.source.slice(call.start, call.end),
       targetRoot,
+      targetType: targetTypeName ?? null,
       importedFrom: targetImport?.source ?? null,
       ownership,
       targetModule: targetFile
-        ? { filePath: targetFile.filePath, source: targetFile.source.slice(0, 12_000) }
+        ? {
+            filePath: targetFile.filePath,
+            source: localTargetTypeSource ?? targetFile.source.slice(0, 12_000),
+          }
         : null,
     },
     callers: findFunctionCallers(candidate.filePath, name, projectFiles),

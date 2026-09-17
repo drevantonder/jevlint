@@ -66,7 +66,11 @@ describe("pass-through wrapper evidence", () => {
       function: { name: "readFoundation" },
       delegation: {
         ownership: "same-module",
-        targetModule: { filePath },
+        targetType: "Operations",
+        targetModule: {
+          filePath,
+          source: expect.stringContaining("type Operations<R>"),
+        },
       },
       callers: [{
         filePath,
