@@ -46,6 +46,10 @@ import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTemporaryFieldEvidence } from "./temporary-field.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildTypeCheckerEscapeEvidence } from "./type-checker-escape.js";
+import { buildTableConditionalEvidence } from "./table-shaped-conditional.js";
+import { buildSequentialStepSoupEvidence } from "./sequential-step-soup.js";
+import { buildMirroredDerivedStateEvidence } from "./mirrored-derived-state.js";
+import { buildConstructionInUseEvidence } from "./construction-in-use.js";
 import { buildTypeCodeDispatchEvidence } from "./type-code-dispatch.js";
 import { buildUnanchoredDomainCheckEvidence } from "./unanchored-domain-check.js";
 import { buildUnawaitedIterationWorkEvidence } from "./unawaited-iteration-work.js";
@@ -301,6 +305,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-temporary-field") {
     return { handled: true, evidence: buildTemporaryFieldEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-table-shaped-conditional") {
+    return { handled: true, evidence: buildTableConditionalEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-sequential-step-soup") {
+    return { handled: true, evidence: buildSequentialStepSoupEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mirrored-derived-state") {
+    return { handled: true, evidence: buildMirroredDerivedStateEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-construction-in-use") {
+    return { handled: true, evidence: buildConstructionInUseEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

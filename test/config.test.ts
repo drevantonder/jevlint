@@ -71,6 +71,10 @@ describe("loadConfig", () => {
       "jev/no-inappropriate-intimacy",
       "jev/no-anemic-type",
       "jev/no-temporary-field",
+      "jev/no-table-shaped-conditional",
+      "jev/no-sequential-step-soup",
+      "jev/no-mirrored-derived-state",
+      "jev/no-construction-in-use",
     ]);
   });
 

@@ -35,6 +35,10 @@ const extractedRules = [
   ["jev/no-inappropriate-intimacy", "function"],
   ["jev/no-anemic-type", "abstraction"],
   ["jev/no-temporary-field", "abstraction"],
+  ["jev/no-table-shaped-conditional", "function"],
+  ["jev/no-sequential-step-soup", "function"],
+  ["jev/no-mirrored-derived-state", "function"],
+  ["jev/no-construction-in-use", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
