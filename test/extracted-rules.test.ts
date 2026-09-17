@@ -204,6 +204,12 @@ const extractedRules = [
   ["jev/no-synonym-vocabulary", "abstraction"],
   ["jev/no-knob-multiplicity", "abstraction"],
   ["jev/no-boolean-fanout", "abstraction"],
+  ["jev/no-hand-rolled-uuid", "function"],
+  ["jev/no-hand-rolled-promise-timeout", "function"],
+  ["jev/no-hand-rolled-event-bus", "function"],
+  ["jev/no-hand-rolled-fetch-wrapper", "function"],
+  ["jev/no-fs-recursive-reinvent", "function"],
+  ["jev/no-hand-rolled-string-hash", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

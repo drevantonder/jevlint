@@ -221,6 +221,12 @@ import { buildDivergentInversesEvidence } from "./divergent-inverses.js";
 import { buildLopsidedErrorHandlingEvidence } from "./lopsided-error-handling.js";
 import { buildRepeatedPredicateEvidence } from "./repeated-predicate.js";
 import { buildOverloadedBooleanReturnEvidence } from "./overloaded-boolean-return.js";
+import { buildHandRolledUuidEvidence } from "./hand-rolled-uuid.js";
+import { buildHandRolledPromiseTimeoutEvidence } from "./hand-rolled-promise-timeout.js";
+import { buildHandRolledEventBusEvidence } from "./hand-rolled-event-bus.js";
+import { buildHandRolledFetchWrapperEvidence } from "./hand-rolled-fetch-wrapper.js";
+import { buildFsRecursiveReinventEvidence } from "./fs-recursive-reinvent.js";
+import { buildHandRolledStringHashEvidence } from "./hand-rolled-string-hash.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1261,6 +1267,24 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-boolean-fanout") {
     return { handled: true, evidence: buildBooleanFanoutEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-uuid") {
+    return { handled: true, evidence: buildHandRolledUuidEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-promise-timeout") {
+    return { handled: true, evidence: buildHandRolledPromiseTimeoutEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-event-bus") {
+    return { handled: true, evidence: buildHandRolledEventBusEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-fetch-wrapper") {
+    return { handled: true, evidence: buildHandRolledFetchWrapperEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-fs-recursive-reinvent") {
+    return { handled: true, evidence: buildFsRecursiveReinventEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-string-hash") {
+    return { handled: true, evidence: buildHandRolledStringHashEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

@@ -6113,6 +6113,169 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "Several same-stem booleans enumerate states of an unnamed discriminant.",
+    },
+
+    "jev/no-hand-rolled-uuid": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this id generator reimplement crypto.randomUUID with no demonstrated need for a different id shape?",
+          inspect: "Compare the random assembly calls and template shape with the id-shape classification, any fixed prefix, randomUUID availability in the module, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local generator is gratuitous duplication of the platform capability for ordinary ids, not whether its randomness is strong enough for secrets.",
+          decision_boundary: [
+            "A v4-shaped random string assembled from Math.random for correlation ids on a runtime with randomUUID in scope is strong evidence of reimplementation.",
+            "Orderable, short, or prefixed ids whose shape the callers sort on or expose, with tests pinning that shape, weaken the claim toward a demonstrated difference.",
+            "A fixed namespace prefix or custom alphabet the replacement cannot express weakens the claim further.",
+            "Values minted for adversary-facing secrets belong to the token-strength question, not this one; if the id guards a secret, answer no.",
+            "If no id-shaped assembly reaches a non-security consumer, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An id generator reimplements crypto.randomUUID for ordinary ids with no demonstrated need for its differences",
+            remedy: "Call crypto.randomUUID for v4-shaped ids, or document the shape requirement the platform call cannot satisfy",
+          },
+          false: {
+            what: "The id shape is orderable, short, or prefixed by a demonstrated caller need, or the value guards an adversary-facing secret",
+          },
+        },
+      },
+      message: "This id generator reimplements crypto.randomUUID.",
+    },
+    "jev/no-hand-rolled-promise-timeout": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this timeout race reimplement AbortSignal.timeout with no demonstrated need for its differences?",
+          inspect: "Compare each setTimeout race leg and its timeout wording with the cleanup handling, whether an abort signal is already threaded to the task, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the manual deadline mechanism duplicates the platform timeout, not whether the attempt carries any deadline at all.",
+          decision_boundary: [
+            "A manual setTimeout race around a fetch call that natively accepts a signal, with no signal threaded, is strong evidence of reimplementation.",
+            "Cleanup semantics beyond abort, such as resource release the signal path cannot run, weaken the claim toward a demonstrated difference.",
+            "A task whose API accepts no signal and a legacy engine floor that predates AbortSignal.timeout weaken the claim further.",
+            "A single attempt with no deadline mechanism at all belongs to the unbounded-wait question, not this one.",
+            "If no manual timeout race reaches a signal-capable task, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A timeout race reimplements AbortSignal.timeout with no demonstrated need for its differences",
+            remedy: "Pass AbortSignal.timeout to the signal-capable task, or document the cleanup the signal path cannot express",
+          },
+          false: {
+            what: "The deadline carries cleanup beyond abort, the task accepts no signal, or no manual timeout race exists",
+          },
+        },
+      },
+      message: "This timeout race reimplements AbortSignal.timeout.",
+    },
+    "jev/no-hand-rolled-event-bus": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this pub/sub wrapper reimplement EventTarget with no demonstrated need for its differences?",
+          inspect: "Compare the listener registry shape and subscribe, unsubscribe, and emit methods with any wildcard, replay, or backpressure features, an installed emitter dependency, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local bus duplicates platform event machinery, not whether the abstraction adds ceremony.",
+          decision_boundary: [
+            "A string-topic bus over a Map-of-Sets registry with a handful of subscribers and no advanced features is strong evidence of reimplementation.",
+            "Wildcard topics, replay, or backpressure the subscribers demonstrably use weaken the claim toward a demonstrated difference.",
+            "Typed-payload contracts the subscribers rely on weaken the claim further.",
+            "A wrapper that merely forwards to EventTarget or an installed emitter without reimplementing the registry answers the question negatively.",
+            "If no listener registry with subscribe and emit reaches real subscribers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A pub/sub wrapper reimplements EventTarget with no demonstrated need for its differences",
+            remedy: "Consume EventTarget or the installed emitter directly, or document the wildcard, replay, or typing feature the platform call cannot satisfy",
+          },
+          false: {
+            what: "Subscribers demonstrably use wildcard, replay, backpressure, or typed payloads, or no listener registry exists",
+          },
+        },
+      },
+      message: "This pub/sub wrapper reimplements EventTarget.",
+    },
+    "jev/no-hand-rolled-fetch-wrapper": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this transport helper rebuild what global fetch already does with no demonstrated need for lower-level control?",
+          inspect: "Compare the node:http request assembly and chunk handling with any proxy, agent, socket, or streaming configuration, the JSON helper shape, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the helper duplicates the platform transport, not whether its contract hides I/O cost.",
+          decision_boundary: [
+            "A simple GET or POST JSON helper assembled over node:https chunk listeners on a runtime with global fetch is strong evidence of reimplementation.",
+            "Proxy agents, custom socket handling, or streaming backpressure the call sites configure weaken the claim toward a demonstrated need for control.",
+            "Keep-alive or connection-pool tuning the callers demonstrably rely on weakens the claim further.",
+            "A correctly named wrapper that delegates to global fetch answers the question negatively.",
+            "If no low-level request assembly reaches a plain JSON consumer, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A transport helper rebuilds what global fetch already does with no demonstrated need for lower-level control",
+            remedy: "Delegate to global fetch, or document the proxy, socket, or streaming control the platform call cannot satisfy",
+          },
+          false: {
+            what: "Call sites configure proxy, socket, keep-alive, or streaming behavior the platform call cannot express",
+          },
+        },
+      },
+      message: "This transport helper rebuilds what global fetch already does.",
+    },
+    "jev/no-fs-recursive-reinvent": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this recursive walk reimplement the node:fs recursive options with no demonstrated extra semantics?",
+          inspect: "Compare the readdir traversal or exists-check chain and the self-recursion with any filtering, dry-run reporting, or per-entry error tolerance, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local recursion duplicates the platform recursive option, not whether similar logic exists elsewhere in the repo.",
+          decision_boundary: [
+            "A plain recursive remove or make with no filter, dry run, or error tolerance is strong evidence of reimplementation.",
+            "Keep-glob filtering, dry-run reporting, or per-entry error tolerance the callers rely on weaken the claim toward demonstrated extra semantics.",
+            "A walk that computes per-entry results rather than merely removing or creating weakens the claim further.",
+            "A call that already passes the recursive option answers the question negatively.",
+            "If no recursive traversal or exists-check chain reaches a plain remove or make, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A recursive walk reimplements the node:fs recursive options with no demonstrated extra semantics",
+            remedy: "Pass the recursive option to the node:fs call, or document the filtering, dry-run, or tolerance behavior the option cannot satisfy",
+          },
+          false: {
+            what: "Callers rely on filtering, dry-run reporting, per-entry tolerance, or per-entry results, or the recursive option is already used",
+          },
+        },
+      },
+      message: "This recursive walk reimplements the node:fs recursive options.",
+    },
+    "jev/no-hand-rolled-string-hash": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this hash function reimplement available hashing for non-security bucketing with no demonstrated need for its exact values?",
+          inspect: "Compare the bitwise fold loop and algorithm family with the bucketing callers, any test pinning of exact values, benchmark or hot-path notes, node:crypto availability, and seed support in the supplied evidence.",
+          focus: "Judge whether the local hash gratuitously duplicates an available primitive for non-security use, not whether the digest is strong enough to protect data.",
+          decision_boundary: [
+            "A djb2 fold over char codes for cache-bucket keys beside node:crypto usage, with no pinning or benchmark note, is strong evidence of gratuitous reimplementation.",
+            "A hot-path benchmark comment, stable cross-language values a contract pins, or seedable hashing the replacement lacks weaken the claim toward a demonstrated need.",
+            "Exact values pinned by tests the callers depend on weaken the claim further.",
+            "Digests that guard passwords, integrity checks, or authentication decisions belong to the strength question, not this one; if the digest sits in a security position, answer no.",
+            "If the fold never serves a non-security consumer, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A hash function reimplements available hashing for non-security bucketing with no demonstrated need for its exact values",
+            remedy: "Hash with node:crypto or the installed hash dependency, or document the pinned values, benchmark, or seed behavior the replacement cannot satisfy",
+          },
+          false: {
+            what: "Tests pin exact values, a benchmark justifies the hot path, seeding is exercised, or the digest guards a security decision",
+          },
+        },
+      },
+      message: "This hash function reimplements available hashing for non-security bucketing.",
 
     },
   },

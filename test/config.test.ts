@@ -240,6 +240,12 @@ describe("loadConfig", () => {
       "jev/no-synonym-vocabulary",
       "jev/no-knob-multiplicity",
       "jev/no-boolean-fanout",
+      "jev/no-hand-rolled-uuid",
+      "jev/no-hand-rolled-promise-timeout",
+      "jev/no-hand-rolled-event-bus",
+      "jev/no-hand-rolled-fetch-wrapper",
+      "jev/no-fs-recursive-reinvent",
+      "jev/no-hand-rolled-string-hash",
     ]);
   });
 
