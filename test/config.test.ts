@@ -158,6 +158,10 @@ describe("loadConfig", () => {
       "jev/no-unclosed-handle",
       "jev/no-bespoke-crypto-construction",
       "jev/no-duplicated-style-object",
+      "jev/no-hand-rolled-date-format",
+      "jev/no-hand-rolled-relative-time",
+      "jev/no-hand-rolled-number-format",
+      "jev/no-hand-rolled-url-query",
     ]);
   });
 

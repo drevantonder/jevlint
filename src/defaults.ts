@@ -3942,5 +3942,109 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-hand-rolled-date-format": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this date assembly reimplement Intl.DateTimeFormat with no demonstrated need for pinned output?",
+          inspect: "Compare the extracted date-part reads and separator assembly with the pinned-output signals, the Intl shelf elsewhere in the repository, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the local assembly is gratuitous locale machinery or a pinned format a contract depends on.",
+          decision_boundary: [
+            "A user-visible date built from getFullYear, getMonth, and getDate with padStart and separators, while no snapshot or wire contract pins the exact string, is strong evidence of reimplemented locale machinery.",
+            "A snapshot, golden file, or wire-format assertion on the exact string answers the question negatively, as does a non-Gregorian or custom calendar Intl cannot express.",
+            "Output already routed through Intl.DateTimeFormat weakens the claim even when part reads remain nearby.",
+            "If the evidence does not establish user-facing display versus a pinned serialized form, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function assembles display dates from parts while no contract pins the exact output",
+            remedy: "Format the date with Intl.DateTimeFormat or pin the wire format explicitly with a round-trip test",
+          },
+          false: {
+            what: "A snapshot or wire contract pins the exact string, the calendar is beyond Intl, or the display versus serialized position is unclear",
+          },
+        },
+      },
+      message: "This date assembly reimplements Intl.DateTimeFormat without a pinned-output need.",
+    },
+    "jev/no-hand-rolled-relative-time": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this time-ago ladder reimplement Intl.RelativeTimeFormat with no demonstrated need for its exact copy?",
+          inspect: "Compare the extracted time-unit ladder and diff signals with the pinned-copy signals, the Intl shelf elsewhere in the repository, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the English-only ladder serves locales Intl could serve, or product copy a contract pins.",
+          decision_boundary: [
+            "An English-only minute, hour, day, and week ladder in a product serving several locales, with no copy contract, is strong evidence of reimplemented relative-time machinery.",
+            "Product copy pinned by tests, such as yesterday versus 1 day ago, or brand plural rules Intl gets wrong, answers the question negatively.",
+            "Output already routed through Intl.RelativeTimeFormat weakens the claim even when unit literals remain nearby.",
+            "If the evidence does not establish the locale reach or the copy contract, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function ladders time units into hard-coded copy with no pinned-copy justification",
+            remedy: "Render relative time with Intl.RelativeTimeFormat or pin the product copy with explicit copy tests",
+          },
+          false: {
+            what: "Tests pin the exact wording, brand voice needs copy Intl cannot produce, or locale reach is not established",
+          },
+        },
+      },
+      message: "This time-ago ladder reimplements Intl.RelativeTimeFormat without a copy need.",
+    },
+    "jev/no-hand-rolled-number-format": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this number assembly reimplement Intl.NumberFormat with no demonstrated need for pinned output?",
+          inspect: "Compare the extracted formatting techniques and currency symbols with the pinned-output signals, the Intl shelf elsewhere in the repository, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the regex and prefix machinery formats display values Intl could format, or a serialized form a parser depends on.",
+          decision_boundary: [
+            "Display currency built by thousand-separator regex or manual symbol prefixing, while no test or parser pins the exact string, is strong evidence of reimplemented formatting machinery.",
+            "A pinned wire format a parser depends on, or compact and percent forms asserted in tests, answers the question negatively.",
+            "Output already routed through Intl.NumberFormat weakens the claim even when toFixed calls remain nearby.",
+            "If the evidence does not establish user-facing display versus a pinned serialized form, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function assembles display numbers from regex and symbol parts while no contract pins the exact output",
+            remedy: "Format the number with Intl.NumberFormat or pin the wire format explicitly with a round-trip test",
+          },
+          false: {
+            what: "A parser or test pins the exact string, or the display versus serialized position is unclear",
+          },
+        },
+      },
+      message: "This number assembly reimplements Intl.NumberFormat without a pinned-output need.",
+    },
+    "jev/no-hand-rolled-url-query": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this query parse or build reimplement URLSearchParams with no demonstrated need for syntax it cannot express?",
+          inspect: "Compare the extracted split and encode-join signals with the nested-syntax support, the tested shape signals, the URLSearchParams shelf, and the repository callers in the supplied evidence.",
+          focus: "Judge whether flat key and value handling could use the platform, or callers demonstrably pass bracket-nested shapes.",
+          decision_boundary: [
+            "Flat key and value parsing by split on ampersand and equals with manual encoding is strong evidence of reimplemented query machinery.",
+            "Bracket-nested or array syntax, such as a[]=1 or a[b]=2, that callers demonstrably pass with tests on that shape answers the question negatively.",
+            "Query work already routed through URLSearchParams weakens the claim even when split calls remain nearby.",
+            "If the evidence does not establish the shapes callers actually pass, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function parses or builds flat query strings by hand while callers show no shape the platform cannot express",
+            remedy: "Parse and build the query with URLSearchParams or pin the nested shape with explicit shape tests",
+          },
+          false: {
+            what: "Callers demonstrably pass nested shapes with tests, the work already uses URLSearchParams, or caller shapes are not established",
+          },
+        },
+      },
+      message: "This query handling reimplements URLSearchParams without a shape need.",
+    },
   },
 };
