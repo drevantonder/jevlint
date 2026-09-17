@@ -5189,5 +5189,109 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This change writes the implementation and its exam together with no pre-existing anchor.",
     },
+    "jev/no-change-stranded-code": {
+      scope: "change",
+      question: {
+        instructions: {
+          question: "Does this change strand previously-live code — a retained function or module whose last in-repo callers or importers disappear inside this diff — that should have been removed in the same change?",
+          inspect: "Compare the stranded functions and their before/after caller counts, the co-added successors with migrated call sites, the stranded modules with lost importers, and the coverage metadata in the supplied evidence.",
+          focus: "Judge whether the retained code lost its last reason to exist inside this diff, not whether the new code duplicates logic elsewhere.",
+          decision_boundary: [
+            "A function dropping from live callers to zero in a diff that adds a same-responsibility successor with migrated call sites is strong evidence of stranded code.",
+            "An exported public API with possible external callers, a documented deprecation window, or a successor covering only part of the old behavior weakens the claim toward deliberate retention.",
+            "jev/no-duplicated-logic scores the new-copy side with remedy reuse the old; this scores the kept-dead side with remedy delete the old on caller-delta evidence.",
+            "If the coverage metadata shows unanalyzed files needed for the judgment, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Previously-live code lost its last in-repo callers inside this change while a replacement stays beside it",
+            remedy: "Delete the stranded implementation in the same change",
+          },
+          false: {
+            what: "The retained code still serves callers, serves external consumers, awaits a deprecation window, or lacks enough caller-delta evidence",
+          },
+        },
+      },
+      message: "This change strands previously-live code with no remaining callers.",
+    },
+    "jev/no-impossible-error-branch": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this error-handling branch guard a failure its repo-visible callee cannot produce, making the branch untestable weight?",
+          inspect: "Compare each handler's guarded calls with the callee throw and rejection findings, the ownership and analyzability of each callee, and the boundary position in the supplied evidence.",
+          focus: "Judge whether the guarded failure can actually occur in this repository, not whether defensive handling is virtuous in general.",
+          decision_boundary: [
+            "A single repo-visible callee, fully analyzable with zero throw or rejection paths, guarded far from any trust boundary, is strong evidence of an impossible branch.",
+            "External or package callees, dynamic dispatch, unanalyzable targets, or a boundary position where callers are untrusted weaken the claim toward prudent handling.",
+            "jev/no-unreachable-guard scores parameter guards on caller-value evidence; this scores callee capability by inspecting callee bodies.",
+            "If no guarded callee is analyzable, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The branch guards a failure no repo-visible callee path can produce",
+            remedy: "Remove the dead branch or narrow it to the failure the callee can actually produce",
+          },
+          false: {
+            what: "A callee can produce the guarded failure, the callee is external or unanalyzable, or the boundary position justifies the handling",
+          },
+        },
+      },
+      message: "This error branch guards a failure its callee cannot produce.",
+    },
+    "jev/no-retained-superseded-implementation": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this implementation marked superseded by its owning module, with no live in-repo callers, yet retained beside its successor instead of removed?",
+          inspect: "Compare the supersede marker and named successor with the caller count, the symbol importers, and the successor-in-use files in the supplied evidence.",
+          focus: "Judge whether the old implementation remains only as history beside a live successor, not whether callers still use the old member.",
+          decision_boundary: [
+            "A marked implementation with zero in-repo callers while all siblings use the named successor is strong evidence of a retained corpse.",
+            "A package-entry export with possible external consumers, or callers the scan cannot see such as dynamic imports or plugin registries, weakens the claim toward deliberate retention.",
+            "jev/no-superseded-api-use scores the call side with callers still on the old member; this scores the retained-implementation side needing the marker-plus-zero-caller conjunction.",
+            "If the marker is absent or live callers remain, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A marked-superseded implementation with no live callers remains beside its in-use successor",
+            remedy: "Delete the superseded implementation now that its successor carries the callers",
+          },
+          false: {
+            what: "The marker is absent, callers remain, external consumers may rely on it, or the successor is not established",
+          },
+        },
+      },
+      message: "This superseded implementation has no callers and should be removed.",
+    },
+    "jev/no-doubled-pure-helper": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test double a side-effect-free repo helper it could call directly, maintaining a double that verifies nothing the real helper would not?",
+          inspect: "Compare each doubled helper with its purity signals and source, the canned mock values, and the real subject calls the test still makes in the supplied evidence.",
+          focus: "Judge whether the double replaces a deterministic helper the test could exercise directly, not whether the test doubles its subject.",
+          decision_boundary: [
+            "A pure leaf helper such as a string or key transform, mocked to return canned values identical to real outputs while the subject stays real, is strong evidence of a needless double.",
+            "A helper with nondeterminism or clock dependence, separate ownership or contract, or a mock deliberately pinning a failure mode the test needs weakens the claim toward a justified seam.",
+            "jev/no-mock-everything scores doubling the subject; this scores doubling a pure helper while the subject stays real on purity evidence.",
+            "If no doubled helper is analyzable or purity is unresolved, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test maintains a double of a pure helper it could call directly while asserting against the real subject",
+            remedy: "Call the real helper and drop the double",
+          },
+          false: {
+            what: "The helper is impure or clock-dependent, the seam pins a needed failure mode, or no analyzable double is established",
+          },
+        },
+      },
+      message: "This test doubles a pure helper it could call directly.",
+    },
   },
 };

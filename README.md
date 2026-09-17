@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- One hundred ninety-four bundled Jev rules
+- One hundred ninety-eight bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -58,6 +58,7 @@ The bundled Jev rules judge:
 - single-concept changes scattered across many modules
 - exported operations whose contract is stated nowhere callers can find it
 - functions that reimplement logic already owned elsewhere
+- changes that strand previously-live code with no remaining callers beside its replacement
 - branches that dispatch on a domain type code its variants should own
 - validators that reimplement an installed schema dependency
 - retry loops that reimplement an installed retry dependency
@@ -161,6 +162,7 @@ The bundled Jev rules judge:
 - tests that wait a fixed duration instead of awaiting a condition
 - tests that decide what to check with branches or loops
 - tests that verify their own doubles rather than the subject
+- tests that double a pure helper they could call directly
 - fixtures that duplicate a setup maintained elsewhere while the copies disagree
 - feature flags that no longer gate live behavior while readers still reason through both arms
 - interactive elements that expose no accessible name to assistive technology
@@ -174,6 +176,7 @@ The bundled Jev rules judge:
 - configuration read through a new channel while the repository already owns one
 - new flags gating behavior with no named owner, tracked ticket, or expiry note
 - calls that use an API the owning module marks superseded while siblings use the successor
+- superseded implementations with no remaining callers that stay beside their successor
 - imports that name a package no manifest in the repository declares
 - tests that pin internal interactions instead of the observable outcome
 - changes that add a dependency for a single trivial call site
@@ -327,3 +330,4 @@ pnpm build
 ```
 
 The tests were written before the implementation. The normal suite uses deterministic evaluator fakes and does not spend TypeSafe credits. `pnpm test:live` loads the key through Varlock and checks the rule fixtures against the real Jev API.
+e key through Varlock and checks the rule fixtures against the real Jev API.

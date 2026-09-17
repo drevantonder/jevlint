@@ -169,6 +169,10 @@ const extractedRules = [
   ["jev/no-unverified-mock-contract", "function"],
   ["jev/no-implementation-mirrored-expectation", "function"],
   ["jev/no-self-authored-exam", "change"],
+  ["jev/no-change-stranded-code", "change"],
+  ["jev/no-impossible-error-branch", "function"],
+  ["jev/no-retained-superseded-implementation", "function"],
+  ["jev/no-doubled-pure-helper", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

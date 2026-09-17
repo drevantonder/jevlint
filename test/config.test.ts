@@ -205,6 +205,10 @@ describe("loadConfig", () => {
       "jev/no-unverified-mock-contract",
       "jev/no-implementation-mirrored-expectation",
       "jev/no-self-authored-exam",
+      "jev/no-change-stranded-code",
+      "jev/no-impossible-error-branch",
+      "jev/no-retained-superseded-implementation",
+      "jev/no-doubled-pure-helper",
     ]);
   });
 
