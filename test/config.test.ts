@@ -119,6 +119,11 @@ describe("loadConfig", () => {
       "jev/no-positional-extension-drift",
       "jev/no-mixed-absence-convention",
       "jev/no-shared-mutable-default",
+      "jev/no-blocking-event-loop-call",
+      "jev/no-unguarded-async-init",
+      "jev/no-promise-combinator-mismatch",
+      "jev/no-orphaned-timer",
+      "jev/no-unsynchronized-shared-memory",
     ]);
   });
 

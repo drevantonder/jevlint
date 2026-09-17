@@ -33,6 +33,11 @@ import { buildInconsistentErrorContractEvidence } from "./inconsistent-error-con
 import { buildMixedAbsenceConventionEvidence } from "./mixed-absence-convention.js";
 import { buildPositionalExtensionDriftEvidence } from "./positional-extension-drift.js";
 import { buildSharedMutableDefaultEvidence } from "./shared-mutable-default.js";
+import { buildBlockingEventLoopCallEvidence } from "./blocking-event-loop-call.js";
+import { buildUnguardedAsyncInitEvidence } from "./unguarded-async-init.js";
+import { buildPromiseCombinatorMismatchEvidence } from "./promise-combinator-mismatch.js";
+import { buildOrphanedTimerEvidence } from "./orphaned-timer.js";
+import { buildUnsynchronizedSharedMemoryEvidence } from "./unsynchronized-shared-memory.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
@@ -559,6 +564,27 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildSharedMutableDefaultEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-blocking-event-loop-call") {
+    return { handled: true, evidence: buildBlockingEventLoopCallEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unguarded-async-init") {
+    return { handled: true, evidence: buildUnguardedAsyncInitEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-promise-combinator-mismatch") {
+    return {
+      handled: true,
+      evidence: buildPromiseCombinatorMismatchEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-orphaned-timer") {
+    return { handled: true, evidence: buildOrphanedTimerEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unsynchronized-shared-memory") {
+    return {
+      handled: true,
+      evidence: buildUnsynchronizedSharedMemoryEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

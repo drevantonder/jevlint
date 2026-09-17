@@ -2905,5 +2905,142 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This default value is shared across calls and mutated per call.",
     },
+
+    "jev/no-blocking-event-loop-call": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this call block the single event loop inside a serving path, stalling every concurrent request for its duration?",
+          inspect: "Compare each synchronous sink call with the function's serving context, the module's mitigation evidence, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the blocking call runs where concurrent requests are served, not whether a synchronous API appears at all.",
+          decision_boundary: [
+            "A synchronous I/O, crypto, or process call such as readFileSync or execSync inside a route handler or server callback is strong evidence of loop blocking.",
+            "The same call inside a build script, CLI, migration, or test setup with no serving callers weakens the claim.",
+            "An async variant, worker offload, or size cap already used for the same work weakens the claim.",
+            "JSON parsing of a small closed literal and regex tests over bounded constants are not loop-blocking sinks.",
+            "If the serving context or the blocking shape of the call cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A synchronous sink runs inside a serving path with no worker, async variant, or bound keeping it off the event loop",
+            remedy: "Use the async variant, move the work to a worker, or bound the input so serving never blocks",
+          },
+          false: {
+            what: "The call runs in a script or offline context, mitigation already keeps it off the loop, or the evidence does not establish serving reach",
+          },
+        },
+      },
+      message: "This call blocks the event loop inside a serving path.",
+    },
+    "jev/no-unguarded-async-init": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Can this lazily initialized value be initialized twice under concurrent first use, because the in-flight attempt is not shared?",
+          inspect: "Compare each memoize-on-empty guard and its awaited initialization with the in-flight sharing evidence, the binding scope, and the concurrent-entry callers in the supplied evidence.",
+          focus: "Judge whether two concurrent first entries can both run the initializer, not whether lazy initialization appears at all.",
+          decision_boundary: [
+            "A memoize guard such as if (!conn) conn = await connect() reachable from concurrent handlers with no shared pending slot is strong evidence of double initialization.",
+            "An in-flight promise slot that concurrent entries await before building weakens the claim.",
+            "A pure, idempotent initializer with no observable side effects weakens the claim even when the guard shape matches.",
+            "A function-local binding recreated on every entry cannot be shared and is not a single-flight smell.",
+            "If concurrent first entry or the absence of sharing cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Concurrent first use can run the initializer twice because only the settled value is memoized and the pending attempt is not shared",
+            remedy: "Store the in-flight promise and share it across concurrent entries until it settles",
+          },
+          false: {
+            what: "The pending attempt is already shared, the initializer is side-effect free, the binding is per-entry, or concurrency is not established",
+          },
+        },
+      },
+      message: "This lazy initializer can run twice under concurrent first use.",
+    },
+    "jev/no-promise-combinator-mismatch": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this promise combinator discard work or failures the surrounding flow needs: fail-fast over legs whose partial results matter, or first-settled over legs needing cleanup?",
+          inspect: "Compare the combinator choice with leg heterogeneity, per-leg capture, how the result is consumed downstream, and the cleanup evidence in the supplied evidence.",
+          focus: "Judge whether the fail-fast or first-settled choice itself loses needed work, not whether a leg can fail.",
+          decision_boundary: [
+            "Promise.all over heterogeneous legs whose outcomes are consumed per leg, or over legs holding connections or locks, is strong evidence of a mismatch.",
+            "Promise.race without cancellation or release of the losing legs is strong evidence of a mismatch when losers hold resources.",
+            "Homogeneous reads consumed only as a complete tuple weaken the claim.",
+            "Per-leg catch handlers, allSettled with status consumption, and abort or cleanup of losers weaken the claim.",
+            "If downstream consumption or resource holding cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The combinator discards completed legs, per-leg outcomes, or losing legs that the flow still needs or must release",
+            remedy: "Capture per-leg outcomes with allSettled or per-leg handlers, or cancel and release legs the winner does not need",
+          },
+          false: {
+            what: "The legs are homogeneous, consumed only together, already captured per leg, or cleaned up on settle",
+          },
+        },
+      },
+      message: "This combinator discards leg work or failures the flow needs.",
+    },
+    "jev/no-orphaned-timer": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this timer keep firing or holding resources after its owning lifecycle ends, because no teardown releases it?",
+          inspect: "Compare each timer creation with its stored handle, the clear or unref evidence, the module teardown, and the owner-creation callers in the supplied evidence.",
+          focus: "Judge whether the schedule itself outlives its owner, not whether the callback is awaited or handled.",
+          decision_boundary: [
+            "A repeating timer created per request, connection, or render with no clearInterval in any teardown path is strong evidence of an orphaned timer.",
+            "A stored handle cleared in dispose, close, unmount, or an effect cleanup weakens the claim.",
+            "A one-shot timeout with unref in a short-lived script weakens the claim.",
+            "An unstored handle that no teardown can reach strengthens the claim for repeating timers.",
+            "If the owner lifecycle or the absence of teardown cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The timer schedule outlives its owner because no teardown path clears or unrefs its handle",
+            remedy: "Store the handle and clear or unref it in the owner's dispose, close, or cleanup path",
+          },
+          false: {
+            what: "A teardown path releases the handle, the timer is one-shot and unrefed, or the lifecycle evidence does not establish orphaning",
+          },
+        },
+      },
+      message: "This timer outlives its owner because no teardown releases it.",
+    },
+    "jev/no-unsynchronized-shared-memory": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this code share memory between workers without atomic access, so readers can observe torn or stale writes?",
+          inspect: "Compare each shared-buffer view and its plain accesses with the Atomics evidence, the worker-sharing sites, and the message-passing alternative in the supplied evidence.",
+          focus: "Judge cross-worker memory visibility, not single-thread module sharing.",
+          decision_boundary: [
+            "Plain indexed writes such as view[0] += 1 on a buffer posted to workers with no Atomics calls is strong evidence of unsynchronized sharing.",
+            "Atomics load, store, wait, or notify on the shared view weakens the claim.",
+            "A buffer written once during setup then used read-only weakens the claim.",
+            "A message-passing alternative already coordinating the same data weakens the claim.",
+            "If worker sharing or the absence of atomic access cannot be established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Workers share memory through plain reads and writes with no atomic coordination, exposing torn or stale values",
+            remedy: "Access the shared view only through Atomics operations or coordinate the data with message passing",
+          },
+          false: {
+            what: "Access is atomic, read-only after setup, confined to one thread, coordinated by messages, or worker sharing is not established",
+          },
+        },
+      },
+      message: "This shared memory is accessed across workers without atomic coordination.",
+
+    },
   },
 };
