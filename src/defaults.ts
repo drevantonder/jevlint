@@ -657,6 +657,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "Bare primitives erase distinct domain meanings in this API.",
     },
+    "jev/no-domain-policy-in-adapter": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this adapter make a business policy decision that belongs in the domain or application layer?",
+          inspect: "Compare the extracted decisions with the adapter path, imports, related modules, function role, and repository consumers in the supplied evidence.",
+          focus: "Judge who owns the decision. Distinguish choosing a business outcome from translating an outcome or satisfying a provider, protocol, or storage constraint.",
+          decision_boundary: [
+            "Declining a payment in a provider gateway based on customer age and charge amount is strong evidence that business policy lives in the adapter.",
+            "Mapping an already-decided domain result to an HTTP status, provider field, persistence record, or message shape is adapter translation, not domain policy.",
+            "Retry rules, provider limits, wire compatibility, transaction handling, and database error translation may belong to the adapter.",
+            "A branch in an adapter is never sufficient by itself; identify the owner of the condition and outcome.",
+            "If the branch could be either an upstream decision mapping or a new business choice and the evidence does not resolve it, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The adapter originates a business eligibility, pricing, routing, entitlement, or lifecycle decision rather than translating one",
+            remedy: "Move the policy to a domain or application-owned decision and pass its result into the adapter",
+          },
+          false: {
+            what: "The branch translates an existing decision, handles a technical constraint, or lacks enough evidence to assign policy ownership",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This adapter owns domain policy.",
+    },
     "jev/no-feature-envy": {
       scope: "function",
       question: {

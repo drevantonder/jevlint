@@ -34,6 +34,7 @@ describe("loadConfig", () => {
       "jev/no-transport-coupled-domain",
       "jev/no-persistence-model-leak",
       "jev/no-interchangeable-domain-primitives",
+      "jev/no-domain-policy-in-adapter",
       "jev/no-feature-envy",
     ]);
   });

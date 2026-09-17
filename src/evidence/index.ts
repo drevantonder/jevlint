@@ -7,6 +7,7 @@ import { buildConditionallyValidStateEvidence } from "./conditionally-valid-stat
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
+import { buildDomainPolicyInAdapterEvidence } from "./domain-policy-in-adapter.js";
 import { buildGenericMagicEvidence } from "./generic-magic.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -117,6 +118,12 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildInterchangeableDomainPrimitivesEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-domain-policy-in-adapter") {
+    return {
+      handled: true,
+      evidence: buildDomainPolicyInAdapterEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

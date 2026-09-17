@@ -2,6 +2,7 @@ import type { Diagnostic } from "./types.js";
 
 const ACCIDENTAL_COMPLEXITY_PRIORITY = new Map<string, number>([
   ["jev/no-complexity-displacement", 100],
+  ["jev/no-domain-policy-in-adapter", 96],
   ["jev/no-transport-coupled-domain", 95],
   ["jev/no-persistence-model-leak", 95],
   ["jev/no-interchangeable-domain-primitives", 90],
