@@ -226,6 +226,7 @@ import { buildHandRolledPromiseTimeoutEvidence } from "./hand-rolled-promise-tim
 import { buildHandRolledEventBusEvidence } from "./hand-rolled-event-bus.js";
 import { buildHandRolledFetchWrapperEvidence } from "./hand-rolled-fetch-wrapper.js";
 import { buildFsRecursiveReinventEvidence } from "./fs-recursive-reinvent.js";
+import { buildNonExhaustiveDomainHandlingEvidence } from "./non-exhaustive-domain-handling.js";
 import { buildHandRolledStringHashEvidence } from "./hand-rolled-string-hash.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
@@ -1285,6 +1286,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-string-hash") {
     return { handled: true, evidence: buildHandRolledStringHashEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-non-exhaustive-domain-handling") {
+    return { handled: true, evidence: buildNonExhaustiveDomainHandlingEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

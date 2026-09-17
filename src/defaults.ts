@@ -6278,5 +6278,32 @@ export const defaultConfig: JevLintConfig = {
       message: "This hash function reimplements available hashing for non-security bucketing.",
 
     },
+    "jev/no-non-exhaustive-domain-handling": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function branch over a declared finite domain while leaving member cases unhandled with no explicit fallback policy?",
+          inspect: "Compare the switch or if-chain discriminant with the declared domain members, which members the arms handle, which members are missing, the absence of a default or terminal else, the absence of an exhaustiveness anchor, the fallthrough shape, and repository callers in the supplied evidence.",
+          focus: "Judge whether a valid domain value falls through silently, not whether branching exists at all.",
+          decision_boundary: [
+            "A switch over a declared literal union or enum where handled cases intersect the members, one or more members are missing, and no default, terminal else, or exhaustiveness anchor exists is strong evidence a valid value falls through silently.",
+            "A default clause, terminal else, or assertNever-style anchor answers the question negatively even when members look unhandled, since the fallback is explicit.",
+            "An open string or number discriminant with no declared finite domain in the repository answers the question negatively; the evidence abstains before judgment in that case.",
+            "Silent fallthrough that falls off the end or returns undefined to cross-module callers strengthens the claim toward a load-bearing gap.",
+            "If every declared member is handled or the discriminant cannot be tied to the declared domain, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function branches over a declared finite domain with member cases silently unhandled and no exhaustiveness anchor",
+            remedy: "Handle the missing members explicitly or add a default that states the unknown-value policy",
+          },
+          false: {
+            what: "Every declared member is handled, an explicit default, else, or exhaustiveness anchor covers the rest, or no declared finite domain is established",
+          },
+        },
+      },
+      message: "This function leaves declared domain members unhandled with no explicit fallback.",
+    },
   },
 };
