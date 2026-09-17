@@ -42,6 +42,10 @@ import { buildUnboundedWaitEvidence } from "./unbounded-wait.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
+import { buildOutputArgumentEvidence } from "./output-argument.js";
+import { buildContextlessErrorEvidence } from "./contextless-error.js";
+import { buildUncheckedPreconditionEvidence } from "./unchecked-precondition.js";
+import { buildUnenforcedWarningCommentEvidence } from "./unenforced-warning-comment.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -223,6 +227,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-type-checker-escape") {
     return { handled: true, evidence: buildTypeCheckerEscapeEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-output-argument") {
+    return { handled: true, evidence: buildOutputArgumentEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-contextless-error") {
+    return { handled: true, evidence: buildContextlessErrorEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unchecked-precondition") {
+    return { handled: true, evidence: buildUncheckedPreconditionEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unenforced-warning-comment") {
+    return { handled: true, evidence: buildUnenforcedWarningCommentEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

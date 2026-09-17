@@ -56,6 +56,10 @@ describe("loadConfig", () => {
       "jev/no-detached-async-work",
       "jev/no-shared-mutable-module-state",
       "jev/no-type-checker-escape",
+      "jev/no-output-argument",
+      "jev/no-contextless-error",
+      "jev/no-unchecked-precondition",
+      "jev/no-unenforced-warning-comment",
     ]);
   });
 
