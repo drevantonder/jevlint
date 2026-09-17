@@ -305,6 +305,10 @@ describe("loadConfig", () => {
       "jev/no-hidden-collaborator-read",
       "jev/no-mixed-calculation-and-interaction",
       "jev/no-fragmented-stateful-procedure",
+      "jev/no-stable-surface-widening",
+      "jev/no-team-boundary-crossing",
+      "jev/no-cross-service-source-reach",
+      "jev/no-same-stem-divergent-role",
       // END GENERATED: rule-keys
     ]);
   });

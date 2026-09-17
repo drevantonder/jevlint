@@ -47,6 +47,7 @@ import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-boolean
 import { buildCrossAreaExportBreakEvidence } from "./cross-area-export-break.js";
 import { buildCrossContextTestReachEvidence } from "./cross-context-test-reach.js";
 import { buildCrossModuleCallOrderEvidence } from "./cross-module-call-order.js";
+import { buildCrossServiceSourceReachEvidence } from "./cross-service-source-reach.js";
 import { buildCrypticAbbreviationEvidence } from "./cryptic-abbreviation.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDeceptiveNameEvidence } from "./deceptive-name.js";
@@ -202,6 +203,7 @@ import { buildRepeatedPredicateEvidence } from "./repeated-predicate.js";
 import { buildRepeatedTestPreambleEvidence } from "./repeated-test-preamble.js";
 import { buildRetainedSupersededImplementationEvidence } from "./retained-superseded-implementation.js";
 import { buildRetryStormEvidence } from "./retry-storm-shape.js";
+import { buildSameStemDivergentRoleEvidence } from "./same-stem-divergent-role.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSecondShelfDependencyEvidence } from "./second-shelf-dependency.js";
 import { buildSelfAuthoredExamEvidence } from "./self-authored-exam.js";
@@ -223,6 +225,7 @@ import { buildSkippedLevelImportEvidence } from "./skipped-level-import.js";
 import { buildSleepInTestEvidence } from "./sleep-in-test.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildStabilityInversionEvidence } from "./stability-inversion.js";
+import { buildStableSurfaceWideningEvidence } from "./stable-surface-widening.js";
 import { buildStableToVolatileEdgeEvidence } from "./stable-to-volatile-edge.js";
 import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
@@ -234,6 +237,7 @@ import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildSyncAsyncSiblingAmbiguityEvidence } from "./sync-async-sibling-ambiguity.js";
 import { buildSynonymVocabularyEvidence } from "./synonym-vocabulary.js";
 import { buildTableConditionalEvidence } from "./table-shaped-conditional.js";
+import { buildTeamBoundaryCrossingEvidence } from "./team-boundary-crossing.js";
 import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTemporaryFieldEvidence } from "./temporary-field.js";
 import { buildTimezoneNaiveArithmeticEvidence } from "./timezone-naive-arithmetic.js";
@@ -349,6 +353,7 @@ type EvidenceRegistry = {
   "jev/no-cross-area-export-break": EvidenceBuilder;
   "jev/no-cross-context-test-reach": EvidenceBuilder;
   "jev/no-cross-module-call-order": EvidenceBuilder;
+  "jev/no-cross-service-source-reach": EvidenceBuilder;
   "jev/no-cryptic-abbreviation": EvidenceBuilder;
   "jev/no-data-clump": EvidenceBuilder;
   "jev/no-deceptive-name": EvidenceBuilder;
@@ -504,6 +509,7 @@ type EvidenceRegistry = {
   "jev/no-repeated-test-preamble": EvidenceBuilder;
   "jev/no-retained-superseded-implementation": EvidenceBuilder;
   "jev/no-retry-storm-shape": EvidenceBuilder;
+  "jev/no-same-stem-divergent-role": EvidenceBuilder;
   "jev/no-scattered-policy": EvidenceBuilder;
   "jev/no-second-shelf-dependency": EvidenceBuilder;
   "jev/no-self-authored-exam": EvidenceBuilder;
@@ -525,6 +531,7 @@ type EvidenceRegistry = {
   "jev/no-sleep-in-test": EvidenceBuilder;
   "jev/no-speculative-generality": EvidenceBuilder;
   "jev/no-stability-inversion": EvidenceBuilder;
+  "jev/no-stable-surface-widening": EvidenceBuilder;
   "jev/no-stable-to-volatile-edge": EvidenceBuilder;
   "jev/no-stale-binding-use": EvidenceBuilder;
   "jev/no-stale-comment": EvidenceBuilder;
@@ -536,6 +543,7 @@ type EvidenceRegistry = {
   "jev/no-sync-async-sibling-ambiguity": EvidenceBuilder;
   "jev/no-synonym-vocabulary": EvidenceBuilder;
   "jev/no-table-shaped-conditional": EvidenceBuilder;
+  "jev/no-team-boundary-crossing": EvidenceBuilder;
   "jev/no-temporal-call-coupling": EvidenceBuilder;
   "jev/no-temporary-field": EvidenceBuilder;
   "jev/no-timezone-naive-arithmetic": EvidenceBuilder;
@@ -686,6 +694,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildCrossContextTestReachEvidence(candidate, projectFiles, changes),
   "jev/no-cross-module-call-order": (candidate, projectFiles) =>
     buildCrossModuleCallOrderEvidence(candidate, projectFiles),
+  "jev/no-cross-service-source-reach": (candidate, projectFiles, changes) =>
+    buildCrossServiceSourceReachEvidence(candidate, projectFiles, changes),
   "jev/no-cryptic-abbreviation": (candidate, projectFiles) =>
     buildCrypticAbbreviationEvidence(candidate, projectFiles),
   "jev/no-data-clump": (candidate, projectFiles) =>
@@ -996,6 +1006,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildRetainedSupersededImplementationEvidence(candidate, projectFiles),
   "jev/no-retry-storm-shape": (candidate, projectFiles) =>
     buildRetryStormEvidence(candidate, projectFiles),
+  "jev/no-same-stem-divergent-role": (candidate, projectFiles, changes) =>
+    buildSameStemDivergentRoleEvidence(candidate, projectFiles, changes),
   "jev/no-scattered-policy": (candidate, projectFiles) =>
     buildScatteredPolicyEvidence(candidate, projectFiles),
   "jev/no-second-shelf-dependency": (candidate, projectFiles, changes) =>
@@ -1038,6 +1050,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildSpeculativeGeneralityEvidence(candidate, projectFiles),
   "jev/no-stability-inversion": (candidate, projectFiles) =>
     buildStabilityInversionEvidence(candidate, projectFiles),
+  "jev/no-stable-surface-widening": (candidate, projectFiles, changes) =>
+    buildStableSurfaceWideningEvidence(candidate, projectFiles, changes),
   "jev/no-stable-to-volatile-edge": (candidate, projectFiles, changes) =>
     buildStableToVolatileEdgeEvidence(candidate, projectFiles, changes),
   "jev/no-stale-binding-use": (candidate, projectFiles) =>
@@ -1060,6 +1074,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildSynonymVocabularyEvidence(candidate, projectFiles),
   "jev/no-table-shaped-conditional": (candidate, projectFiles) =>
     buildTableConditionalEvidence(candidate, projectFiles),
+  "jev/no-team-boundary-crossing": (candidate, projectFiles, changes) =>
+    buildTeamBoundaryCrossingEvidence(candidate, projectFiles, changes),
   "jev/no-temporal-call-coupling": (candidate, projectFiles) =>
     buildTemporalCallCouplingEvidence(candidate, projectFiles),
   "jev/no-temporary-field": (candidate, projectFiles) =>
