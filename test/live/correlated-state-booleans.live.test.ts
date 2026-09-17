@@ -1,0 +1,72 @@
+import { readFile } from "node:fs/promises";
+import { describe, expect, it } from "vitest";
+import { analyzeFile } from "../../src/analyze.js";
+import { defaultConfig } from "../../src/config.js";
+import { TypeSafeEvaluator } from "../../src/typesafe-evaluator.js";
+import type { EvaluationRequest, Evaluator, JevLintConfig, ProjectFile } from "../../src/types.js";
+
+const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
+const repositories = new URL("../fixtures/repositories/", import.meta.url);
+
+class RecordingEvaluator implements Evaluator {
+  readonly probabilities = new Map<string, number>();
+  readonly delegate = new TypeSafeEvaluator();
+
+  async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
+    const answers = await this.delegate.evaluate(request);
+    const probability = answers.q0;
+    if (probability !== undefined) this.probabilities.set(request.state.file.path, probability);
+    return answers;
+  }
+}
+
+async function project(name: string, paths: string[]): Promise<ProjectFile[]> {
+  return Promise.all(paths.map(async (filePath) => ({
+    filePath,
+    source: await readFile(new URL(`${name}/${filePath}`, repositories), "utf8"),
+  })));
+}
+
+async function lint(projectFiles: ProjectFile[], evaluator: Evaluator) {
+  const changed = projectFiles[0];
+  const rule = defaultConfig.rules["jev/no-correlated-state-booleans"];
+  expect(changed).toBeDefined();
+  expect(rule).toBeDefined();
+  if (!changed || !rule) return [];
+  const config: JevLintConfig = { rules: { "jev/no-correlated-state-booleans": rule } };
+  return analyzeFile({
+    filePath: changed.filePath,
+    source: changed.source,
+    changedLines: [{ start: 1, end: changed.source.split("\n").length }],
+    config,
+    projectFiles,
+  }, evaluator);
+}
+
+liveDescribe("correlated state booleans with repository evidence", () => {
+  it("separates lifecycle flags from independent booleans and uncertain evidence", async () => {
+    const cases = await Promise.all([
+      project("correlated-state-booleans-positive", ["src/upload-state.ts", "src/upload-workflow.ts"]),
+      project("correlated-state-booleans-negative", ["src/export-capabilities.ts", "src/export-menu.ts"]),
+      project("correlated-state-booleans-exception", ["src/checkout-flags.ts", "src/checkout.ts"]),
+      project("correlated-state-booleans-ambiguous", ["src/session-state.ts"]),
+    ]);
+    const evaluator = new RecordingEvaluator();
+    const diagnostics = await Promise.all(cases.map((files) => lint(files, evaluator)));
+
+    const positive = evaluator.probabilities.get("src/upload-state.ts");
+    const negative = evaluator.probabilities.get("src/export-capabilities.ts");
+    const exception = evaluator.probabilities.get("src/checkout-flags.ts");
+    const ambiguous = evaluator.probabilities.get("src/session-state.ts");
+    expect(positive).toBeGreaterThanOrEqual(0.85);
+    expect(negative).toBeLessThan(0.5);
+    expect(exception).toBeLessThan(0.5);
+    expect(ambiguous).toBeLessThan(0.85);
+    expect(diagnostics.map((items) => items.map(({ ruleId }) => ruleId))).toEqual([
+      ["jev/no-correlated-state-booleans"],
+      [],
+      [],
+      [],
+    ]);
+  });
+});

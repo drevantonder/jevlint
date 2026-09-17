@@ -26,6 +26,17 @@ describe("diagnostic deduplication", () => {
     expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual(["jev/no-generic-magic"]);
   });
 
+  it("prefers a state-model cause over generic configuration on the same type", () => {
+    const diagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-disproportionate-configuration", 4, 12),
+      diagnostic("jev/no-correlated-state-booleans", 4, 12),
+    ]);
+
+    expect(diagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-correlated-state-booleans",
+    ]);
+  });
+
   it("keeps independent findings in separate spans", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-pass-through-wrapper", 4, 6),

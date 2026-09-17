@@ -142,6 +142,34 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function appears to accumulate unrelated special-case policies.",
     },
+    "jev/no-correlated-state-booleans": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this type use boolean fields as mutually dependent alternatives of one state, allowing contradictory or meaningless combinations?",
+          inspect: "Use the declared shape, each boolean field, and the typed construction, transition, and read sites in the repository evidence.",
+          focus: "Judge whether these booleans jointly encode one lifecycle or choice that should have one explicit set of valid cases.",
+          decision_boundary: [
+            "Flags that are repeatedly reset together or checked in priority order as alternative statuses are strong evidence of one state split across booleans.",
+            "Independent capabilities, permissions, preferences, filters, and feature flags may combine freely and are not a violation.",
+            "Separate observations can legitimately disagree, such as network availability and service reachability.",
+            "Two or more boolean fields alone are never enough. If their relationship or invalid combinations are not established by the evidence, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The booleans represent exclusive or dependent cases of one concept, and the declared type admits combinations the code does not meaningfully handle",
+            remedy: "Replace the correlated flags with a discriminated union, enum-like status, or separate valid case types",
+          },
+          false: {
+            what: "The booleans are independent dimensions, intentionally combinable controls, distinct observations, or too weakly evidenced to prove a shared state",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "Correlated booleans make contradictory states representable.",
+    },
     "jev/no-needless-abstraction": {
       scope: "abstraction",
       question: {

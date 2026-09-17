@@ -8,6 +8,7 @@ export { collectChangedFiles, collectRepositoryFiles } from "./git.js";
 export { buildAdHocBranchingEvidence } from "./evidence/ad-hoc-branching.js";
 export { buildAvoidableOrchestrationEvidence } from "./evidence/avoidable-orchestration.js";
 export { buildComplexityDisplacementEvidence } from "./evidence/complexity-displacement.js";
+export { buildCorrelatedStateBooleansEvidence } from "./evidence/correlated-state-booleans.js";
 export { buildDisproportionateConfigurationEvidence } from "./evidence/disproportionate-configuration.js";
 export { buildGenericMagicEvidence } from "./evidence/generic-magic.js";
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";

@@ -14,7 +14,7 @@ This first slice supports:
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
 - Text and JSON diagnostics
-- Eleven bundled Jev rules
+- Twelve bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules flag:
@@ -24,6 +24,7 @@ The bundled Jev rules flag:
 - names that obscure a function's purpose
 - speculative generality
 - ad-hoc special-case branching
+- correlated booleans that admit contradictory states
 - needless abstractions
 - generic reflective machinery for fixed operations
 - configuration disproportionate to observed use
@@ -31,7 +32,7 @@ The bundled Jev rules flag:
 - changes that displace rather than reduce complexity
 - feature envy
 
-The eight accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, variation, policy, and dependency constraints. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
+The eight accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, variation, policy, and dependency constraints. The state-modeling rule distinguishes correlated lifecycle flags from independently combinable capabilities, preferences, observations, and feature flags. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
 
 ## Setup
 
