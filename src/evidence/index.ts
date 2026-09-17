@@ -227,6 +227,7 @@ import { buildHandRolledEventBusEvidence } from "./hand-rolled-event-bus.js";
 import { buildHandRolledFetchWrapperEvidence } from "./hand-rolled-fetch-wrapper.js";
 import { buildFsRecursiveReinventEvidence } from "./fs-recursive-reinvent.js";
 import { buildHandRolledStringHashEvidence } from "./hand-rolled-string-hash.js";
+import { buildCoupledIndexCollectionsEvidence } from "./coupled-index-collections.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1285,6 +1286,12 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-string-hash") {
     return { handled: true, evidence: buildHandRolledStringHashEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-coupled-index-collections") {
+    return {
+      handled: true,
+      evidence: buildCoupledIndexCollectionsEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

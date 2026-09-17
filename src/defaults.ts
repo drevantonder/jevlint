@@ -6278,5 +6278,32 @@ export const defaultConfig: JevLintConfig = {
       message: "This hash function reimplements available hashing for non-security bucketing.",
 
     },
+    "jev/no-coupled-index-collections": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do two collections in this function advance in lockstep under one shared index, so that pairing by position is the real structure?",
+          inspect: "Compare the two array bindings, each paired access site, the loop source showing the lockstep, and whether a pairing record already exists in the supplied evidence.",
+          focus: "Judge whether the position is the pairing and one record collection preserves order and identity, not whether indexed access appears at all.",
+          decision_boundary: [
+            "Siblings declared together at equal length with the shared index as their only link, where the loop body treats each position as one logical item, are strong evidence of position pairing.",
+            "Differing stride or offset arithmetic between the collections answers the question negatively.",
+            "Independent lengths, standalone uses of either collection, or domain-required separate buffers such as typed arrays or FFI interop answer the question negatively.",
+            "A pairing record that already exists and is used where the lockstep runs answers the question negatively.",
+            "If fewer than two collections share one index identifier in one loop, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The position is the pairing and one collection of records preserves the order the index was maintaining and the identity the position was implying",
+            remedy: "Store one array of records instead of position-paired collections",
+          },
+          false: {
+            what: "The collections are independently shaped, constrained to separate buffers, already paired where it matters, or never share one index in lockstep",
+          },
+        },
+      },
+      message: "Two collections advance in lockstep under one shared index instead of one record collection.",
+    },
   },
 };

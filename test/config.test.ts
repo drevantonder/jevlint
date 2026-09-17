@@ -246,6 +246,7 @@ describe("loadConfig", () => {
       "jev/no-hand-rolled-fetch-wrapper",
       "jev/no-fs-recursive-reinvent",
       "jev/no-hand-rolled-string-hash",
+      "jev/no-coupled-index-collections",
     ]);
   });
 
