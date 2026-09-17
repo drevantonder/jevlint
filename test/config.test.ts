@@ -214,6 +214,11 @@ describe("loadConfig", () => {
       "jev/no-barrel-wide-reexport",
       "jev/no-utility-module-grab-bag",
       "jev/no-duplicate-module-role",
+      "jev/no-layer-skipping-call",
+      "jev/no-chatty-interface",
+      "jev/no-partitioned-fat-interface",
+      "jev/no-dev-dependency-runtime-leak",
+      "jev/no-cross-module-call-order",
     ]);
   });
 

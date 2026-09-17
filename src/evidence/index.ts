@@ -199,6 +199,11 @@ import { buildDomainUpwardImportEvidence } from "./domain-upward-import.js";
 import { buildBarrelWideReexportEvidence } from "./barrel-wide-reexport.js";
 import { buildUtilityModuleGrabBagEvidence } from "./utility-module-grab-bag.js";
 import { buildDuplicateModuleRoleEvidence } from "./duplicate-module-role.js";
+import { buildLayerSkippingCallEvidence } from "./layer-skipping-call.js";
+import { buildChattyInterfaceEvidence } from "./chatty-interface.js";
+import { buildPartitionedFatInterfaceEvidence } from "./partitioned-fat-interface.js";
+import { buildDevDependencyRuntimeLeakEvidence } from "./dev-dependency-runtime-leak.js";
+import { buildCrossModuleCallOrderEvidence } from "./cross-module-call-order.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1114,6 +1119,33 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildDuplicateModuleRoleEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-layer-skipping-call") {
+    return {
+      handled: true,
+      evidence: buildLayerSkippingCallEvidence(candidate, projectFiles, changes),
+    };
+  }
+  if (ruleId === "jev/no-chatty-interface") {
+    return { handled: true, evidence: buildChattyInterfaceEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-partitioned-fat-interface") {
+    return {
+      handled: true,
+      evidence: buildPartitionedFatInterfaceEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-dev-dependency-runtime-leak") {
+    return {
+      handled: true,
+      evidence: buildDevDependencyRuntimeLeakEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-cross-module-call-order") {
+    return {
+      handled: true,
+      evidence: buildCrossModuleCallOrderEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

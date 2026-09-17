@@ -5425,5 +5425,140 @@ export const defaultConfig: JevLintConfig = {
       message: "This added file duplicates the responsibility already owned by an existing module.",
 
     },
+    "jev/no-layer-skipping-call": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function call a deeper-layer module directly while bypassing an intermediate layer that enforces policy?",
+          inspect: "Compare the direct call and its target layer with the intermediate modules the caller already imports that also reach the target, the guard excerpts in those intermediates, and how established each path is.",
+          focus: "Judge whether the bypass skips validation, authorization, or shaping the repository routes through the intermediate, not whether direct calls are untidy in the abstract.",
+          decision_boundary: [
+            "A direct call to a target most callers reach through a guard-bearing intermediate is strong evidence of a skipped policy layer.",
+            "An intermediate that merely re-exports without guards, validation, or shaping is a shell, not a policy layer.",
+            "Nominal layers over a flat utility sprawl, and direct calls from tests or setup code, do not establish a bypassed policy.",
+            "A pre-existing direct import used for an unrelated symbol weakens the claim that the new call is the bypass.",
+            "If no guard-bearing intermediate sits on the established path, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The call reaches a deeper module past an intermediate that guards the established path",
+            remedy: "Route the call through the intermediate layer so its validation and policy apply",
+          },
+          false: {
+            what: "The intermediate adds no policy, the layers are nominal, the call comes from tests or setup, or no guarded intermediate exists",
+          },
+        },
+      },
+      message: "This call reaches a deeper module past the intermediate layer that guards it.",
+    },
+    "jev/no-chatty-interface": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function make repeated cross-module calls in a loop where one call would serve?",
+          inspect: "Use the per-item calls inside each loop, which arguments stay invariant across iterations, whether the calls run sequentially, and whether the target already offers a batch-shaped sibling.",
+          focus: "Judge whether the interface tells callers the wrong story about cost by forcing one round trip per item when a single call could carry the loop.",
+          decision_boundary: [
+            "Sequential per-item calls with loop-invariant arguments and an existing batch export are strong evidence of a chatty interface.",
+            "Per-item failure isolation as the evident intent, with each item needing its own outcome, weakens the batch claim.",
+            "A small bounded loop, or a target with no batch-shaped sibling anywhere nearby, leaves the caller no better shape to use.",
+            "Same-module calls are local work, not cross-module round trips.",
+            "If the loop carries no cross-module call or no batch alternative exists, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The loop issues one cross-module round trip per item although a batch-shaped call would serve",
+            remedy: "Add or use a batch entry point so the loop becomes a single call",
+          },
+          false: {
+            what: "The loop is bounded, per-item isolation is the intent, no batch shape exists, or the calls stay inside the module",
+          },
+        },
+      },
+      message: "This loop makes one cross-module call per item where a single batch call would serve.",
+    },
+    "jev/no-partitioned-fat-interface": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this class expose a wide surface whose methods serve disjoint caller populations?",
+          inspect: "Compare each public method's caller-file set with every other method's, noting pairs with no shared callers and whether one dominant client or a shared audience explains the surface.",
+          focus: "Judge whether one client group carries the evolution risk of another group's methods, not whether the class is merely large or internally incohesive.",
+          decision_boundary: [
+            "Two sizable caller populations with near-zero file overlap across method groups are strong evidence of a partitioned surface.",
+            "One dominant client, heavy caller overlap, or a deliberate facade over a stable domain keeps the surface coherent.",
+            "Shared state between method groups does not by itself reunite audiences that never overlap.",
+            "A handful of callers total is weak evidence of distinct populations.",
+            "If the caller sets overlap heavily or one audience dominates, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Disjoint caller populations share one surface, so each group absorbs the other's evolution risk",
+            remedy: "Split the surface so each audience depends only on the methods it uses",
+          },
+          false: {
+            what: "One audience dominates, caller sets overlap, the surface is a deliberate facade, or too few callers establish a partition",
+          },
+        },
+      },
+      message: "This class serves disjoint caller populations through one shared surface.",
+    },
+    "jev/no-dev-dependency-runtime-leak": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this runtime file reach a development-only dependency or test-marked module from a shipped path?",
+          inspect: "Use the matched manifest section for each import, whether the imported symbol is used in a value position, the test markers on resolved targets, and whether the owner is build-script-adjacent.",
+          focus: "Judge whether production behavior couples to dev tooling, not whether the import list mentions a dev package in passing.",
+          decision_boundary: [
+            "A shipped file importing a dev-listed package and using it at runtime is strong evidence of a dev-to-prod leak.",
+            "Type-only imports erased at build, and packages correctly dual-listed in both sections, do not couple runtime behavior.",
+            "Build scripts, tooling, and configuration-adjacent files legitimately reach dev dependencies.",
+            "Test-marked targets reached from shipped paths couple production to test fixtures regardless of manifest section.",
+            "If the symbol is type-only, the file is tooling, or the package is a runtime dependency, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A shipped path uses a dev-only package or test-marked module at runtime",
+            remedy: "Move the dependency to runtime dependencies or remove the shipped path's reliance on dev tooling",
+          },
+          false: {
+            what: "The import is type-only, the file is tooling, the package is dual-listed, or no dev-section edge exists",
+          },
+        },
+      },
+      message: "This shipped file reaches a development-only dependency at runtime.",
+    },
+    "jev/no-cross-module-call-order": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function call two same-target-module functions in an order the caller cannot verify, where the second reads state the first writes?",
+          inspect: "Use the ordered callee pairs sharing one target module, the write and read evidence on the shared binding, the guard and combined-entry-point evidence, and the orderings at other call sites.",
+          focus: "Judge whether a caller can trigger the wrong sequence without complaint because the ordering assumption lives invisibly across the module boundary.",
+          decision_boundary: [
+            "Target analysis confirming a write then read on one binding, with sibling call sites all using one order and no guard, is strong evidence of an unverifiable ordering assumption.",
+            "A guard that rejects the uninitialized state, or a combined entry point that sequences the pair, makes the order explicit rather than assumed.",
+            "Independent callees, a documented order, or a combined entry point the call site predates weaken the claim.",
+            "Same-module reader and writer pairs belong to the temporal coupling judgment, not this one.",
+            "If the callees share no write-read binding or the order is enforced, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The call site assumes an order across a module boundary that nothing enforces or verifies",
+            remedy: "Expose a combined entry point or guard so the order is explicit instead of assumed",
+          },
+          false: {
+            what: "The callees are independent, a guard or combined entry verifies the order, or no shared write-read binding exists",
+          },
+        },
+      },
+      message: "These calls assume an order across a module boundary that nothing enforces.",
+    },
   },
 };
