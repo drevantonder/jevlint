@@ -258,6 +258,9 @@ import { buildImportUseSkewEvidence } from "./import-use-skew.js";
 import { buildUnpinnedFailurePathEvidence } from "./unpinned-failure-path.js";
 import { buildIncidentalSnapshotEvidence } from "./incidental-snapshot.js";
 import { buildQuarantinedTestCoverageEvidence } from "./quarantined-test-coverage.js";
+import { buildUnusedExportedHelperEvidence } from "./unused-exported-helper.js";
+import { buildCommentedOutImplementationEvidence } from "./commented-out-implementation.js";
+import { buildUnmarkedAbandonedCompatLayerEvidence } from "./unmarked-abandoned-compat-layer.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1463,6 +1466,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-inline-lifecycle-phases") {
     return { handled: true, evidence: buildInlineLifecyclePhasesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unused-exported-helper") {
+    return { handled: true, evidence: buildUnusedExportedHelperEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-commented-out-implementation") {
+    return { handled: true, evidence: buildCommentedOutImplementationEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unmarked-abandoned-compat-layer") {
+    return {
+      handled: true,
+      evidence: buildUnmarkedAbandonedCompatLayerEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

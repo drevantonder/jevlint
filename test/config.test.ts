@@ -277,6 +277,9 @@ describe("loadConfig", () => {
       "jev/no-quarantined-test-coverage",
       "jev/no-flag-shepherded-control-flow",
       "jev/no-inline-lifecycle-phases",
+      "jev/no-unused-exported-helper",
+      "jev/no-commented-out-implementation",
+      "jev/no-unmarked-abandoned-compat-layer",
     ]);
   });
 
