@@ -204,6 +204,7 @@ const extractedRules = [
   ["jev/no-synonym-vocabulary", "abstraction"],
   ["jev/no-knob-multiplicity", "abstraction"],
   ["jev/no-boolean-fanout", "abstraction"],
+  ["jev/no-fragmented-stateful-procedure", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

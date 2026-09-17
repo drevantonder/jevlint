@@ -240,6 +240,7 @@ describe("loadConfig", () => {
       "jev/no-synonym-vocabulary",
       "jev/no-knob-multiplicity",
       "jev/no-boolean-fanout",
+      "jev/no-fragmented-stateful-procedure",
     ]);
   });
 

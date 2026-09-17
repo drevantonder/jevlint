@@ -221,7 +221,7 @@ import { buildDivergentInversesEvidence } from "./divergent-inverses.js";
 import { buildLopsidedErrorHandlingEvidence } from "./lopsided-error-handling.js";
 import { buildRepeatedPredicateEvidence } from "./repeated-predicate.js";
 import { buildOverloadedBooleanReturnEvidence } from "./overloaded-boolean-return.js";
-
+import { buildFragmentedStatefulProcedureEvidence } from "./fragmented-stateful-procedure.js";
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
 import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
@@ -1261,6 +1261,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-boolean-fanout") {
     return { handled: true, evidence: buildBooleanFanoutEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-fragmented-stateful-procedure") {
+    return { handled: true, evidence: buildFragmentedStatefulProcedureEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
