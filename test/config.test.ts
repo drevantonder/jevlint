@@ -114,6 +114,11 @@ describe("loadConfig", () => {
       "jev/no-shallow-convenience-layer",
       "jev/no-prototype-in-production",
       "jev/no-hidden-loop-exit",
+      "jev/no-inconsistent-error-contract",
+      "jev/no-breaking-export-reshape",
+      "jev/no-positional-extension-drift",
+      "jev/no-mixed-absence-convention",
+      "jev/no-shared-mutable-default",
     ]);
   });
 

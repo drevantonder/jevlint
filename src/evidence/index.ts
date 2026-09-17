@@ -27,7 +27,12 @@ import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
+import { buildBreakingExportEvidence } from "./breaking-export-reshape.js";
 import { buildHiddenLoopExitEvidence } from "./hidden-loop-exit.js";
+import { buildInconsistentErrorContractEvidence } from "./inconsistent-error-contract.js";
+import { buildMixedAbsenceConventionEvidence } from "./mixed-absence-convention.js";
+import { buildPositionalExtensionDriftEvidence } from "./positional-extension-drift.js";
+import { buildSharedMutableDefaultEvidence } from "./shared-mutable-default.js";
 import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
@@ -525,6 +530,36 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hidden-loop-exit") {
     return { handled: true, evidence: buildHiddenLoopExitEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-inconsistent-error-contract") {
+    return {
+      handled: true,
+      evidence: buildInconsistentErrorContractEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-breaking-export-reshape") {
+    return {
+      handled: true,
+      evidence: buildBreakingExportEvidence(candidate, changes, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-positional-extension-drift") {
+    return {
+      handled: true,
+      evidence: buildPositionalExtensionDriftEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-mixed-absence-convention") {
+    return {
+      handled: true,
+      evidence: buildMixedAbsenceConventionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-shared-mutable-default") {
+    return {
+      handled: true,
+      evidence: buildSharedMutableDefaultEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
