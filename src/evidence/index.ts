@@ -139,6 +139,11 @@ import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js"
 import { buildBespokeCryptoConstructionEvidence } from "./bespoke-crypto-construction.js";
 import { buildDrilledPropEvidence } from "./drilled-prop.js";
 import { buildDuplicatedStyleObjectEvidence } from "./duplicated-style-object.js";
+import { buildHandRolledSchemaCheckEvidence } from "./hand-rolled-schema-check.js";
+import { buildHandRolledRetryLoopEvidence } from "./hand-rolled-retry-loop.js";
+import { buildHandRolledConcurrencyLimitEvidence } from "./hand-rolled-concurrency-limit.js";
+import { buildHandRolledDebounceEvidence } from "./hand-rolled-debounce.js";
+import { buildHandRolledCsvSplitEvidence } from "./hand-rolled-csv-split.js";
 import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
@@ -939,6 +944,24 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-deep-equal") {
     return { handled: true, evidence: buildHandRolledDeepEqualEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-schema-check") {
+    return { handled: true, evidence: buildHandRolledSchemaCheckEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-retry-loop") {
+    return { handled: true, evidence: buildHandRolledRetryLoopEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-concurrency-limit") {
+    return {
+      handled: true,
+      evidence: buildHandRolledConcurrencyLimitEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-hand-rolled-debounce") {
+    return { handled: true, evidence: buildHandRolledDebounceEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-hand-rolled-csv-split") {
+    return { handled: true, evidence: buildHandRolledCsvSplitEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

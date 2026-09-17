@@ -185,6 +185,11 @@ describe("loadConfig", () => {
       "jev/no-hand-rolled-set-ops",
       "jev/no-hand-rolled-flatten",
       "jev/no-hand-rolled-deep-equal",
+      "jev/no-hand-rolled-schema-check",
+      "jev/no-hand-rolled-retry-loop",
+      "jev/no-hand-rolled-concurrency-limit",
+      "jev/no-hand-rolled-debounce",
+      "jev/no-hand-rolled-csv-split",
     ]);
   });
 
