@@ -21,6 +21,7 @@ export const EVALUATION_REQUEST_BUDGET_CHARS = 48_000;
 const MAX_QUESTIONS_PER_REQUEST = 24;
 const MODULE_SOURCE_LIMIT = 16_000;
 const FAILURE_MESSAGE_LIMIT = 500;
+const EVALUATION_SCHEMA = "jevlint-semantic-judgment-v1";
 
 export interface AnalyzeFileInput {
   filePath: string;
@@ -66,6 +67,8 @@ interface BuiltRequest {
 
 interface QuestionInstructions {
   [key: string]: JsonValue;
+  schema: typeof EVALUATION_SCHEMA;
+  ruleId: string;
   question: RuleConfig["question"]["instructions"];
   inspect: string;
   context: string;
@@ -181,6 +184,8 @@ function buildRequest(filePath: string, prepared: PreparedQuestion[]): BuiltRequ
     const questionId = `q${pending.length}`;
     const candidatePath = `candidates[${candidateIndex}]`;
     const instructions: QuestionInstructions = {
+      schema: EVALUATION_SCHEMA,
+      ruleId: item.ruleId,
       question: item.rule.question.instructions,
       inspect: candidatePath,
       context: stateCandidate.nearbySource === undefined

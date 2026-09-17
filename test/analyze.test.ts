@@ -124,6 +124,58 @@ describe("analyzeFile", () => {
     expect(result.failures).toEqual([]);
   });
 
+  it("retains schema and rule identity through batching and recursive splitting", async () => {
+    const assertQuestionIdentity = (request: EvaluationRequest): void => {
+      for (const question of Object.values(request.questions)) {
+        expect(question.instructions).toMatchObject({
+          schema: "jevlint-semantic-judgment-v1",
+          ruleId: "test/function",
+        });
+      }
+    };
+
+    const normalRequests: EvaluationRequest[] = [];
+    const normalEvaluator: Evaluator = {
+      async evaluate(request) {
+        assertQuestionIdentity(request);
+        normalRequests.push(request);
+        return Object.fromEntries(Object.keys(request.questions).map((id) => [id, 0.9]));
+      },
+    };
+    const payload = "x".repeat(2_000);
+    const largeSource = functions(36, `return "${payload}";`);
+    const normal = await analyzeFileWithFailures({
+      filePath: "src/schema-large.ts",
+      source: largeSource,
+      changedLines: [{ start: 1, end: 36 }],
+      config: functionConfig,
+    }, normalEvaluator);
+
+    const splitRequestSizes: number[] = [];
+    const splittingEvaluator: Evaluator = {
+      async evaluate(request) {
+        assertQuestionIdentity(request);
+        const size = Object.keys(request.questions).length;
+        splitRequestSizes.push(size);
+        if (size > 2) throw new Error("400 max_tokens_exceeded");
+        return Object.fromEntries(Object.keys(request.questions).map((id) => [id, 0.9]));
+      },
+    };
+    const split = await analyzeFileWithFailures({
+      filePath: "src/schema-split.ts",
+      source: functions(8),
+      changedLines: [{ start: 1, end: 8 }],
+      config: functionConfig,
+    }, splittingEvaluator);
+
+    expect(normalRequests).toHaveLength(2);
+    expect(normal.diagnostics).toHaveLength(36);
+    expect(normal.failures).toEqual([]);
+    expect(splitRequestSizes).toEqual([8, 4, 2, 2, 4, 2, 2]);
+    expect(split.diagnostics).toHaveLength(8);
+    expect(split.failures).toEqual([]);
+  });
+
   it("sends module context once instead of repeating it in rule evidence", async () => {
     const source = `const moduleMarker = "module-context-marker";
       export async function load() {
