@@ -227,6 +227,7 @@ import { buildHandRolledEventBusEvidence } from "./hand-rolled-event-bus.js";
 import { buildHandRolledFetchWrapperEvidence } from "./hand-rolled-fetch-wrapper.js";
 import { buildFsRecursiveReinventEvidence } from "./fs-recursive-reinvent.js";
 import { buildHandRolledStringHashEvidence } from "./hand-rolled-string-hash.js";
+import { buildMisplacedCoordinationEvidence } from "./misplaced-coordination.js";
 
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildMutableSurfaceExpansionEvidence } from "./mutable-surface-expansion.js";
@@ -1285,6 +1286,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-hand-rolled-string-hash") {
     return { handled: true, evidence: buildHandRolledStringHashEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-misplaced-coordination") {
+    return { handled: true, evidence: buildMisplacedCoordinationEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
