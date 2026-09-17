@@ -3521,5 +3521,140 @@ export const defaultConfig: JevLintConfig = {
       message: "This code assumes its deployment environment instead of receiving it.",
 
     },
+    "jev/no-assertion-free-test": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test exercise its subject without stating any expectation, so it cannot distinguish working from broken behavior?",
+          inspect: "Use the extracted subject calls, the absence of assertion calls, whether the test name promises behavior no assertion covers, and the sibling assertion norm in the supplied evidence.",
+          focus: "Judge whether the test pins any behavior of its subject, not whether the subject itself is documented or correct.",
+          decision_boundary: [
+            "A test that calls into its subject and ends, beside sibling tests asserting outcomes on the same subject, is strong evidence of an assertion-free test.",
+            "A smoke test whose documented purpose is import-time crash detection states its only expectation implicitly; weigh the smoke shape against the missing assertion.",
+            "Any expect, assert, matcher, or snapshot call on any path states an expectation even when the assertion is weak.",
+            "A test with no subject call at all is not an assertion-free exercise of behavior; answer no.",
+            "If the evidence cannot establish that the candidate is a test, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test exercises its subject but states no expectation, so passing proves only that nothing threw",
+            remedy: "Assert the observable outcome the test name promises, following the sibling tests that pin the same subject",
+          },
+          false: {
+            what: "The test states an expectation through an assertion, snapshot, or intentional smoke contract, or it exercises no subject",
+          },
+        },
+      },
+      message: "This test exercises its subject without stating any expectation.",
+    },
+    "jev/no-sleep-in-test": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test wait a fixed duration for asynchronous work instead of awaiting a condition, making it slow when generous and flaky when tight?",
+          inspect: "Use the extracted sleep calls with their literal durations, the polling helpers present in the test, whether the delay is itself the subject under test, and the sibling polling-helper files in the supplied evidence.",
+          focus: "Judge whether the wait synchronizes on time rather than on the awaited condition, not whether the test touches async code at all.",
+          decision_boundary: [
+            "A fixed sleep before asserting an eventually-consistent outcome, with polling helpers used by sibling tests for the same condition, is strong evidence of a sleepy test.",
+            "A small delay testing an actual debounce or throttle duration as the subject behavior is the behavior under test, not a synchronization sleep.",
+            "A waitFor, eventually, or polling helper awaiting the condition bounds the wait even when a literal duration appears nearby as a timeout cap.",
+            "A sleep with no literal duration or no assertion on async work after it deserves suspicion but is weaker evidence.",
+            "If the evidence cannot establish a fixed-duration wait, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test synchronizes on elapsed time rather than on the awaited condition, so timing variance decides its outcome",
+            remedy: "Await the condition with the polling helper the sibling tests use instead of sleeping a fixed duration",
+          },
+          false: {
+            what: "The test awaits a condition, the delay is itself the asserted behavior, or no fixed-duration wait is established",
+          },
+        },
+      },
+      message: "This test waits a fixed duration instead of awaiting a condition.",
+    },
+    "jev/no-logic-in-test": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test contain branches or loops that decide what to check, so the test can be wrong in the same way as the code it checks?",
+          inspect: "Use the extracted branches and loops, whether assertions sit inside loop bodies or conditional arms, whether a data table enumerates independent cases, and the subject-predicate overlap in the supplied evidence.",
+          focus: "Judge whether the test reimplements decisions instead of stating expectations, not whether the subject itself branches.",
+          decision_boundary: [
+            "A test branching on the same predicate as its subject before asserting is strong evidence of logic in the test.",
+            "A data-driven table enumerating independent input and expected pairs with one assertion shape states cases linearly even when iteration runs them.",
+            "Assertions inside loop bodies or conditional arms mean the check itself is conditional; weigh how much of the verdict the branch decides.",
+            "A single guard that skips an environment-dependent test narrows but does not remove the branching; judge what remains.",
+            "If the evidence cannot establish a branch or loop in the test, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Branches or loops in the test decide what gets checked, so a defect in the shared decision hides in both",
+            remedy: "Split the branches into linear tests or a data table with one assertion shape per enumerated case",
+          },
+          false: {
+            what: "The test states each case linearly, the iteration only enumerates independent cases, or no test logic is established",
+          },
+        },
+      },
+      message: "This test decides what to check with branches or loops.",
+    },
+    "jev/no-mock-everything": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test replace every collaborator including the behavior under test, so it verifies its own doubles rather than the subject?",
+          inspect: "Use the extracted doubles with their targets, whether assertions check only mock interactions, whether any assertion checks real state or return values, and whether the doubles stay at true boundaries in the supplied evidence.",
+          focus: "Judge whether real subject behavior survives under the doubles, not whether mocks exist at all.",
+          decision_boundary: [
+            "A test mocking the parser, the store, and the formatter, then asserting mock call order only, is strong evidence of a mock-everything test.",
+            "One boundary mock for a clock, network, or filesystem with real logic asserted keeps the subject under test.",
+            "An assertion on a return value or observable state computed by real code weighs against the proposition even when several doubles are present.",
+            "A shared in-memory fake the repository owns is a seam, not a double that bypasses behavior; judge what the test still executes for real.",
+            "If the evidence cannot establish any test double, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Doubles stand in for the behavior under test and the assertions check only the scaffolding",
+            remedy: "Keep doubles at true boundaries and assert on real state or return values the subject computes",
+          },
+          false: {
+            what: "Real subject behavior is asserted, doubles stay at true boundaries, or no test double is established",
+          },
+        },
+      },
+      message: "This test verifies its own doubles rather than the subject.",
+    },
+    "jev/no-duplicated-fixture-drift": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test setup duplicate a fixture block maintained separately elsewhere, where the copies already disagree about what a valid fixture is?",
+          inspect: "Use the extracted setup fingerprint, the matching copies with their locations, the field-level divergence points, and whether a shared factory exists in the supplied evidence.",
+          focus: "Judge whether parallel copies encode different versions of the same fixture, not whether similar setups exist at all.",
+          decision_boundary: [
+            "Several setup blocks building the same entity with diverging required fields is strong evidence of fixture drift.",
+            "Similar setups that intentionally vary the one field under test state distinct cases rather than drifting copies.",
+            "A shared factory that some copies already use shows the seam exists; weigh whether this copy bypasses it.",
+            "A single setup block with no matching copy elsewhere cannot drift; answer no.",
+            "If the evidence cannot establish a duplicated fixture block, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Parallel fixture copies encode different versions of the same valid entity and already disagree on its fields",
+            remedy: "Route the setups through the shared factory, parameterizing only the field each test varies",
+          },
+          false: {
+            what: "The setups intentionally vary the field under test, share one factory, or no duplicated fixture is established",
+          },
+        },
+      },
+      message: "This fixture duplicates a setup maintained elsewhere and the copies disagree.",
+    },
   },
 };

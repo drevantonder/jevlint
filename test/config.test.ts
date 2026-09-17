@@ -142,6 +142,11 @@ describe("loadConfig", () => {
       "jev/no-missing-shutdown-drain",
       "jev/no-missing-health-signal",
       "jev/no-deployment-coupled-assumption",
+      "jev/no-assertion-free-test",
+      "jev/no-sleep-in-test",
+      "jev/no-logic-in-test",
+      "jev/no-mock-everything",
+      "jev/no-duplicated-fixture-drift",
     ]);
   });
 

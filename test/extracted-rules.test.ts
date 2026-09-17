@@ -106,6 +106,11 @@ const extractedRules = [
   ["jev/no-missing-shutdown-drain", "function"],
   ["jev/no-missing-health-signal", "function"],
   ["jev/no-deployment-coupled-assumption", "function"],
+  ["jev/no-assertion-free-test", "function"],
+  ["jev/no-sleep-in-test", "function"],
+  ["jev/no-logic-in-test", "function"],
+  ["jev/no-mock-everything", "function"],
+  ["jev/no-duplicated-fixture-drift", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
