@@ -1,10 +1,10 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
-import { collectChangedFiles } from "../src/git.js";
+import { collectChangedFiles, repositoryCacheContext } from "../src/git.js";
 
 const execFile = promisify(execFileCallback);
 
@@ -22,6 +22,17 @@ async function repository(): Promise<string> {
   await git(cwd, "commit", "-qm", "initial");
   return cwd;
 }
+
+describe("repositoryCacheContext", () => {
+  it("keeps the cache in repository-local Git metadata", async () => {
+    const cwd = await repository();
+
+    const context = await repositoryCacheContext(cwd);
+
+    expect(context.repository).toBe(await realpath(cwd));
+    expect(context.directory).toBe(join(cwd, ".git", "jevlint", "cache", "v1"));
+  });
+});
 
 describe("collectChangedFiles", () => {
   it("collects changed lines and untracked JavaScript or TypeScript files", async () => {

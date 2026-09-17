@@ -1,5 +1,5 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseChangedLineRanges } from "./changed-lines.js";
@@ -13,6 +13,11 @@ interface GitOptions {
   staged: boolean;
 }
 
+export interface RepositoryCacheContext {
+  directory: string;
+  repository: string;
+}
+
 async function git(cwd: string, args: string[]): Promise<string> {
   const { stdout } = await execFile("git", args, {
     cwd,
@@ -20,6 +25,17 @@ async function git(cwd: string, args: string[]): Promise<string> {
     maxBuffer: 20 * 1024 * 1024,
   });
   return stdout;
+}
+
+export async function repositoryCacheContext(cwd: string): Promise<RepositoryCacheContext> {
+  const [rootOutput, directoryOutput] = await Promise.all([
+    git(cwd, ["rev-parse", "--show-toplevel"]),
+    git(cwd, ["rev-parse", "--path-format=absolute", "--git-path", "jevlint/cache/v1"]),
+  ]);
+  return {
+    directory: directoryOutput.trim(),
+    repository: await realpath(rootOutput.trim()),
+  };
 }
 
 async function hasHead(cwd: string): Promise<boolean> {

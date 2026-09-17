@@ -7,7 +7,7 @@ const TYPESAFE_ENDPOINT = "https://api.typesafe.ai";
 const JEV_MODEL = "jev-1.13.0";
 const EVALUATOR_VERSION = "jevlint-system-one-v1";
 
-function stateEntry(state: EvaluationState): EntryType {
+export function evaluationStateEntry(state: EvaluationState): EntryType {
   return {
     file: { path: state.file.path },
     candidates: state.candidates.map((candidate) => ({
@@ -46,7 +46,7 @@ export class TypeSafeEvaluator implements Evaluator {
       defaultModel: this.model,
     }));
     const response = await client.systemOne({
-      state: stateEntry(request.state),
+      state: evaluationStateEntry(request.state),
       questions: request.questions satisfies Questions,
       model: this.model,
     });

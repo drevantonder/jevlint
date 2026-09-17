@@ -3,7 +3,8 @@ import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
 import { z } from "zod";
-import type { EvaluationRequest, EvaluationState, Evaluator } from "./types.js";
+import { evaluationStateEntry } from "./typesafe-evaluator.js";
+import type { EvaluationRequest, Evaluator } from "./types.js";
 
 const CACHE_FORMAT = "jevlint-semantic-response-v1";
 
@@ -67,21 +68,6 @@ function canonicalJson(value: JsonValue): string {
   ).join(",")}}`;
 }
 
-function evaluationState(state: EvaluationState): JsonValue {
-  return {
-    file: { path: state.file.path },
-    candidates: state.candidates.map((candidate) => ({
-      id: candidate.id,
-      kind: candidate.kind,
-      source: candidate.source,
-      nearbySource: candidate.nearbySource,
-      startLine: candidate.startLine,
-      endLine: candidate.endLine,
-      evidence: candidate.evidence ?? null,
-    })),
-  };
-}
-
 function evaluationCriteria(
   criteria: Exclude<NoulQuestion["criteria"], null | undefined>,
 ): JsonValue {
@@ -122,7 +108,7 @@ function digestQuestion(
       sdk: identity.sdk,
       evaluator: identity.evaluator,
     },
-    state: evaluationState(state),
+    state: evaluationStateEntry(state),
     question: evaluationQuestion(question),
   };
   return createHash("sha256").update(canonicalJson(material)).digest("hex");

@@ -112,11 +112,20 @@ describe("CachedEvaluator", () => {
     };
     await evaluator.evaluate(criteriaChange);
 
-    const otherModel = new CachedEvaluator(delegate, {
-      ...await options(directory),
-      identity: { ...identity, model: "jev-test-2" },
-    });
-    await otherModel.evaluate(request());
+    const identities: EvaluatorIdentity[] = [
+      { ...identity, provider: "other-provider" },
+      { ...identity, endpoint: "https://other.example.test" },
+      { ...identity, model: "jev-test-2" },
+      { ...identity, sdk: "test-sdk@2" },
+      { ...identity, evaluator: "test-evaluator-v2" },
+    ];
+    for (const changedIdentity of identities) {
+      const changedEvaluator = new CachedEvaluator(delegate, {
+        ...await options(directory),
+        identity: changedIdentity,
+      });
+      await changedEvaluator.evaluate(request());
+    }
 
     const otherRepository = new CachedEvaluator(delegate, {
       ...await options(directory),
@@ -124,10 +133,39 @@ describe("CachedEvaluator", () => {
     });
     await otherRepository.evaluate(request());
 
-    expect(delegate.requests).toHaveLength(9);
+    expect(delegate.requests).toHaveLength(13);
   });
 
-  it("canonicalizes object key order without changing array order", async () => {
+  it("misses when file or candidate context changes", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jevlint-cache-context-"));
+    const delegate = new CountingEvaluator();
+    const evaluator = new CachedEvaluator(delegate, await options(directory));
+    await evaluator.evaluate(request());
+
+    const changedPath = request();
+    changedPath.state.file.path = "src/other.ts";
+    await evaluator.evaluate(changedPath);
+
+    const changedId = request();
+    changedId.state.candidates[0]!.id = "candidate_1";
+    await evaluator.evaluate(changedId);
+
+    const changedKind = request();
+    changedKind.state.candidates[0]!.kind = "comment";
+    await evaluator.evaluate(changedKind);
+
+    const changedContext = request();
+    changedContext.state.candidates[0]!.nearbySource = "const context = true;";
+    await evaluator.evaluate(changedContext);
+
+    const changedLines = request();
+    changedLines.state.candidates[0]!.endLine = 2;
+    await evaluator.evaluate(changedLines);
+
+    expect(delegate.requests).toHaveLength(6);
+  });
+
+  it("canonicalizes object key order and ignores question map IDs", async () => {
     const directory = await mkdtemp(join(tmpdir(), "jevlint-cache-canonical-"));
     const delegate = new CountingEvaluator();
     const evaluator = new CachedEvaluator(delegate, await options(directory));
@@ -138,6 +176,11 @@ describe("CachedEvaluator", () => {
 
     await evaluator.evaluate(first);
     await evaluator.evaluate(second);
+    const originalQuestion = second.questions.q0;
+    expect(originalQuestion).toBeDefined();
+    if (!originalQuestion) return;
+    second.questions = { renumbered: originalQuestion };
+    await expect(evaluator.evaluate(second)).resolves.toEqual({ renumbered: 0.73 });
 
     expect(delegate.requests).toHaveLength(1);
   });

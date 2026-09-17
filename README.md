@@ -13,6 +13,7 @@ This first slice supports:
 - Before/after evidence for change-level judgments
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
+- Repository-local, content-addressed Jev response caching
 - Text and JSON diagnostics
 - Thirty-two bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
@@ -90,6 +91,16 @@ Produce machine-readable output:
 pnpm jevlint diff --format json
 ```
 
+Jev judgments are cached by default in the current worktree's Git metadata. Candidate discovery and repository evidence collection still run every time. Inspect a run, force fresh judgments, or bypass the cache with:
+
+```sh
+pnpm jevlint diff --verbose
+pnpm jevlint diff --refresh-cache
+pnpm jevlint diff --no-cache
+```
+
+Normal runs print no cache status. See [Jev response cache](docs/caching.md) for the cache boundary, key inputs, storage, and security properties.
+
 When using a globally linked binary, wrap it directly:
 
 ```sh
@@ -125,7 +136,7 @@ export default defineConfig({
 });
 ```
 
-Each rule uses a Jev Noul question. A result at or above `threshold` creates a diagnostic at the Oxc candidate's source span. Bundled accidental-complexity rules first apply structural gates, so Jev is called only when Oxc finds the relevant mechanism. Repository evidence is bounded and rule-specific rather than a generic whole-project prompt.
+Each rule uses a Jev Noul question. A result at or above `threshold` creates a diagnostic at the Oxc candidate's source span. Bundled accidental-complexity rules first apply structural gates, so Jev is called only when Oxc finds the relevant mechanism. Repository evidence is bounded and rule-specific rather than a generic whole-project prompt. Jevlint pins the versioned `jev-1.13.0` model so cached judgments cannot silently outlive a moving model alias.
 
 ## Development
 

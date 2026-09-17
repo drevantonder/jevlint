@@ -49,6 +49,38 @@ describe("runCli", () => {
     expect(stdout).toContain("jev/no-pass-through-wrapper (0.99)");
   });
 
+  it("reports cache status only when verbose output is requested", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "jevlint-cli-cache-"));
+    await execFile("git", ["init", "-q"], { cwd });
+    let stderr = "";
+    const exitCode = await runCli(["diff", "--no-cache", "--verbose"], {
+      cwd,
+      evaluator: new PassThroughEvaluator(),
+      stdout: () => undefined,
+      stderr: (text) => {
+        stderr += text;
+      },
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr).toBe("jevlint cache: disabled\n");
+  });
+
+  it("rejects conflicting cache modes", async () => {
+    let stderr = "";
+    const exitCode = await runCli(["diff", "--no-cache", "--refresh-cache"], {
+      cwd: process.cwd(),
+      evaluator: new PassThroughEvaluator(),
+      stdout: () => undefined,
+      stderr: (text) => {
+        stderr += text;
+      },
+    });
+
+    expect(exitCode).toBe(2);
+    expect(stderr).toContain("Usage: jevlint diff");
+  });
+
   it("rejects unsupported commands without calling the evaluator", async () => {
     let stderr = "";
     const exitCode = await runCli(["wat"], {

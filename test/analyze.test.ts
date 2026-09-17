@@ -81,6 +81,24 @@ describe("analyzeFile", () => {
     ]);
   });
 
+  it("normalizes candidate line endings before evaluation", async () => {
+    const source = "export function wrap(value: string) {\r\n  return target(value);\r\n}\r\n";
+    const evaluator = new RecordingEvaluator();
+
+    await analyzeFile(
+      {
+        filePath: "src/wrapper.ts",
+        source,
+        changedLines: [{ start: 1, end: 3 }],
+        config: { rules: { "jev/no-pass-through-wrapper": config.rules["jev/no-pass-through-wrapper"]! } },
+      },
+      evaluator,
+    );
+
+    expect(evaluator.requests[0]?.state.candidates[0]?.source).not.toContain("\r");
+    expect(evaluator.requests[0]?.state.candidates[0]?.nearbySource).not.toContain("\r");
+  });
+
   it("does not call Jev when no changed candidate matches a rule", async () => {
     const source = "const answer = 42;\n";
     const evaluator = new RecordingEvaluator();
