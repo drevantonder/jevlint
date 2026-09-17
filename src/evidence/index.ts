@@ -12,6 +12,7 @@ import { buildConcurrentSharedMutationEvidence } from "./concurrent-shared-mutat
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
 import { buildCorrelatedStateBooleansEvidence } from "./correlated-state-booleans.js";
 import { buildContractSignatureDriftEvidence } from "./contract-signature-drift.js";
+import { buildConventionBreakingAdditionEvidence } from "./convention-breaking-addition.js";
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
@@ -39,19 +40,23 @@ import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
 import { buildLiveCredentialEvidence } from "./live-credential.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
+import { buildLaunderedAbsenceEvidence } from "./laundered-absence.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
 import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
+import { buildNonNarrowingGuardEvidence } from "./non-narrowing-guard.js";
 import { buildSiblingIdentifierSwapEvidence } from "./sibling-identifier-swap.js";
 import { buildOverbroadOriginTrustEvidence } from "./overbroad-origin-trust.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildPathTraversalJoinEvidence } from "./path-traversal-join.js";
 import { buildPreGateSideEffectEvidence } from "./pre-gate-side-effect.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
+import { buildPhantomMemberAccessEvidence } from "./phantom-member-access.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildRefusedInheritanceEvidence } from "./refused-inheritance.js";
+import { buildRepeatedHandlerPreambleEvidence } from "./repeated-handler-preamble.js";
 import { buildRetryStormEvidence } from "./retry-storm-shape.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSensitiveDataInLogEvidence } from "./sensitive-data-in-log.js";
@@ -465,6 +470,36 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-path-traversal-join") {
     return { handled: true, evidence: buildPathTraversalJoinEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-phantom-member-access") {
+    return {
+      handled: true,
+      evidence: buildPhantomMemberAccessEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-laundered-absence") {
+    return {
+      handled: true,
+      evidence: buildLaunderedAbsenceEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-convention-breaking-addition") {
+    return {
+      handled: true,
+      evidence: buildConventionBreakingAdditionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-repeated-handler-preamble") {
+    return {
+      handled: true,
+      evidence: buildRepeatedHandlerPreambleEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-non-narrowing-guard") {
+    return {
+      handled: true,
+      evidence: buildNonNarrowingGuardEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
