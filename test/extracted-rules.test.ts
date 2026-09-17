@@ -182,6 +182,9 @@ const extractedRules = [
   ["jev/no-single-caller-exported-helper", "function"],
   ["jev/no-string-duplicated-enumeration", "change"],
   ["jev/no-convergent-twin-types", "abstraction"],
+  ["jev/no-predicate-name-deception", "function"],
+  ["jev/no-confusion-confessing-comment", "comment"],
+  ["jev/no-unexplained-suppression", "comment"],
 ] as const;
 
 describe("extracted review rules", () => {

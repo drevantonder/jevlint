@@ -203,6 +203,10 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildMysteriousNameEvidence } from "./mysterious-name.js";
+import { buildPredicateNameDeceptionEvidence } from "./predicate-name-deception.js";
+import { buildConfusionConfessingCommentEvidence } from "./confusion-confessing-comment.js";
+import { buildUnexplainedSuppressionEvidence } from "./unexplained-suppression.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1141,27 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-mysterious-name") {
+    return { handled: true, evidence: buildMysteriousNameEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-predicate-name-deception") {
+    return {
+      handled: true,
+      evidence: buildPredicateNameDeceptionEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-confusion-confessing-comment") {
+    return {
+      handled: true,
+      evidence: buildConfusionConfessingCommentEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unexplained-suppression") {
+    return {
+      handled: true,
+      evidence: buildUnexplainedSuppressionEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }

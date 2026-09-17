@@ -5529,5 +5529,83 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This type duplicates a field shape already owned by another module.",
     },
+    "jev/no-predicate-name-deception": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this predicate-shaped name return a non-boolean value, so callers branching on it test the wrong thing?",
+          inspect: "Compare the function name prefix with each return path's value shape, the declared return type, and how repository callers consume the result in the supplied evidence.",
+          focus: "Judge whether a caller reading only the name would branch on a truthiness the implementation does not deliver as a boolean.",
+          decision_boundary: [
+            "A predicate prefix such as is, has, can, should, or needs promising a boolean while a return path yields a string, object, number, or absent value is strong evidence of deception.",
+            "Type predicates written as x is T annotations are boolean by construction and answer the question negatively.",
+            "Documented tri-states and conventional truthy idioms whose callers branch correctly answer the question negatively.",
+            "A non-predicate name, or a predicate whose every return path is boolean-shaped, is outside this proposition.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The predicate-shaped name promises a boolean answer while at least one return path yields a non-boolean-shaped value",
+            remedy: "Return a boolean on every path or rename the function to state what it actually returns",
+          },
+          false: {
+            what: "The name carries no predicate prefix, every return path is boolean-shaped, or the shape is a boolean by construction",
+          },
+        },
+      },
+      message: "This predicate-shaped name returns a non-boolean value.",
+    },
+    "jev/no-confusion-confessing-comment": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Does this comment transfer the author's confusion to the reader instead of recording what was tried or verified?",
+          inspect: "Compare the confession wording with the adjoining code's behavior, any test pinning the behavior, and any tracked-work pointer in the supplied evidence.",
+          focus: "Judge whether every future reader must re-pay the investigation the author declined to record.",
+          decision_boundary: [
+            "A confession of ignorance above branching or retry logic with no pinning test and no tracked-work pointer is strong evidence of transferred confusion.",
+            "An honest scope note naming the heuristic, the dataset it was tuned on, and the test pinning current behavior answers the question negatively.",
+            "A confession beside a tracked issue with pinned behavior answers the question negatively.",
+            "A comment that names a concrete verification is outside this proposition.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The comment confesses uncertainty or fragility without pointing at a test, issue, or measured verification of the adjoining behavior",
+            remedy: "Investigate the behavior, pin it with a test, and record what was verified or file tracked work",
+          },
+          false: {
+            what: "The comment records what was tried or verified, or points at tracked work pinning the behavior",
+          },
+        },
+      },
+      message: "This comment confesses confusion without recording what was verified.",
+    },
+    "jev/no-unexplained-suppression": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Does this suppression disable a check without recording why, so future readers cannot tell whether the exception is still earned?",
+          inspect: "Compare the suppression directive and its scope with the rationale words beside it, the family of the suppressed check, and the risky shapes in the adjoined code from the supplied evidence.",
+          focus: "Judge whether a future reader can tell from the comment why the check may stay off.",
+          decision_boundary: [
+            "A file-scoped or type-safety suppression with no rationale words beside a risky cast or dynamic boundary crossing is strong evidence of an unearned exception.",
+            "A directive with an adjacent reason or issue link answers the question negatively.",
+            "A line-scoped formatting-rule suppression, or a suppression whose rationale the adjoined code makes self-evident, answers the question negatively.",
+            "A suppression carrying a rationale clause is outside this proposition.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The suppression disables a check with no recorded reason while the adjoined code carries shapes the check exists to catch",
+            remedy: "Record why the exception is safe beside the directive, or remove the suppression and satisfy the check",
+          },
+          false: {
+            what: "The directive carries its reason, suppresses only a low-risk check in a narrow scope, or is self-evidently earned",
+          },
+        },
+      },
+      message: "This suppression disables a check without recording why.",
+    },
   },
 };
