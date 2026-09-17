@@ -34,10 +34,13 @@ import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildModeFlagParameterEvidence } from "./mode-flag-parameter.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
+import { buildOverbroadOriginTrustEvidence } from "./overbroad-origin-trust.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
+import { buildPathTraversalJoinEvidence } from "./path-traversal-join.js";
 import { buildPersistenceModelLeakEvidence } from "./persistence-model-leak.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
 import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
+import { buildSensitiveDataInLogEvidence } from "./sensitive-data-in-log.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
@@ -54,6 +57,7 @@ import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-str
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
 import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-dereference.js";
 import { buildUnreleasedSubscriptionEvidence } from "./unreleased-subscription.js";
+import { buildUnsafeRedirectTargetEvidence } from "./unsafe-redirect-target.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 import { buildUntrustedSinkInputEvidence } from "./untrusted-sink-input.js";
 import { buildUnwieldySignatureEvidence } from "./unwieldy-signature.js";
@@ -301,6 +305,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-temporary-field") {
     return { handled: true, evidence: buildTemporaryFieldEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-sensitive-data-in-log") {
+    return { handled: true, evidence: buildSensitiveDataInLogEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unsafe-redirect-target") {
+    return { handled: true, evidence: buildUnsafeRedirectTargetEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-overbroad-origin-trust") {
+    return { handled: true, evidence: buildOverbroadOriginTrustEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-path-traversal-join") {
+    return { handled: true, evidence: buildPathTraversalJoinEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }

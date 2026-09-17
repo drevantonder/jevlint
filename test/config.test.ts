@@ -71,6 +71,10 @@ describe("loadConfig", () => {
       "jev/no-inappropriate-intimacy",
       "jev/no-anemic-type",
       "jev/no-temporary-field",
+      "jev/no-sensitive-data-in-log",
+      "jev/no-unsafe-redirect-target",
+      "jev/no-overbroad-origin-trust",
+      "jev/no-path-traversal-join",
     ]);
   });
 

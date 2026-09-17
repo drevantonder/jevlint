@@ -35,6 +35,10 @@ const extractedRules = [
   ["jev/no-inappropriate-intimacy", "function"],
   ["jev/no-anemic-type", "abstraction"],
   ["jev/no-temporary-field", "abstraction"],
+  ["jev/no-sensitive-data-in-log", "function"],
+  ["jev/no-unsafe-redirect-target", "function"],
+  ["jev/no-overbroad-origin-trust", "function"],
+  ["jev/no-path-traversal-join", "function"],
 ] as const;
 
 describe("extracted review rules", () => {
