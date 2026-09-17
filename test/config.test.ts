@@ -47,6 +47,12 @@ describe("loadConfig", () => {
       "jev/no-temporal-call-coupling",
       "jev/no-shotgun-change",
       "jev/no-undocumented-contract",
+      "jev/no-unnamed-parameter-object",
+      "jev/no-predictable-token",
+      "jev/no-unreachable-guard",
+      "jev/no-unaccountable-todo",
+      "jev/no-adversarial-regex",
+      "jev/no-live-credential",
     ]);
   });
 

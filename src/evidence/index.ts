@@ -1,6 +1,7 @@
 import type { JsonValue } from "@typesafe-ai/sdk";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
+import { buildAdversarialRegexEvidence } from "./adversarial-regex.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
@@ -18,6 +19,7 @@ import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
+import { buildLiveCredentialEvidence } from "./live-credential.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
@@ -32,6 +34,9 @@ import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTransportCoupledDomainEvidence } from "./transport-coupled-domain.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
+import { buildUnnamedParameterObjectEvidence } from "./unnamed-parameter-object.js";
+import { buildPredictableTokenEvidence } from "./predictable-token.js";
+import { buildUnreachableGuardEvidence } from "./unreachable-guard.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 
 export type RuleEvidenceResult =
@@ -181,6 +186,21 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-undocumented-contract") {
     return { handled: true, evidence: buildUndocumentedContractEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unnamed-parameter-object") {
+    return { handled: true, evidence: buildUnnamedParameterObjectEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-predictable-token") {
+    return { handled: true, evidence: buildPredictableTokenEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unreachable-guard") {
+    return { handled: true, evidence: buildUnreachableGuardEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-adversarial-regex") {
+    return { handled: true, evidence: buildAdversarialRegexEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-live-credential") {
+    return { handled: true, evidence: buildLiveCredentialEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
