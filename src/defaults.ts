@@ -3942,5 +3942,109 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This style object repeats literals a shared theme already owns.",
     },
+    "jev/no-rare-case-first": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a shallow branch handle the rare case first and park the nominal outcome in else?",
+          inspect: "Compare the first-branch test signals, the relative sizes of the two arms, and the function's callers in the supplied evidence.",
+          focus: "Judge branch ORDERING at depth 1, not burial under nesting depth; guard clauses with no else are a different shape.",
+          decision_boundary: [
+            "A null, error, or empty test first with a substantially larger else arm exercised by most callers is strong evidence the common path waits.",
+            "Arms with genuinely balanced likelihood answer the question negatively even when the first test names an edge case.",
+            "Guard clauses that return early with no else are the preferred shape, not this smell.",
+            "Nesting depth alone never decides; a deeply buried path belongs to another rule.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The first branch tests the exception while the rule readers need sits in else",
+            remedy: "Test the nominal case first or return early on the rare case so readers meet the rule before the exception",
+          },
+          false: {
+            what: "The arms are balanced, the first branch is the common path, or the shape is an early-return guard with no else",
+          },
+        },
+      },
+      message: "This branch handles the rare case first and parks the nominal outcome in else.",
+    },
+    "jev/no-side-effecting-conditional-expression": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a conditional expression perform side effects or nest so deep that readers must execute it like statements?",
+          inspect: "Compare each conditional arm's recorded calls and assignments, the nesting depth, and the statement-position logical chains in the supplied evidence.",
+          focus: "Judge statement-position effects and nesting, not value selection; a flat ternary choosing between two pure values is not this smell.",
+          decision_boundary: [
+            "Mutating calls or assignments inside ternary arms, nesting two or more levels deep, are strong evidence readers must execute the expression.",
+            "Statement-position && or || chains that invoke effects are the same smell in logical form.",
+            "One flat ternary selecting between two pure values answers the question negatively.",
+            "Data-mapping branches a lookup could replace belong to another rule even when written as a ternary.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Conditional or logical expression arms perform effects or nest so deep the expression reads as hidden statements",
+            remedy: "Rewrite the selection as explicit statements or split nested choices into named steps",
+          },
+          false: {
+            what: "Every conditional is a flat selection between pure values with no statement-position effects",
+          },
+        },
+      },
+      message: "This conditional expression performs side effects or nests so deep it reads like statements.",
+    },
+    "jev/no-unexplained-complex-condition": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does one boolean expression combine so many operators that no reader can hold it, with no local name explaining any part?",
+          inspect: "Compare the operator counts and depth of each recorded condition with the extracted boolean locals in the supplied evidence.",
+          focus: "Judge ONE expression and its missing explanatory names, not a patchwork of special-case branches.",
+          decision_boundary: [
+            "Six or more clauses in one test with zero extracted boolean locals is strong evidence no reader can hold the condition.",
+            "Three clauses already grouped behind one explanatory local weaken the claim toward adequate decomposition.",
+            "Two-clause tests with an obvious single idea answer the question negatively.",
+            "A collection of special-case branches belongs to another rule; this rule needs one dense expression.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A single dense condition carries the whole decision with no explanatory variable naming any part",
+            remedy: "Extract explanatory boolean locals that name each clause of the decision",
+          },
+          false: {
+            what: "Each condition is small, already decomposed into named parts, or the complexity lives across branches rather than one expression",
+          },
+        },
+      },
+      message: "This boolean expression combines many operators with no local name explaining any part.",
+    },
+    "jev/no-clever-expression": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does an expression use expert-only idioms that force readers to decode mechanics before intent?",
+          inspect: "Compare each recorded finding, its idiom kind, and the surrounding function in the supplied evidence.",
+          focus: "Judge idiom cleverness only; narrow expression shapes owned by other rules are not this smell.",
+          decision_boundary: [
+            "Assignment inside a test combined with bitwise defaults no comment explains is strong evidence of decoding-before-intent.",
+            "Comma sequences, chained assignment, and bitwise tricks on non-bitwise domains each force mechanical decoding.",
+            "One conventional idiom used consistently in the file, such as boolean coercion, answers the question negatively.",
+            "If the idiom is the module's established convention, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An expert-only idiom hides the intent behind mechanics readers must decode first",
+            remedy: "State the intent directly with separate statements, named values, or plain comparisons",
+          },
+          false: {
+            what: "The expressions use only plain comparisons, calls, and conventional idioms the module already shares",
+          },
+        },
+      },
+      message: "This expression uses expert-only idioms that force readers to decode mechanics before intent.",
+    },
   },
 };
