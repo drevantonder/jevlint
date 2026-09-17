@@ -33,6 +33,27 @@ describe("avoidable orchestration evidence", () => {
     });
   });
 
+  it.each([
+    "src/platform-client.ts",
+    "src/plugin.ts",
+  ])("does not attribute nested callback awaits to %s", async (filePath) => {
+    const fixtureRoot = new URL(
+      "./fixtures/repositories/nested-callback-orchestration/",
+      import.meta.url,
+    );
+    const source = await readFile(new URL(filePath, fixtureRoot), "utf8");
+    const functionName = filePath.endsWith("platform-client.ts")
+      ? "platformClient"
+      : "createPlugin";
+    const candidate = extractCandidates(filePath, source)
+      .find(({ source: candidateSource }) => candidateSource.includes(`function ${functionName}`));
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    expect(buildAvoidableOrchestrationEvidence(candidate, [{ filePath, source }]))
+      .toBeUndefined();
+  });
+
   it("abstains when there is only one awaited step", () => {
     const source = "export async function load(id: string) { return await fetchUser(id); }";
     const candidate = extractCandidates("src/load.ts", source)[0];

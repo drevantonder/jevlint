@@ -5,6 +5,8 @@ import {
   findFunctionCallers,
   functionName,
   isFunctionExported,
+  isInsideNestedFunction,
+  nestedFunctionRanges,
 } from "./repository.js";
 import type { FunctionCaller } from "./repository.js";
 
@@ -44,9 +46,14 @@ export function buildGenericMagicEvidence(
   if (!name) return undefined;
 
   const operations = new Set<string>();
+  const nestedFunctions = nestedFunctionRanges(parsed.program, candidate);
   new Visitor({
     CallExpression(node) {
-      if (node.start < candidate.start || node.end > candidate.end) return;
+      if (
+        node.start < candidate.start
+        || node.end > candidate.end
+        || isInsideNestedFunction(node, nestedFunctions)
+      ) return;
       const callee = node.callee;
       if (
         callee.type === "MemberExpression"
@@ -56,13 +63,19 @@ export function buildGenericMagicEvidence(
       ) operations.add(owner.source.slice(callee.start, callee.end));
     },
     MemberExpression(node) {
-      if (node.start < candidate.start || node.end > candidate.end || !node.computed) return;
+      if (
+        node.start < candidate.start
+        || node.end > candidate.end
+        || isInsideNestedFunction(node, nestedFunctions)
+        || !node.computed
+      ) return;
       operations.add(owner.source.slice(node.start, node.end));
     },
     NewExpression(node) {
       if (
         node.start >= candidate.start
         && node.end <= candidate.end
+        && !isInsideNestedFunction(node, nestedFunctions)
         && node.callee.type === "Identifier"
         && node.callee.name === "Proxy"
       ) operations.add("new Proxy");

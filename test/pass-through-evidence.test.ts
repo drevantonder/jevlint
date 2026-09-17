@@ -49,6 +49,28 @@ describe("pass-through wrapper evidence", () => {
     });
   });
 
+  it("includes callers from the wrapper's own module", async () => {
+    const filePath = "src/foundation.ts";
+    const source = await readFile(
+      new URL("./fixtures/repositories/pass-through-same-file/src/foundation.ts", import.meta.url),
+      "utf8",
+    );
+    const candidate = extractCandidates(filePath, source)
+      .find(({ source: candidateSource }) => candidateSource.includes("operations.read(props"));
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    const evidence = buildPassThroughWrapperEvidence(candidate, [{ filePath, source }]);
+
+    expect(evidence).toMatchObject({
+      function: { name: "readFoundation" },
+      callers: [{
+        filePath,
+        call: "readFoundation(operations, props, policy, true)",
+      }],
+    });
+  });
+
   it("supports exported arrow-function wrappers", () => {
     const source = `
       const usersRepository = { getUserById: (id: string) => database.users.find(id) };

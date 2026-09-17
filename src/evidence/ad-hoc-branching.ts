@@ -5,6 +5,8 @@ import {
   findFunctionCallers,
   functionName,
   isFunctionExported,
+  isInsideNestedFunction,
+  nestedFunctionRanges,
 } from "./repository.js";
 import type { FunctionCaller } from "./repository.js";
 
@@ -41,9 +43,14 @@ export function buildAdHocBranchingEvidence(
   if (!name) return undefined;
 
   const branches: BranchEvidence[] = [];
+  const nestedFunctions = nestedFunctionRanges(parsed.program, candidate);
   new Visitor({
     IfStatement(node) {
-      if (node.start < candidate.start || node.end > candidate.end) return;
+      if (
+        node.start < candidate.start
+        || node.end > candidate.end
+        || isInsideNestedFunction(node, nestedFunctions)
+      ) return;
       branches.push({
         kind: "if",
         condition: owner.source.slice(node.test.start, node.test.end),
@@ -51,7 +58,11 @@ export function buildAdHocBranchingEvidence(
       });
     },
     SwitchStatement(node) {
-      if (node.start < candidate.start || node.end > candidate.end) return;
+      if (
+        node.start < candidate.start
+        || node.end > candidate.end
+        || isInsideNestedFunction(node, nestedFunctions)
+      ) return;
       branches.push({
         kind: "switch",
         condition: `switch ${owner.source.slice(node.discriminant.start, node.discriminant.end)}`,
@@ -59,7 +70,11 @@ export function buildAdHocBranchingEvidence(
       });
     },
     ConditionalExpression(node) {
-      if (node.start < candidate.start || node.end > candidate.end) return;
+      if (
+        node.start < candidate.start
+        || node.end > candidate.end
+        || isInsideNestedFunction(node, nestedFunctions)
+      ) return;
       branches.push({
         kind: "conditional",
         condition: owner.source.slice(node.test.start, node.test.end),

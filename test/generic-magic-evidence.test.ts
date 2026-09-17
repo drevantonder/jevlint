@@ -53,6 +53,23 @@ describe("generic magic evidence", () => {
       .toMatchObject({ dynamicOperations: expect.arrayContaining(["new Proxy"]) });
   });
 
+  it("does not attribute nested callback operations to the enclosing function", async () => {
+    const filePath = "src/nested-operations.ts";
+    const source = await readFile(
+      new URL(
+        "./fixtures/repositories/nested-callback-orchestration/src/nested-operations.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const candidate = extractCandidates(filePath, source)[0];
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    expect(buildGenericMagicEvidence(candidate, [{ filePath, source }]))
+      .toBeUndefined();
+  });
+
   it("abstains from ordinary property access", () => {
     const source = "export function userName(user: User) { return user.name; }";
     const candidate = extractCandidates("src/user.ts", source)[0];

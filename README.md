@@ -109,6 +109,10 @@ varlock run -- jevlint diff
 
 Warnings do not fail the command. Diagnostics configured as errors produce exit code 1. Invalid arguments, configuration failures, Git failures, and API failures produce exit code 2.
 
+## Known limitations
+
+Repository evidence resolves relative JavaScript and TypeScript imports. TypeScript `paths` aliases and workspace package aliases are not resolved yet. Supporting them requires loading each repository's effective tsconfig and package export map; guessing from an import prefix would produce incorrect caller evidence.
+
 ## Configuration
 
 Jevlint looks for `jevlint.config.ts` and common JavaScript module variants in the current directory. User rules extend the bundled rules. Set a bundled rule to `"off"` to disable it.

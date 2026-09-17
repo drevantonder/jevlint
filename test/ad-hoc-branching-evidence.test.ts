@@ -36,6 +36,23 @@ describe("ad-hoc branching evidence", () => {
     });
   });
 
+  it("does not attribute nested callback branches to the enclosing function", async () => {
+    const filePath = "src/nested-operations.ts";
+    const source = await readFile(
+      new URL(
+        "./fixtures/repositories/nested-callback-orchestration/src/nested-operations.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const candidate = extractCandidates(filePath, source)[0];
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    expect(buildAdHocBranchingEvidence(candidate, [{ filePath, source }]))
+      .toBeUndefined();
+  });
+
   it("abstains when there is no branching structure to judge", () => {
     const source = "export function route(order: Order) { return order.route; }";
     const candidate = extractCandidates("src/route.ts", source)[0];

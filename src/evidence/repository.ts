@@ -5,6 +5,7 @@ import type {
   CallExpression,
   Function as OxcFunction,
   ImportDeclaration,
+  Node,
   Program,
 } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
@@ -29,6 +30,11 @@ export type RelatedProjectModule = {
   importedFrom: string;
   importedSymbols: string[];
   source: string;
+};
+
+type SourceRange = {
+  start: number;
+  end: number;
 };
 
 interface ImportedCallNames {
@@ -74,6 +80,30 @@ export function findDirectFunction(
     FunctionExpression: matches,
   }).visit(program);
   return result;
+}
+
+export function nestedFunctionRanges(
+  program: Program,
+  candidate: Candidate,
+): SourceRange[] {
+  const ranges: SourceRange[] = [];
+  const addRange = (node: FunctionNode): void => {
+    if (
+      node.start >= candidate.start
+      && node.end <= candidate.end
+      && (node.start !== candidate.start || node.end !== candidate.end)
+    ) ranges.push({ start: node.start, end: node.end });
+  };
+  new Visitor({
+    ArrowFunctionExpression: addRange,
+    FunctionDeclaration: addRange,
+    FunctionExpression: addRange,
+  }).visit(program);
+  return ranges;
+}
+
+export function isInsideNestedFunction(node: Node, ranges: SourceRange[]): boolean {
+  return ranges.some((range) => range.start <= node.start && range.end >= node.end);
 }
 
 export function functionName(program: Program, node: FunctionNode): string | undefined {
@@ -215,16 +245,17 @@ export function findFunctionCallers(
 ): FunctionCaller[] {
   const result: FunctionCaller[] = [];
   for (const file of projectFiles) {
-    if (file.filePath === ownerPath) continue;
     const parsed = parseSync(file.filePath, file.source, { range: true });
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
-    const names = importedCallNames(
-      parsed.program,
-      file.filePath,
-      ownerPath,
-      functionName,
-      projectFiles,
-    );
+    const names = file.filePath === ownerPath
+      ? { identifiers: new Set([functionName]), namespaces: new Set<string>() }
+      : importedCallNames(
+        parsed.program,
+        file.filePath,
+        ownerPath,
+        functionName,
+        projectFiles,
+      );
     if (names.identifiers.size === 0 && names.namespaces.size === 0) continue;
     new Visitor({
       CallExpression(call) {

@@ -6,6 +6,8 @@ import {
   findFunctionCallers,
   functionName,
   isFunctionExported,
+  isInsideNestedFunction,
+  nestedFunctionRanges,
 } from "./repository.js";
 import type { FunctionCaller } from "./repository.js";
 
@@ -53,14 +55,20 @@ export function buildAvoidableOrchestrationEvidence(
 
   const awaits: AwaitExpression[] = [];
   const bindings: BindingRange[] = [];
+  const nestedFunctions = nestedFunctionRanges(parsed.program, candidate);
   new Visitor({
     AwaitExpression(node) {
-      if (node.start >= candidate.start && node.end <= candidate.end) awaits.push(node);
+      if (
+        node.start >= candidate.start
+        && node.end <= candidate.end
+        && !isInsideNestedFunction(node, nestedFunctions)
+      ) awaits.push(node);
     },
     VariableDeclarator(node) {
       if (
         node.start >= candidate.start
         && node.end <= candidate.end
+        && !isInsideNestedFunction(node, nestedFunctions)
         && node.id.type === "Identifier"
         && node.init
       ) {
