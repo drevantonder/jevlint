@@ -134,6 +134,32 @@ describe("diagnostic deduplication", () => {
     ]);
   });
 
+  it("suppresses explicit-effect symptoms without suppressing unrelated rules", () => {
+    const atomicityDiagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-hidden-initialization-order", 4, 12),
+      diagnostic("jev/no-implicit-atomicity", 4, 12),
+    ]);
+    const initializationDiagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-hidden-runtime-input", 20, 28),
+      diagnostic("jev/no-hidden-initialization-order", 20, 28),
+    ]);
+    const unrelatedDiagnostics = deduplicateDiagnostics([
+      diagnostic("jev/no-avoidable-orchestration", 40, 48),
+      diagnostic("jev/no-implicit-atomicity", 40, 48),
+    ]);
+
+    expect(atomicityDiagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-implicit-atomicity",
+    ]);
+    expect(initializationDiagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-hidden-initialization-order",
+    ]);
+    expect(unrelatedDiagnostics.map(({ ruleId }) => ruleId)).toEqual([
+      "jev/no-avoidable-orchestration",
+      "jev/no-implicit-atomicity",
+    ]);
+  });
+
   it("prefers a hidden command over its generic I/O symptom", () => {
     const diagnostics = deduplicateDiagnostics([
       diagnostic("jev/no-hidden-io", 5, 12),

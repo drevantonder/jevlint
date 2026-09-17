@@ -13,6 +13,7 @@ import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
+import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
@@ -106,6 +107,9 @@ export function buildRuleEvidence(
       handled: true,
       evidence: buildHiddenInitializationOrderEvidence(candidate, projectFiles),
     };
+  }
+  if (ruleId === "jev/no-implicit-atomicity") {
+    return { handled: true, evidence: buildImplicitAtomicityEvidence(candidate, projectFiles) };
   }
   if (ruleId === "jev/no-complexity-displacement") {
     return {

@@ -25,6 +25,7 @@ const STATE_MODEL_PRIORITY = new Map<string, number>([
 ]);
 
 const EXPLICIT_EFFECTS_PRIORITY = new Map<string, number>([
+  ["jev/no-implicit-atomicity", 99],
   ["jev/no-hidden-initialization-order", 98],
   ["jev/no-hidden-runtime-input", 95],
 ]);

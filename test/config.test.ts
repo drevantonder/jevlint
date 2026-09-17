@@ -32,6 +32,7 @@ describe("loadConfig", () => {
       "jev/no-avoidable-orchestration",
       "jev/no-hidden-runtime-input",
       "jev/no-hidden-initialization-order",
+      "jev/no-implicit-atomicity",
       "jev/no-complexity-displacement",
       "jev/no-transport-coupled-domain",
       "jev/no-persistence-model-leak",

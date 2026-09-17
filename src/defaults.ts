@@ -598,6 +598,36 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function has an initialization prerequisite that its API does not express.",
     },
+    "jev/no-implicit-atomicity": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function rely on several durable effects succeeding as one domain operation without expressing an atomic boundary or recovery policy?",
+          inspect: "Compare the ordered effect candidates with transaction signals, error handling, compensation, function purpose, module context, and callers.",
+          focus: "Judge whether a real all-or-nothing domain invariant spans the effects and remains unprotected or undocumented in code.",
+          decision_boundary: [
+            "A balance transfer, ownership move, or state transition whose writes must agree is strong evidence when no transaction, outbox, idempotency, or compensation policy is visible.",
+            "Several effect-like calls alone are never proof of an atomicity requirement; infer the shared invariant from their meaning and data flow.",
+            "Telemetry, caching, notification, or audit work may be intentionally independent from the primary write.",
+            "An explicit database transaction, unit of work, outbox, or complete compensating path makes the constraint visible even across several operations.",
+            "Cross-service work may require a saga rather than a database transaction. Judge whether recovery is expressed, not which mechanism is used.",
+            "If the domain invariant or durability of the operations is unclear, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A partial success would violate a visible domain invariant, yet the function expresses no atomic boundary, idempotency, outbox, or recovery policy",
+            remedy: "Encode the unit of work with the appropriate transaction, outbox, idempotency, or compensating workflow",
+          },
+          false: {
+            what: "The effects are independent, atomicity or recovery is explicit, a partial result is acceptable, or the evidence does not establish a shared invariant",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This operation has an all-or-nothing constraint that the code does not express.",
+    },
     "jev/no-complexity-displacement": {
       scope: "change",
       question: {
