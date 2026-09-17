@@ -131,6 +131,11 @@ import { buildSleepInTestEvidence } from "./sleep-in-test.js";
 import { buildLogicInTestEvidence } from "./logic-in-test.js";
 import { buildMockEverythingEvidence } from "./mock-everything.js";
 import { buildDuplicatedFixtureDriftEvidence } from "./duplicated-fixture-drift.js";
+import { buildStaleFeatureFlagEvidence } from "./stale-feature-flag.js";
+import { buildUnlabeledInteractiveElementEvidence } from "./unlabeled-interactive-element.js";
+import { buildUnlocalizedUserStringEvidence } from "./unlocalized-user-string.js";
+import { buildConsoleResidueEvidence } from "./console-residue.js";
+import { buildDeepHappyPathNestingEvidence } from "./deep-happy-path-nesting.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -716,6 +721,30 @@ export function buildRuleEvidence(
     return {
       handled: true,
       evidence: buildDuplicatedFixtureDriftEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-stale-feature-flag") {
+    return { handled: true, evidence: buildStaleFeatureFlagEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unlabeled-interactive-element") {
+    return {
+      handled: true,
+      evidence: buildUnlabeledInteractiveElementEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-unlocalized-user-string") {
+    return {
+      handled: true,
+      evidence: buildUnlocalizedUserStringEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-console-residue") {
+    return { handled: true, evidence: buildConsoleResidueEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-deep-happy-path-nesting") {
+    return {
+      handled: true,
+      evidence: buildDeepHappyPathNestingEvidence(candidate, projectFiles),
     };
   }
   return { handled: false };

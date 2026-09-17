@@ -3656,5 +3656,135 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This fixture duplicates a setup maintained elsewhere and the copies disagree.",
     },
+    "jev/no-stale-feature-flag": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this feature flag no longer gate live behavior, so every reader still reasons through a dead arm?",
+          inspect: "Compare each flag check with its arm shapes, the flag source hint and detail, the repository callers in the supplied evidence.",
+          focus: "Judge whether the flag still selects live behavior per call or release, not whether a boolean parameter exists.",
+          decision_boundary: [
+            "A flag check with an empty arm, a constant return, or a removed-page arm while the flag source is bound to a constant is strong evidence of a stale flag.",
+            "A flag read from live config or the environment with both arms carrying real behavior answers the question negatively.",
+            "A boolean parameter selecting behavior per call belongs to mode-flag selection, not flag fossilization; answer no when the branch varies by argument.",
+            "If neither arm is dead and the flag source still varies, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A persistent flag gates behavior that no longer varies, yet every reader still pays for both arms",
+            remedy: "Remove the dead arm and the flag check, keeping the live path as straight-line code",
+          },
+          false: {
+            what: "The flag still selects live behavior, varies per call or release, or the evidence does not show a dead arm",
+          },
+        },
+      },
+      message: "This feature flag no longer gates live behavior, yet every reader still reasons through both arms.",
+    },
+    "jev/no-unlabeled-interactive-element": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this interactive element expose no accessible name, so assistive technology announces an unlabeled control?",
+          inspect: "Compare each unlabeled element with its trigger kind, dynamic-children and title signals, the associated labels and design-system components in the module, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the control needs a name in context, not whether an icon-only shape merely looks suspicious.",
+          decision_boundary: [
+            "An icon-only button with an onClick handler in a shipped dialog and no label props is strong evidence of an unlabeled control.",
+            "A hidden input, an aria-hidden control, or an input carrying a programmatic label from its associated control answers the question negatively.",
+            "Dynamic children such as an icon component may still leave the announced name empty; judge the announced contract, not the visual one.",
+            "If every interactive element carries an accessible name or is hidden from assistive technology, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An exposed interactive control announces nothing while sighted users see its purpose",
+            remedy: "Give the control an accessible name with visible text, aria-label, an associated label, or a design-system labeled component",
+          },
+          false: {
+            what: "Controls are labeled, hidden from assistive technology, or carry programmatic labels from associated controls",
+          },
+        },
+      },
+      message: "This interactive element exposes no accessible name to assistive technology.",
+    },
+    "jev/no-unlocalized-user-string": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this user-visible string baked into code with no internationalization path, so every new locale needs a code change?",
+          inspect: "Compare each surfaced string and hand-rolled plural with the i18n signals in the function, the project i18n frameworks, and the repository callers in the supplied evidence.",
+          focus: "Judge locale readiness of user-visible text, not whether a name reads well in one language.",
+          decision_boundary: [
+            "Hand-rolled plural logic or JSX copy in a checkout flow while the project already ships an i18n framework used by siblings is strong evidence of a locked-out locale.",
+            "A developer-only assertion message in a project with no i18n surface answers the question negatively.",
+            "A string already routed through t, formatMessage, or Intl weakens the claim even when sibling strings stay hard-coded.",
+            "If no user-visible string reaches a surface, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "User-visible text is baked into code with no path to translation",
+            remedy: "Route the string through the project's i18n framework with locale-aware plural and select formatting",
+          },
+          false: {
+            what: "Surfaced text already passes through i18n, the strings are developer-only, or the project has no user-facing locale surface",
+          },
+        },
+      },
+      message: "This user-visible string is baked into code with no internationalization path.",
+    },
+    "jev/no-console-residue": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this debugging output sit in a shipped path, where it leaks internals to consoles and costs I/O per call?",
+          inspect: "Compare each console call and debugger statement with the logger imports in the module, the debug comments beside the change, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the output belongs in the shipped path, not whether console output is ever legitimate.",
+          decision_boundary: [
+            "A console.log of a user record in a request handler where the module already imports a structured logger is strong evidence of residue.",
+            "A console.error in a CLI entry reporting fatal startup failure answers the question negatively.",
+            "Warn and error calls report operational failures; log, debug, info, and trace in shipped code deserve suspicion.",
+            "Test files own their console output legitimately and never reach this judgment.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Debugging output rides the shipped path, leaking internals and spending I/O per call",
+            remedy: "Remove the debugging output or route it through the module's structured logger at an appropriate level",
+          },
+          false: {
+            what: "The output reports a genuine operational failure through the right channel, or the path is a CLI, script, or test that owns its console",
+          },
+        },
+      },
+      message: "This debugging output sits in a shipped path instead of a logger or nowhere.",
+    },
+    "jev/no-deep-happy-path-nesting": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this function's nominal path buried under layers of nesting, so readers must simulate the whole staircase to find the normal outcome?",
+          inspect: "Compare each return with its nesting depth and early-return marking, the else-chain count, the switch-dispatch signal, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the depth buries the nominal outcome or structures genuine alternatives, not whether the raw depth number is large.",
+          decision_boundary: [
+            "A main result computed inside nested elses with no early return, beside flattened siblings, is strong evidence of a buried nominal path.",
+            "Deep nesting where each level genuinely scopes the alternatives, such as state-machine dispatch, answers the question negatively.",
+            "Guard clauses that return early at shallow depth weaken the claim even when one deep path remains.",
+            "If the nominal return sits at shallow depth, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The normal outcome hides at the bottom of nested conditions while readers simulate every level",
+            remedy: "Return early from guard clauses so the nominal path reads at shallow depth",
+          },
+          false: {
+            what: "Nesting scopes genuine alternatives, guards already flatten the path, or the nominal outcome stays visible",
+          },
+        },
+      },
+      message: "This function's nominal path is buried under layers of nesting.",
+    },
   },
 };

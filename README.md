@@ -16,7 +16,7 @@ This first slice supports:
 - TypeScript configuration
 - Repository-local, content-addressed Jev response caching
 - Ranked text and versioned JSON review reports
-- One hundred thirty-six bundled Jev rules
+- One hundred forty-one bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules judge:
@@ -119,6 +119,11 @@ The bundled Jev rules judge:
 - servers that accept work with no graceful shutdown path
 - serving entries that expose traffic endpoints but no health or readiness signal
 - code that assumes its deployment environment instead of receiving it
+- feature flags that no longer gate live behavior while readers still reason through both arms
+- interactive elements that expose no accessible name to assistive technology
+- user-visible strings baked into code with no internationalization path
+- debugging output sitting in a shipped path instead of a logger or nowhere
+- nominal paths buried under layers of nesting
 
 The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, extract sentinel return paths, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, explicit result types, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, intentional absence semantics, telemetry, and cache population remain valid.
 
