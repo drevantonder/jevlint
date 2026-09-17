@@ -287,6 +287,35 @@ export const defaultConfig: JevLintConfig = {
       severity: "warning",
       message: "This function combines responsibilities with different reasons to change.",
     },
+    "jev/no-scattered-policy": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do the matched branches independently encode one business policy that should have a single owner?",
+          inspect: "Compare each condition, outcome, function purpose, and surrounding module in the supplied repository evidence.",
+          focus: "Judge shared business meaning and coordinated change risk, not textual or structural similarity by itself.",
+          decision_boundary: [
+            "The same eligibility decision independently controlling several manifestations of one entitlement is strong evidence of scattered policy.",
+            "Matching fields and literals in unrelated domain decisions are coincidental, not a shared policy.",
+            "Separate external adapters may each enforce the same transport or authentication protocol at their own boundary.",
+            "Calling one shared policy from several modules is centralized use, not scattered policy.",
+            "If the evidence does not establish one named policy or a natural owner, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Several modules restate the same business decision and would need coordinated edits when that decision changes",
+            remedy: "Give the decision one domain owner and have each module consume its result",
+          },
+          false: {
+            what: "The matches are unrelated decisions, required boundary checks, uses of one shared policy, or too ambiguous to assign common ownership",
+          },
+        },
+      },
+      threshold: 0.85,
+      severity: "warning",
+      message: "This business policy appears to be encoded independently in multiple modules.",
+    },
     "jev/no-correlated-state-booleans": {
       scope: "abstraction",
       question: {

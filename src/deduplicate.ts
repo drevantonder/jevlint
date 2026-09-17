@@ -8,6 +8,7 @@ const ACCIDENTAL_COMPLEXITY_PRIORITY = new Map<string, number>([
   ["jev/no-pass-through-wrapper", 90],
   ["jev/no-needless-abstraction", 85],
   ["jev/no-generic-magic", 85],
+  ["jev/no-scattered-policy", 80],
   ["jev/no-speculative-generality", 70],
   ["jev/no-mixed-responsibilities", 60],
 ]);

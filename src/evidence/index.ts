@@ -14,6 +14,7 @@ import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js"
 import { buildNeedlessAbstractionEvidence } from "./needless-abstraction.js";
 import { buildPassThroughWrapperEvidence } from "./pass-through-wrapper.js";
 import { buildQuerySideEffectEvidence } from "./query-side-effect.js";
+import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-string.js";
 
@@ -50,6 +51,9 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-mixed-responsibilities") {
     return { handled: true, evidence: buildMixedResponsibilitiesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-scattered-policy") {
+    return { handled: true, evidence: buildScatteredPolicyEvidence(candidate, projectFiles) };
   }
   if (ruleId === "jev/no-needless-abstraction") {
     return { handled: true, evidence: buildNeedlessAbstractionEvidence(candidate, projectFiles) };

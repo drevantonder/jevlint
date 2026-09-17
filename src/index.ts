@@ -19,6 +19,7 @@ export { buildMixedResponsibilitiesEvidence } from "./evidence/mixed-responsibil
 export { buildNeedlessAbstractionEvidence } from "./evidence/needless-abstraction.js";
 export { buildPassThroughWrapperEvidence } from "./evidence/pass-through-wrapper.js";
 export { buildQuerySideEffectEvidence } from "./evidence/query-side-effect.js";
+export { buildScatteredPolicyEvidence } from "./evidence/scattered-policy.js";
 export { buildSpeculativeGeneralityEvidence } from "./evidence/speculative-generality.js";
 export { buildUnconstrainedStateStringEvidence } from "./evidence/unconstrained-state-string.js";
 export { TypeSafeEvaluator } from "./typesafe-evaluator.js";

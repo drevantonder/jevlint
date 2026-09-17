@@ -21,6 +21,7 @@ describe("loadConfig", () => {
       "jev/no-speculative-generality",
       "jev/no-ad-hoc-branching",
       "jev/no-mixed-responsibilities",
+      "jev/no-scattered-policy",
       "jev/no-correlated-state-booleans",
       "jev/no-unconstrained-state-string",
       "jev/no-conditionally-valid-state",

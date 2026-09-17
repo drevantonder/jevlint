@@ -14,7 +14,7 @@ This first slice supports:
 - Root-cause deduplication for overlapping accidental-complexity findings
 - TypeScript configuration
 - Text and JSON diagnostics
-- Nineteen bundled Jev rules
+- Twenty bundled Jev rules
 - A local Oxlint anti-slop plugin for deterministic TypeScript checks
 
 The bundled Jev rules flag:
@@ -29,6 +29,7 @@ The bundled Jev rules flag:
 - speculative generality
 - ad-hoc special-case branching
 - functions that combine unrelated responsibilities
+- business policy encoded independently in several modules
 - correlated booleans that admit contradictory states
 - unconstrained strings used as closed internal states
 - flat records that permit invalid discriminant and payload combinations
@@ -41,7 +42,7 @@ The bundled Jev rules flag:
 
 The API-contract rules use Oxc to prove that an argument changes, trace confirmed and possible I/O boundaries through project imports, extract sentinel return paths, or show that a value-returning function invokes a possible command. Jev then judges whether the contract discloses the behavior and cost. Pure copies, local calculations, explicit result types, and pure queries never reach Jev; explicit mutable protocols, clearly named I/O, intentional absence semantics, telemetry, and cache population remain valid.
 
-The nine accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, workflows, variation, policy, and dependency constraints. The state-modeling rules distinguish correlated lifecycle flags from independent booleans, closed internal states from open strings, and conditionally required payloads from optional metadata or boundary contracts. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
+The ten accidental-complexity rules use Oxc for factual candidate discovery and evidence collection, then ask Jev to distinguish a smell from legitimate boundaries, workflows, variation, policy, and dependency constraints. The scattered-policy rule proves repetition in the current repository; it does not infer historical shotgun change without change-history evidence. The state-modeling rules distinguish correlated lifecycle flags from independent booleans, closed internal states from open strings, and conditionally required payloads from optional metadata or boundary contracts. The principles were adapted from Cursor's [Thermo-Nuclear Code Quality Review](https://github.com/cursor/plugins/blob/main/cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md) and Matt Pocock's [Code Review](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md).
 
 ## Setup
 
