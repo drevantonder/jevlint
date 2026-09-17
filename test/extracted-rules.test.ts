@@ -26,6 +26,12 @@ const extractedRules = [
   ["jev/no-falsy-absent-conflation", "function"],
   ["jev/no-unanchored-domain-check", "function"],
   ["jev/no-contract-signature-drift", "function"],
+  ["jev/no-phantom-member-access", "function"],
+  ["jev/no-laundered-absence", "function"],
+  ["jev/no-hedging-comment", "comment"],
+  ["jev/no-convention-breaking-addition", "function"],
+  ["jev/no-repeated-handler-preamble", "function"],
+  ["jev/no-non-narrowing-guard", "function"],
 ] as const;
 
 describe("extracted review rules", () => {

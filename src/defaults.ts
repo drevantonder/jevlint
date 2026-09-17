@@ -1366,5 +1366,167 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This code disagrees with the contract signature it claims to satisfy.",
     },
+    "jev/no-phantom-member-access": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this member access name something the owning module never defines, so the call can only fail at compile or runtime?",
+          inspect: "Compare each accessed member path with the resolved owner module surface, sibling uses of neighboring members, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the named member exists anywhere in the owner's exports, declared members, or re-export chain, or whether the access pattern matches a registry or dynamic convention the repo uses elsewhere.",
+          decision_boundary: [
+            "A member path absent from the owner's exports and source, with no sibling precedent, is strong evidence of a hallucinated access.",
+            "Accesses into owners with re-export chains or dynamic registration that siblings also use may resolve outside the visible surface.",
+            "An owner that cannot be resolved to a project module leaves existence genuinely uncertain.",
+            "A near-miss sibling name that does exist points at a wrong pick, not a phantom member.",
+            "If the owner surface establishes the member or the evidence cannot settle existence, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function calls a member that appears nowhere in the owning module's surface while no repo convention explains the indirection",
+            remedy: "Call a member the owner actually defines or add the missing member to the owner",
+          },
+          false: {
+            what: "The member exists in the owner surface, resolves through a re-export or registry pattern with precedent, or existence cannot be settled from the evidence",
+          },
+        },
+      },
+      message: "This member access names something the owning module never defines.",
+    },
+    "jev/no-laundered-absence": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this fallback convert a contract breach into an ordinary empty value, so callers can no longer distinguish none from broken?",
+          inspect: "Compare each default and catch return with the producer contract, whether the defaulted value flows into a success-typed return, and how callers handle emptiness in the supplied evidence.",
+          focus: "Judge whether emptiness is a legitimate domain state the callers handle deliberately or a laundered breach the callers can no longer detect.",
+          decision_boundary: [
+            "A default over a producer-guaranteed field, or a catch returning an empty collection while discarding the error, is strong evidence of laundering.",
+            "Defaults over explicitly optional display fields whose callers render emptiness deliberately are legitimate absence handling.",
+            "A fallback that preserves failure identity or branches distinctly on the empty case does not launder.",
+            "Correct falsy handling elsewhere does not by itself justify turning genuine absence into valid emptiness.",
+            "If the producer guarantees nothing or callers treat emptiness as meaningful, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function turns missing data or a failed load into a success-shaped empty value that callers cannot distinguish from genuine emptiness",
+            remedy: "Propagate the absence explicitly so callers can tell none from broken",
+          },
+          false: {
+            what: "The fallback covers an explicitly optional value, preserves failure identity, or matches how callers deliberately handle emptiness",
+          },
+        },
+      },
+      message: "This fallback launders a contract breach into ordinary emptiness.",
+    },
+    "jev/no-hedging-comment": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Does this comment assert uncertainty about nearby code instead of stating its contract, so readers inherit the doubt without any handle to resolve it?",
+          inspect: "Read the comment text against the adjoined code, what the hedge attaches to, and whether any test or caller pins the hedged behavior.",
+          focus: "Judge whether the doubt marks a genuinely open question the team tracks or an unverified guess shipped as documentation.",
+          decision_boundary: [
+            "Hedges such as should work, probably, hopefully, seems to, might, just in case, or not sure above untested logic are strong evidence of performed doubt.",
+            "A hedge naming a concrete upstream uncertainty beside tests pinning current behavior records a real open question.",
+            "Reassurances that wave away a dropped failure in prose instead of handling it inherit the same doubt.",
+            "A single hedged integration note with a tracked issue differs from a pattern of hedges across a module.",
+            "If the comment states a verifiable contract or points at tracked work with pinned behavior, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The comment performs uncertainty or reassurance in prose while the adjoined code stays unverified and unpinned",
+            remedy: "Verify the behavior and state the contract, or track the open question with tests pinning current behavior",
+          },
+          false: {
+            what: "The comment records a concrete tracked uncertainty beside pinned behavior, or states intent, constraints, or tradeoffs",
+          },
+        },
+      },
+      message: "This comment performs doubt instead of stating a contract.",
+    },
+    "jev/no-convention-breaking-addition": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this added code follow a different local convention than its owning module, so readers must hold two conventions for one file?",
+          inspect: "Compare the candidate's async style, error signaling, module system, and quote style against the owning module's dominant signals outside the candidate in the supplied evidence.",
+          focus: "Judge whether the divergence is a justified migration or an isolated hunk disagreeing with the module it lands in.",
+          decision_boundary: [
+            "One hunk using promise chains, require, or error returns inside a module otherwise uniformly async, ESM, and throwing is strong evidence of drift.",
+            "A change converting every hunk and its imports to the new convention at once is a migration, not drift.",
+            "A single differing signal with no measurable module norm is insufficient to establish a break.",
+            "File-level formatter choices the repo does not enforce carry less weight than async and error-signaling conventions.",
+            "If the candidate agrees with the module norm or migrates the module coherently, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The added function follows async, error, module, or style conventions that disagree with the owning module's established norm",
+            remedy: "Rewrite the addition in the module's convention or migrate the whole module coherently",
+          },
+          false: {
+            what: "The addition matches the module norm, migrates the module as a whole, or the module establishes no measurable norm",
+          },
+        },
+      },
+      message: "This addition follows a different convention than its owning module.",
+    },
+    "jev/no-repeated-handler-preamble": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this guard preamble or handler repeat failure handling the module already owns in one place, instead of sharing it?",
+          inspect: "Compare the extracted preamble fingerprint with sibling preambles in the same module and whether a shared helper already performs the same handling in the supplied evidence.",
+          focus: "Judge whether the repetition is copy-pasted ceremony that could live once at the boundary or deliberate per-site handling that translates distinct errors.",
+          decision_boundary: [
+            "Several siblings opening with the identical guard or catch shape while a shared helper one hop away already does it for some of them is strong evidence of ceremony.",
+            "Similar-looking guards that translate distinct domain errors per site are deliberate handling, not repetition.",
+            "A preamble with no sibling match and no shared helper is a local choice, not duplication.",
+            "Uniform caller handling suggests the preamble could live once at the boundary.",
+            "If each site owns a distinct error decision or nothing is shared, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function repeats a guard preamble or handler shape that siblings share and a common helper already owns",
+            remedy: "Route the handling through the shared helper or boundary instead of repeating it per function",
+          },
+          false: {
+            what: "Each site translates distinct errors, no shared helper exists, or the preamble is unique to this function",
+          },
+        },
+      },
+      message: "This handler repeats failure handling the module already owns once.",
+    },
+    "jev/no-non-narrowing-guard": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this defensive check change no path's assumptions, so it performs care without providing any?",
+          inspect: "Compare each guard with the settling statements earlier in the same function, whether the value is reassigned between settling and guard, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the guard narrows any path the function's own preceding flow had not already settled.",
+          decision_boundary: [
+            "Re-checking a parameter narrowed lines earlier, or chaining optional access over a value the flow already established, without any reassignment between, is strong evidence of theater.",
+            "A guard is genuine when the value can change between settling and guard, or when callers can produce the unguarded case on paths the flow never settled.",
+            "Nearby type-system escapes change the question toward unchecked assumptions rather than redundant care.",
+            "Guards that document a boundary the function's own flow cannot settle still narrow caller paths.",
+            "If any path reaches the guard with the question genuinely open, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The guard re-checks a value the function's own preceding flow already settled, with no reassignment reopening the question",
+            remedy: "Delete the redundant check and let the earlier narrowing carry the path",
+          },
+          false: {
+            what: "The guard settles a path the preceding flow left open, the value can change before the guard, or callers reach it unsettled",
+          },
+        },
+      },
+      message: "This guard narrows nothing the flow had not already settled.",
+    },
   },
 };

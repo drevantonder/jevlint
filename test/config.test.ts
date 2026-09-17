@@ -62,6 +62,12 @@ describe("loadConfig", () => {
       "jev/no-falsy-absent-conflation",
       "jev/no-unanchored-domain-check",
       "jev/no-contract-signature-drift",
+      "jev/no-phantom-member-access",
+      "jev/no-laundered-absence",
+      "jev/no-hedging-comment",
+      "jev/no-convention-breaking-addition",
+      "jev/no-repeated-handler-preamble",
+      "jev/no-non-narrowing-guard",
     ]);
   });
 
