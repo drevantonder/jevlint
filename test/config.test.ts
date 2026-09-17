@@ -134,6 +134,11 @@ describe("loadConfig", () => {
       "jev/no-sync-async-sibling-ambiguity",
       "jev/no-leaky-internal-export",
       "jev/no-weak-crypto-primitive",
+      "jev/no-cascading-fallback",
+      "jev/no-silent-queue-drop",
+      "jev/no-missing-shutdown-drain",
+      "jev/no-missing-health-signal",
+      "jev/no-deployment-coupled-assumption",
     ]);
   });
 

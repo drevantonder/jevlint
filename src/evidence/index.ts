@@ -16,6 +16,8 @@ import { buildConventionBreakingAdditionEvidence } from "./convention-breaking-a
 import { buildDataClumpEvidence } from "./data-clump.js";
 import { buildDetachedAsyncWorkEvidence } from "./detached-async-work.js";
 import { buildDisproportionateConfigurationEvidence } from "./disproportionate-configuration.js";
+import { buildCascadingFallbackEvidence } from "./cascading-fallback.js";
+import { buildDeploymentCoupledAssumptionEvidence } from "./deployment-coupled-assumption.js";
 import { buildDiscardedTransformationEvidence } from "./discarded-transformation.js";
 import { buildDivergentChangeEvidence } from "./divergent-change.js";
 import { buildDivergentSiblingInterfacesEvidence } from "./divergent-sibling-interfaces.js";
@@ -56,6 +58,8 @@ import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
 import { buildLiveCredentialEvidence } from "./live-credential.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
+import { buildMissingHealthSignalEvidence } from "./missing-health-signal.js";
+import { buildMissingShutdownDrainEvidence } from "./missing-shutdown-drain.js";
 import { buildLaunderedAbsenceEvidence } from "./laundered-absence.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
 import { buildMixedResponsibilitiesEvidence } from "./mixed-responsibilities.js";
@@ -79,6 +83,7 @@ import { buildScatteredPolicyEvidence } from "./scattered-policy.js";
 import { buildSensitiveDataInLogEvidence } from "./sensitive-data-in-log.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
 import { buildShallowConvenienceLayerEvidence } from "./shallow-convenience-layer.js";
+import { buildSilentQueueDropEvidence } from "./silent-queue-drop.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
@@ -653,6 +658,30 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-weak-crypto-primitive") {
     return { handled: true, evidence: buildWeakCryptoPrimitiveEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-cascading-fallback") {
+    return { handled: true, evidence: buildCascadingFallbackEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-silent-queue-drop") {
+    return { handled: true, evidence: buildSilentQueueDropEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-missing-shutdown-drain") {
+    return {
+      handled: true,
+      evidence: buildMissingShutdownDrainEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-missing-health-signal") {
+    return {
+      handled: true,
+      evidence: buildMissingHealthSignalEvidence(candidate, projectFiles),
+    };
+  }
+  if (ruleId === "jev/no-deployment-coupled-assumption") {
+    return {
+      handled: true,
+      evidence: buildDeploymentCoupledAssumptionEvidence(candidate, projectFiles),
+    };
   }
   return { handled: false };
 }
