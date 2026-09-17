@@ -143,6 +143,10 @@ import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logi
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildUnclosedHandleEvidence } from "./unclosed-handle.js";
 import { buildUnverifiedClaimEvidence } from "./unverified-claim.js";
+import { buildDivergentInversesEvidence } from "./divergent-inverses.js";
+import { buildLopsidedErrorHandlingEvidence } from "./lopsided-error-handling.js";
+import { buildRepeatedPredicateEvidence } from "./repeated-predicate.js";
+import { buildOverloadedBooleanReturnEvidence } from "./overloaded-boolean-return.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -777,6 +781,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-duplicated-style-object") {
     return { handled: true, evidence: buildDuplicatedStyleObjectEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-divergent-inverses") {
+    return { handled: true, evidence: buildDivergentInversesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-lopsided-error-handling") {
+    return { handled: true, evidence: buildLopsidedErrorHandlingEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-repeated-predicate") {
+    return { handled: true, evidence: buildRepeatedPredicateEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-overloaded-boolean-return") {
+    return { handled: true, evidence: buildOverloadedBooleanReturnEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
