@@ -203,6 +203,9 @@ import { buildCloneAndTweakSiblingEvidence } from "./clone-and-tweak-sibling.js"
 import { buildSingleCallerExportedHelperEvidence } from "./single-caller-exported-helper.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildConvergentTwinTypesEvidence } from "./convergent-twin-types.js";
+import { buildVariantPartitionedHelperEvidence } from "./variant-partitioned-helper.js";
+import { buildCoincidentalSimilarityEvidence } from "./coincidental-similarity.js";
+import { buildEntangledMechanicalChangeEvidence } from "./entangled-mechanical-change.js";
 
 export type RuleEvidenceResult =
   | { handled: false }
@@ -1137,6 +1140,18 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-convergent-twin-types") {
     return { handled: true, evidence: buildConvergentTwinTypesEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-variant-partitioned-helper") {
+    return { handled: true, evidence: buildVariantPartitionedHelperEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-coincidental-similarity") {
+    return { handled: true, evidence: buildCoincidentalSimilarityEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-entangled-mechanical-change") {
+    return {
+      handled: true,
+      evidence: buildEntangledMechanicalChangeEvidence(candidate, changes, projectFiles),
+    };
   }
   return { handled: false };
 }

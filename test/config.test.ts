@@ -218,6 +218,9 @@ describe("loadConfig", () => {
       "jev/no-single-caller-exported-helper",
       "jev/no-string-duplicated-enumeration",
       "jev/no-convergent-twin-types",
+      "jev/no-variant-partitioned-helper",
+      "jev/no-coincidental-similarity",
+      "jev/no-entangled-mechanical-change",
     ]);
   });
 
