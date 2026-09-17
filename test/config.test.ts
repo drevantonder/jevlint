@@ -75,6 +75,12 @@ describe("loadConfig", () => {
       "jev/no-divergent-change",
       "jev/no-divergent-sibling-interfaces",
       "jev/no-refused-inheritance",
+      "jev/no-unnamed-parameter-object",
+      "jev/no-predictable-token",
+      "jev/no-unreachable-guard",
+      "jev/no-unaccountable-todo",
+      "jev/no-adversarial-regex",
+      "jev/no-live-credential",
     ]);
   });
 

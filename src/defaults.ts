@@ -1092,7 +1092,6 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This exported operation states its contract nowhere callers can find it.",
     },
-
     "jev/no-unbounded-wait": {
       scope: "function",
       question: {
@@ -1719,6 +1718,169 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This subclass discards behavior its inheritance link still promises.",
+    },
+
+    "jev/no-unnamed-parameter-object": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this positional parameter list describe a coherent object the code never names, forcing every caller to keep argument order in mind?",
+          inspect: "Compare the parameter names and count, shared naming affixes, body packing of parameters into one object, sibling functions taking overlapping subsets, and call sites spreading one object's properties into positional slots in the supplied evidence.",
+          focus: "Judge whether callers already hold a single concept that the signature splits into positional slots, rather than a coincidental bundle of independent values.",
+          decision_boundary: [
+            "Callers supplying properties of one object in the same order, shared parameter affixes, and body packing into one object are strong evidence of an unnamed concept.",
+            "A short list of unrelated kinds invoked with inline literals at each site is a coincidental bundle, not a missing object.",
+            "Recurrence of the same group across functions belongs to data-clump territory; this rule needs only one function's own callers to reveal the object.",
+            "Destructured single-object parameters and options bags already name the concept.",
+            "If the evidence does not show callers holding the object or parameters forming a coherent concept, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Positional parameters split a coherent caller-held concept that no named type captures",
+            remedy: "Introduce a named parameter object and migrate call sites to pass it whole",
+          },
+          false: {
+            what: "Parameters are independent values, already grouped in a named object, or lack evidence of a caller-held concept",
+          },
+        },
+      },
+      message: "This parameter list describes an object the code never names.",
+    },
+    "jev/no-predictable-token": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this weak randomness guard something an adversary can exploit, rather than providing benign variability?",
+          inspect: "Compare each Math.random call and its token-assembly context, secure-alternative availability, credential-named sinks receiving the value, and caller module roles in the supplied evidence.",
+          focus: "Judge whether the random output protects an adversary-facing secret such as a session, token, or reset secret, rather than jitter, sampling, UI variation, or test fixtures.",
+          decision_boundary: [
+            "A reset or session token minted from Math.random and persisted to a user row or credential-bearing response is strong evidence of adversary-facing weakness.",
+            "Random jitter in a retry delay, sampling, UI variation, or values confined to test fixtures are benign uses.",
+            "A secure alternative already imported in the module raises the reading; its absence does not by itself establish exploitability.",
+            "Pure determinism or testability concerns belong elsewhere; score only adversary-facing adequacy of the generator.",
+            "If the value never reaches a credential sink or adversary-observable surface, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Weak randomness mints or guards an adversary-facing secret without adequate unpredictability",
+            remedy: "Mint the value with a cryptographic generator such as crypto.getRandomValues or randomUUID",
+          },
+          false: {
+            what: "Randomness serves jitter, sampling, display, or tests, or never reaches an adversary-observable secret",
+          },
+        },
+      },
+      message: "This weak randomness guards something an adversary can exploit.",
+    },
+    "jev/no-unreachable-guard": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this defensive check guard a case no caller can produce, misleading readers about the function's real contract?",
+          inspect: "Compare each guard clause, its guarded parameter and fallback behavior, every same-repo call site's argument shapes, and exportedness in the supplied evidence.",
+          focus: "Judge whether the guarded case can arrive through any known caller, weighing that exported boundaries admit unknown external callers.",
+          decision_boundary: [
+            "A private function whose every call site supplies values the guard excludes is strong evidence of a misleading check.",
+            "An exported handler whose parameters arrive from request objects no same-repo caller constrains may genuinely need the guard.",
+            "A guard whose fallback carries behavior readers will trust, such as a default value or error message, misleads more than a silent return.",
+            "Checks that some caller can still trigger remain load-bearing regardless of how defensive they look.",
+            "If caller evidence is thin or the boundary admits unknown external callers, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A defensive check guards a case no caller can produce while presenting fallback behavior readers will trust",
+            remedy: "Remove the unreachable check or narrow the contract so the guarded case is genuinely possible",
+          },
+          false: {
+            what: "Some caller can trigger the guarded case, the boundary admits unknown callers, or the evidence does not establish unreachability",
+          },
+        },
+      },
+      message: "This defensive check guards a case no caller can produce.",
+    },
+    "jev/no-unaccountable-todo": {
+      scope: "comment",
+      question: {
+        instructions: {
+          question: "Does this deferred-work marker carry no accountable follow-through, leaving the deferral open-ended?",
+          inspect: "Read the marker text for an owner, tracking reference, or scope bound, and the nearby code and module context for accumulation history and any interim fallback that bounds the wait.",
+          focus: "Judge whether the deferral names who will honor it and when, rather than promising future work to nobody in particular.",
+          decision_boundary: [
+            "A bare marker such as TODO fix this later above intricate branching in a module already carrying aged markers is strong evidence of an open-ended deferral.",
+            "A marker naming an issue, an owner, and the interim fallback that bounds it carries accountable follow-through.",
+            "Restating nearby code is a separate concern; score only whether the deferral is accountable.",
+            "A fallback or feature flag that bounds the interim weakens the reading even without a named owner.",
+            "If the marker names an owner, a tracking reference, or an expiry condition, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A deferred-work marker promises future work without naming who will do it, where it is tracked, or when it expires",
+            remedy: "Name an owner and tracking reference, bound the scope, or do the work now",
+          },
+          false: {
+            what: "The marker names an owner, tracking reference, or expiry condition, or sits behind an interim bound that contains the wait",
+          },
+        },
+      },
+      message: "This deferred-work marker carries no accountable follow-through.",
+    },
+    "jev/no-adversarial-regex": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this nested-quantifier pattern run against input an adversary can shape, exposing the service to disproportionate backtracking cost?",
+          inspect: "Compare each pattern's nesting and alternation shape, the tested value's source traced toward request parameters or constants, length caps or timeouts, linear-engine use, and caller shapes in the supplied evidence.",
+          focus: "Judge whether a small hostile input can reach the risky pattern and produce a large backtracking bill, rather than whether the pattern looks complex in isolation.",
+          decision_boundary: [
+            "A nested-quantifier pattern testing a route or request parameter with no length check in the module is strong evidence of adversary-reachable cost.",
+            "The same pattern shape applied only to a module constant, or guarded by an explicit length cap before the test, contains the cost.",
+            "A linear-engine import or timeout around the test weakens the reading even when the input is adversary-shaped.",
+            "Cleverness of the pattern alone is out of scope; score only the asymmetry between hostile input size and backtracking cost.",
+            "If the tested value never traces to adversary-shaped input, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A backtracking-prone pattern tests adversary-shaped input without a length, timeout, or linear-engine bound",
+            remedy: "Anchor or simplify the pattern, cap input length before testing, or test with a linear-time engine",
+          },
+          false: {
+            what: "The pattern tests only internal constants, stays behind a length or timeout bound, runs on a linear engine, or lacks evidence of adversary reachability",
+          },
+        },
+      },
+      message: "This pattern risks disproportionate backtracking on adversary-shaped input.",
+    },
+    "jev/no-live-credential": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Is this hard-coded secret a live credential rather than a test placeholder or obviously inert example?",
+          inspect: "Compare each credential-named literal and its placeholder and entropy signals, the file role, whether the value reaches a real client constructor or transport call, nearby env plumbing, and callers in the supplied evidence.",
+          focus: "Judge whether the literal can authenticate against a live surface, rather than whether secret-shaped text merely appears in code.",
+          decision_boundary: [
+            "A high-entropy token literal handed to a production client constructor in service code is strong evidence of a live credential.",
+            "A placeholder such as changeme inside a test fixture with no transport use is an inert example.",
+            "Env plumbing for the same key suggests the literal is a fallback or an accident, not deliberate configuration.",
+            "Test, fixture, docs, and example paths lower the reading; service paths raise it.",
+            "If the value never reaches a live client or is plainly a placeholder, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A hard-coded literal can authenticate against a live surface through a real client or transport call",
+            remedy: "Remove the literal, load the credential from the environment or secret store, and rotate the exposed value",
+          },
+          false: {
+            what: "The literal is a placeholder, test fixture, or inert example that never reaches a live client",
+          },
+        },
+      },
+      message: "This hard-coded secret looks like a live credential.",
 
     },
   },

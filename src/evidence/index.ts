@@ -4,6 +4,7 @@ import { buildAccidentalSerializationEvidence } from "./accidental-serialization
 import { buildAdHocBranchingEvidence } from "./ad-hoc-branching.js";
 import { buildAnemicTypeEvidence } from "./anemic-type.js";
 import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
+import { buildAdversarialRegexEvidence } from "./adversarial-regex.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
 import { buildComplexityDisplacementEvidence } from "./complexity-displacement.js";
 import { buildConditionallyValidStateEvidence } from "./conditionally-valid-state.js";
@@ -31,6 +32,7 @@ import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLoadBearingAsyncEvidence } from "./load-bearing-async.js";
 import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
+import { buildLiveCredentialEvidence } from "./live-credential.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
 import { buildMixedAbstractionLevelsEvidence } from "./mixed-abstraction-levels.js";
@@ -58,6 +60,9 @@ import { buildUnconstrainedStateStringEvidence } from "./unconstrained-state-str
 import { buildUndocumentedContractEvidence } from "./undocumented-contract.js";
 import { buildUnguardedNullableDereferenceEvidence } from "./unguarded-nullable-dereference.js";
 import { buildUnreleasedSubscriptionEvidence } from "./unreleased-subscription.js";
+import { buildUnnamedParameterObjectEvidence } from "./unnamed-parameter-object.js";
+import { buildPredictableTokenEvidence } from "./predictable-token.js";
+import { buildUnreachableGuardEvidence } from "./unreachable-guard.js";
 import { buildUnsafeRetryEvidence } from "./unsafe-retry.js";
 import { buildUntrustedSinkInputEvidence } from "./untrusted-sink-input.js";
 import { buildUnwieldySignatureEvidence } from "./unwieldy-signature.js";
@@ -323,6 +328,21 @@ export function buildRuleEvidence(
   }
   if (ruleId === "jev/no-refused-inheritance") {
     return { handled: true, evidence: buildRefusedInheritanceEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unnamed-parameter-object") {
+    return { handled: true, evidence: buildUnnamedParameterObjectEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-predictable-token") {
+    return { handled: true, evidence: buildPredictableTokenEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-unreachable-guard") {
+    return { handled: true, evidence: buildUnreachableGuardEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-adversarial-regex") {
+    return { handled: true, evidence: buildAdversarialRegexEvidence(candidate, projectFiles) };
+  }
+  if (ruleId === "jev/no-live-credential") {
+    return { handled: true, evidence: buildLiveCredentialEvidence(candidate, projectFiles) };
   }
   return { handled: false };
 }
