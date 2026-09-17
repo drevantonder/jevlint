@@ -42,6 +42,12 @@ describe("loadConfig", () => {
       "jev/no-lossy-error-translation",
       "jev/no-unsafe-retry",
       "jev/no-hidden-partial-failure",
+      "jev/no-unvalidated-boundary-shape",
+      "jev/no-stale-binding-use",
+      "jev/no-pre-gate-side-effect",
+      "jev/no-inverted-authorization-predicate",
+      "jev/no-hardcoded-config-shadow",
+      "jev/no-sibling-identifier-swap",
       "jev/no-feature-envy",
     ]);
   });
