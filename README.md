@@ -89,13 +89,33 @@ pnpm jevlint audit --max-questions 2000 --evidence-budget-ms 60000
 
 Change-scope rules (for example `jev/no-complexity-displacement`) need before/after change context, so an audit never scores them. They are listed under `coverage.unscoredRules` instead of being scored, and no change candidates are synthesized.
 
+### Scoping runs to paths
+
+`review` defaults to changed files; `audit` defaults to every source file. Positional paths filter either scope to files or directories:
+
+```sh
+pnpm jevlint review src/checkout
+pnpm jevlint audit src/checkout
+```
+
+A scope that matches nothing is an error, unless `--no-error-on-unmatched-pattern` is given, which exits 0 with an empty report instead.
+
+Inspect the resolved scope, timings, or cache behavior without disturbing stdout. Stdout carries only the report or config JSON; all human chatter goes to stderr:
+
+```sh
+pnpm jevlint review --debug=files
+pnpm jevlint review --debug=timings
+pnpm jevlint review --debug=cache
+pnpm jevlint review --print-config
+```
+
+`--debug=files` prints the resolved scope file list and exits without evaluating. `--debug=timings` prints a per-rule timing table after the report. `--debug=cache` prints cache statistics. `--print-config` prints the effective config as JSON and exits without evaluating. Per-command help is available via `jevlint review --help` and `jevlint audit --help`.
+
 Produce machine-readable output:
 
 ```sh
 pnpm jevlint review --format json
 ```
-
-`jevlint diff` remains as a compatibility alias for `jevlint review` with identical score output.
 
 Every evaluated rule/candidate pair is reported as a judgment with a probability, the rule's proposition, the candidate's file and span, its kind, and the bounded evidence behind the score. Text output ranks judgments by descending probability with deterministic tie-breaks, shows the top 5 by default, and ends with a summary line; when judgments are hidden by the limit, one hint line after the summary states the remaining count and how to see them:
 
@@ -124,7 +144,7 @@ With more than 5 judgments, text output keeps the top 5 and appends a hint line 
 Jev judgments are cached by default in the current worktree's Git metadata. Candidate discovery and repository evidence collection still run every time. Inspect a run, force fresh judgments, or bypass the cache with:
 
 ```sh
-pnpm jevlint review --verbose
+pnpm jevlint review --debug=cache
 pnpm jevlint review --refresh-cache
 pnpm jevlint review --no-cache
 ```

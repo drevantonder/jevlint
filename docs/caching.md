@@ -52,7 +52,7 @@ Caching is on by default.
 ```sh
 jevlint review --no-cache
 jevlint review --refresh-cache
-jevlint review --verbose
+jevlint review --debug=cache
 ```
 
-`--no-cache` bypasses reads and writes. `--refresh-cache` bypasses reads, performs live evaluations, and atomically replaces matching entries. `--verbose` writes one cache summary to stderr after analysis. Normal output stays unchanged.
+`--no-cache` bypasses reads and writes. `--refresh-cache` bypasses reads, performs live evaluations, and atomically replaces matching entries. `--debug=cache` writes one cache summary to stderr after analysis. Normal output stays unchanged.
