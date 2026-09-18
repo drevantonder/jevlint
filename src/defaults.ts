@@ -838,11 +838,12 @@ export const defaultConfig: JevLintConfig = {
         instructions: {
           question: "Does this function reimplement logic that already exists elsewhere in the repository?",
           inspect: "Compare the normalized statement fingerprint with each matching function excerpt, the shared literals and member names, shared imports, common callers, and repository callers in the supplied evidence.",
-          focus: "Judge whether the candidate repeats domain behavior already owned elsewhere, rather than sharing only generic scaffolding.",
+          focus: "Judge whether the candidate repeats domain behavior already owned elsewhere, rather than sharing only generic scaffolding, weighing shared-evolution signals against divergence in the excerpts.",
           decision_boundary: [
             "A body that matches another function statement-for-statement, including the same literals and domain member names, is strong evidence of reimplemented logic.",
             "Shared try/catch structure, map/filter chains, or other generic scaffolding with no shared literals or domain tokens is weak evidence on its own.",
             "A single shared literal or member name without structural similarity is insufficient; look for the fingerprint and excerpts to agree.",
+            "Shared imports and common caller files show the two implementations evolve under one audience and strengthen the case; disjoint callers with distinct domain vocabulary in the excerpts weaken it toward legitimately separate implementations.",
             "Matches in test fixtures, generated code, or intentionally parallel implementations with distinct ownership are not duplication that needs one home.",
             "If the evidence does not establish a concrete matching implementation with shared domain behavior, answer no.",
           ],
@@ -3871,10 +3872,11 @@ export const defaultConfig: JevLintConfig = {
         instructions: {
           question: "Does this function compute what a neighboring helper already provides, spelled differently enough to evade textual matching?",
           inspect: "Compare the candidate signature with each matched helper signature, their textual dissimilarity, the fingerprint-gap signals, and shared callers in the supplied evidence.",
-          focus: "Judge input and output equivalence plus helper existence, never text identity.",
+          focus: "Judge input and output equivalence plus helper existence, never text identity, weighing shared-evolution signals against divergence in edge-case behavior.",
           decision_boundary: [
             "Identical parameter and return shapes with a coexisting helper and interchangeable callers are strong evidence of one computation owned twice.",
             "High textual dissimilarity corroborates that whole-body fingerprinting cannot see the duplication; it is evidence of the gap, not of innocence.",
+            "Common caller files show both spellings serve one audience and strengthen the case for one home; disjoint callers with independently evolved edge cases weaken it toward legitimately separate helpers.",
             "Similar-typed helpers whose edge-case behavior provably differs answer the question negatively.",
             "If the evidence does not establish equivalent inputs and outputs, answer no.",
           ],
@@ -7250,28 +7252,28 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Do these structurally similar spans encode different domain concepts, so consolidating them would create a false abstraction?",
-          inspect: "Compare the similarity trigger with each lookalike's divergence signals: member and literal names only one side uses, shared versus distinct domain tokens in the names, whether the files share a module role, and whether caller populations and imports overlap in the supplied evidence.",
-          focus: "Judge whether the resemblance is coincidence between distinct concepts that must stay separate, rather than one behavior with two spellings.",
+          question: "Is this structural similarity a mergeable duplication worth consolidating into one shared unit?",
+          inspect: "Compare the similarity trigger, opcode overlap and sequence with shared member names and literal values, against each lookalike's mergeability facts: shared literals and domain member names, common caller files, shared import sources, and same module role, weighed against divergence facts: candidate-only and match-only members and literals, distinct name tokens, different module roles, and disjoint callers in the supplied evidence.",
+          focus: "Judge whether the spans share one concept that should have one home, not whether the spans merely look alike.",
           decision_boundary: [
-            "High structural overlap together with disjoint domain vocabulary, different module roles, and disjoint callers is strong evidence that merging would forge a false abstraction.",
-            "Shared literals, shared domain member names, common callers, or shared imports indicate one genuine concept and answer the question negatively; the merge-side rules then own the finding.",
-            "Generic scaffolding alone, such as matching try/catch shape with no shared domain tokens, is not a merge risk worth scoring.",
-            "This rule reads the same similarity trigger as duplicated-logic in the opposite direction: high here means do not consolidate, which inverts the usual consolidation remedy.",
-            "If the evidence does not establish both a concrete similarity trigger and divergence in what the spans mean, answer no.",
+            "Structural overlap together with shared literals, shared domain member names, common caller files, or shared import sources is strong evidence the spans share one concept worth consolidating.",
+            "Disjoint domain vocabulary, different module roles, and disjoint callers are strong evidence the resemblance is coincidence; legitimately separate spans answer the question negatively, and the honest answer for distinct concepts is no.",
+            "Generic scaffolding alone, such as matching try/catch shape with no shared domain tokens, is not a mergeable duplication.",
+            "This rule reads the same similarity trigger as duplicated-logic from the mergeability side: yes here means consolidate, and the consolidation remedy owns the finding.",
+            "If the evidence does not establish both a concrete similarity trigger and shared-concept signals, answer no.",
           ],
         },
         criteria: {
           true: {
-            what: "Structurally similar spans encode distinct domain concepts with disjoint vocabulary, roles, or audiences, so merging them would invent a false shared abstraction",
-            remedy: "Keep the spans separate and let each evolve under its own domain owner",
+            what: "Structurally similar spans share one domain concept shown by common literals, members, callers, or imports, so one named unit should own the behavior",
+            remedy: "Extract the shared behavior into one named unit and reuse it from both spans",
           },
           false: {
-            what: "The spans share a genuine concept shown by common literals, members, callers, or imports, or no concrete lookalike is established",
+            what: "The spans encode distinct concepts with disjoint vocabulary, roles, or audiences, or no concrete mergeable concept is established",
           },
         },
       },
-      message: "These lookalikes encode different concepts; consolidating them would forge a false abstraction.",
+      message: "These lookalikes share one concept; consolidate them into one named unit.",
     },
     "jev/no-entangled-mechanical-change": {
       scope: "change",
