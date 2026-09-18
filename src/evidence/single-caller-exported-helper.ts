@@ -2,7 +2,7 @@ import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
-  findFunctionCallersWithCoverage,
+  findFunctionCallersAndReferencesWithCoverage,
   findModuleImporters,
   functionName,
   isFunctionExported,
@@ -75,7 +75,14 @@ export function buildSingleCallerExportedHelperEvidence(
   if (!name) return undefined;
   if (!isFunctionExported(parsed.program, fn, name)) return undefined;
 
-  const coverage = findFunctionCallersWithCoverage(owner.filePath, name, projectFiles);
+  // A lone reference-as-value (`const g = fn`) is still exactly one
+  // production consumer, so it lands in the single-caller seam as the caller.
+  const coverage = findFunctionCallersAndReferencesWithCoverage(
+    owner.filePath,
+    name,
+    projectFiles,
+    { start: fn.start, end: fn.end },
+  );
   const { production, test } = partitionCallersByTest(coverage.callers);
   if (production.length !== 1) return undefined;
   const caller = production[0];
