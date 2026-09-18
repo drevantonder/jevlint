@@ -1,5 +1,6 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
+import { isTestFileContent } from "./test-signals.js";
 import type { Expression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -38,7 +39,6 @@ const RESIDUE_METHODS = new Set(["log", "debug", "info", "trace", "dir", "table"
 
 const LOGGER_SOURCES = ["winston", "pino", "bunyan", "loglevel", "signale", "roarr", "debug"];
 
-const TEST_PATH_PATTERN = /(^|\/)(__tests__|__mocks__|test|tests|spec|e2e)(\/|$|\.)|\.(test|spec)\.[cm]?[jt]sx?$/;
 
 function lineAt(source: string, offset: number): number {
   let line = 1;
@@ -63,7 +63,7 @@ export function buildConsoleResidueEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  if (TEST_PATH_PATTERN.test(owner.filePath)) return undefined;
+  if (isTestFileContent(owner.filePath, owner.source)) return undefined;
   const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);

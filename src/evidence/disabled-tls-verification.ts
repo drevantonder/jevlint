@@ -2,6 +2,7 @@ import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, nestedFunctionRanges } from "./function-scope.js";
+import { isTestProjectFile } from "./test-signals.js";
 import {
   findDirectFunction,
   findFunctionCallers,
@@ -33,7 +34,6 @@ export type DisabledTlsVerificationEvidence = {
   callers: FunctionCaller[];
 };
 
-const TEST_PATH_PATTERN = /(^|\/)(test|tests|__tests__|__fixtures__|fixtures?|mocks?|spec)(^|\/|\.)|\.(test|spec)\.[cm]?[jt]sx?$/i;
 const DOCS_PATH_PATTERN = /(^|\/)(docs|examples?)(^|\/)/i;
 const CLIENT_IMPORT_PATTERN = /^(node:)?(https|tls|http2|net)$|axios|node-fetch|undici|got|superagent|elasticsearch|@elastic|pg|ioredis|redis|mqtt|amqplib|nodemailer|ws$/i;
 const AGENT_CALLEE_PATTERN = /Agent$/;
@@ -46,8 +46,8 @@ function lineAt(source: string, offset: number): number {
   return line;
 }
 
-function fileRole(filePath: string): "test" | "docs" | "service" {
-  if (TEST_PATH_PATTERN.test(filePath)) return "test";
+function fileRole(filePath: string, projectFiles: ProjectFile[]): "test" | "docs" | "service" {
+  if (isTestProjectFile(filePath, projectFiles)) return "test";
   if (DOCS_PATH_PATTERN.test(filePath)) return "docs";
   return "service";
 }
@@ -154,7 +154,7 @@ export function buildDisabledTlsVerificationEvidence(
       name,
       exported: isFunctionExported(parsed.program, fn, name),
       filePath: candidate.filePath,
-      fileRole: fileRole(candidate.filePath),
+      fileRole: fileRole(candidate.filePath, projectFiles),
       source: candidate.source,
     },
     bypasses: found.slice(0, 10).map(({ kind, start, end }) => ({

@@ -57,9 +57,12 @@ describe("far away test evidence", () => {
       test: { filePath: "tests/billing.test.ts", dir: "tests", stem: "billing" },
       subject: { candidates: ["src/billing.ts"], dir: "src" },
       distanceSegments: 2,
-      repoNorm: { testFiles: 10, colocated: 8 },
+      // tests/helpers.ts carries no test content (no filename segment, no
+      // framework import, no runner usage), so the content classifier counts
+      // it as a production file: 9 test files, still 8 colocated.
+      repoNorm: { testFiles: 9, colocated: 8 },
     });
-    expect(evidence?.repoNorm.agreement).toBeCloseTo(8 / 10);
+    expect(evidence?.repoNorm.agreement).toBeCloseTo(8 / 9);
     expect(evidence?.module.dir).toBe("tests");
     expect(evidence?.module.truncated).toBe(false);
   });

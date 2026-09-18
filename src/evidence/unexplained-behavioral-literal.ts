@@ -129,7 +129,7 @@ export function buildUnexplainedBehavioralLiteralEvidence(
   projectFiles: ProjectFile[],
 ): UnexplainedBehavioralLiteralEvidence | undefined {
   if (candidate.kind !== "function") return undefined;
-  if (isTestFilePath(candidate.filePath)) return undefined;
+  if (isTestFilePath(candidate.filePath, projectFiles)) return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
   const parsed = parseCached(owner.filePath, owner.source);

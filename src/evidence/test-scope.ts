@@ -4,6 +4,7 @@ import type { CallExpression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { calleeRootName, findDirectFunction, findFunctionCallersWithCoverage, findSeamCallSites } from "./repository.js";
 import type { FunctionCaller, FunctionNode } from "./repository.js";
+import { isTestFilename, isTestProjectFile } from "./test-signals.js";
 
 export interface TestFunctionScope {
   owner: ProjectFile;
@@ -13,11 +14,9 @@ export interface TestFunctionScope {
   runner: "it" | "test" | "describe" | null;
 }
 
-export function isTestFilePath(filePath: string): boolean {
-  const normalized = filePath.replaceAll("\\", "/");
-  const base = normalized.split("/").pop() ?? normalized;
-  if (/(^|\.)(test|spec)\.[cm]?[jt]sx?$/i.test(base)) return true;
-  return /(^|\/)__tests__\//.test(normalized);
+export function isTestFilePath(filePath: string, projectFiles?: ProjectFile[]): boolean {
+  if (projectFiles !== undefined) return isTestProjectFile(filePath, projectFiles);
+  return isTestFilename(filePath);
 }
 
 export interface PartitionedCallers {
@@ -28,11 +27,14 @@ export interface PartitionedCallers {
 /** Split callers into production callers and test callers.
  * A test caller exercises the function without making it live in the product,
  * so rules count only production callers while naming test callers as evidence. */
-export function partitionCallersByTest(callers: FunctionCaller[]): PartitionedCallers {
+export function partitionCallersByTest(
+  callers: FunctionCaller[],
+  projectFiles?: ProjectFile[],
+): PartitionedCallers {
   const production: FunctionCaller[] = [];
   const test: FunctionCaller[] = [];
   for (const caller of callers) {
-    if (isTestFilePath(caller.filePath)) test.push(caller);
+    if (isTestFilePath(caller.filePath, projectFiles)) test.push(caller);
     else production.push(caller);
   }
   return { production, test };
@@ -70,11 +72,11 @@ export function findTransitiveTestPins(
   const seen = new Set<string>();
   for (const site of findSeamCallSites(ownerPath, candidateName, projectFiles)) {
     if (site.seam === null) continue;
-    if (isTestFilePath(site.filePath)) continue;
+    if (isTestFilePath(site.filePath, projectFiles)) continue;
     if (site.filePath === ownerPath && site.seam === candidateName) continue;
     const seamCallers = findFunctionCallersWithCoverage(site.filePath, site.seam, projectFiles);
     for (const caller of seamCallers.callers) {
-      if (!isTestFilePath(caller.filePath)) continue;
+      if (!isTestFilePath(caller.filePath, projectFiles)) continue;
       const key = `${caller.filePath}\u0000${site.filePath}\u0000${site.seam}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -100,7 +102,7 @@ export function parseTestFunction(
   projectFiles: ProjectFile[],
 ): TestFunctionScope | undefined {
   if (candidate.kind !== "function") return undefined;
-  if (!isTestFilePath(candidate.filePath)) return undefined;
+  if (!isTestFilePath(candidate.filePath, projectFiles)) return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
   const parsed = parseCached(owner.filePath, owner.source);

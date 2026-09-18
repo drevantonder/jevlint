@@ -9,6 +9,7 @@ import {
   nestedFunctionRanges,
 } from "./repository.js";
 import type { FunctionNode } from "./repository.js";
+import { isTestFileContent } from "./test-signals.js";
 import { isTestFilePath } from "./test-scope.js";
 
 export type SingletonGrabEvidence = {
@@ -78,7 +79,7 @@ export function buildUntestableSingletonGrabEvidence(
   projectFiles: ProjectFile[],
 ): UntestableSingletonGrabEvidence | undefined {
   if (candidate.kind !== "function") return undefined;
-  if (isTestFilePath(candidate.filePath)) return undefined;
+  if (isTestFilePath(candidate.filePath, projectFiles)) return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
   const parsed = parseCached(owner.filePath, owner.source);
@@ -154,7 +155,7 @@ export function buildUntestableSingletonGrabEvidence(
 
   const testDoubleFiles: string[] = [];
   for (const file of projectFiles) {
-    if (!isTestFilePath(file.filePath)) continue;
+    if (!isTestFileContent(file.filePath, file.source)) continue;
     const mentionsModule = [...singletonLocals.values()].some((module) => {
       const base = module.split("/").pop() ?? module;
       return file.source.includes(module) || (base.length > 2 && file.source.includes(base));

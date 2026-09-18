@@ -34,12 +34,16 @@ describe("live credential evidence", () => {
   });
 
   it("marks placeholders in test fixtures as inert signals", () => {
+    // The describe block is the content signal marking this fixture as test
+    // code; the fixtures/ directory name it used to rely on is gone.
     const { candidate, projectFiles } = changedFunction(
       "test/fixtures/auth.ts",
-      "export function testCredentials(): { password: string } {\n"
+      "import { describe } from \"vitest\";\n"
+      + "export function testCredentials(): { password: string } {\n"
       + "  const password = \"changeme\";\n"
       + "  return { password };\n"
-      + "}\n",
+      + "}\n"
+      + "describe(\"fixtures\", () => {});\n",
     );
 
     expect(buildLiveCredentialEvidence(candidate, projectFiles)).toMatchObject({

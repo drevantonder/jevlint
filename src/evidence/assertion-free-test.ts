@@ -7,7 +7,8 @@ import {
   isInsideNestedFunction,
   nestedFunctionRanges,
 } from "./repository.js";
-import { isTestFilePath, parseTestFunction } from "./test-scope.js";
+import { parseTestFunction } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type SiblingAssertionNorm = {
   subject: string;
@@ -91,7 +92,7 @@ function siblingAssertionNorm(
   let assertingTests = 0;
   const files = new Set<string>();
   for (const file of projectFiles) {
-    if (file.filePath === ownerPath || !isTestFilePath(file.filePath)) continue;
+    if (file.filePath === ownerPath || !isTestFileContent(file.filePath, file.source)) continue;
     const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     let assertsOnSubject = false;

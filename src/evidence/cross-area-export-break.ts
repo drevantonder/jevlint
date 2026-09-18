@@ -83,7 +83,7 @@ export function buildCrossAreaExportBreakEvidence(
       byArea.set(area, group);
     }
     group.importerCount += 1;
-    if (isTestFile(edge.from)) {
+    if (isTestFile(edge.from, projectFiles)) {
       if (group.testImporters.length < MAX_IMPORTERS_PER_GROUP) group.testImporters.push(edge.from);
     } else if (group.runtimeImporters.length < MAX_IMPORTERS_PER_GROUP) {
       group.runtimeImporters.push(edge.from);

@@ -7,7 +7,8 @@ import {
   moduleImports,
   resolveModule,
 } from "./repository.js";
-import { isTestFilePath, parseTestFunction } from "./test-scope.js";
+import { parseTestFunction } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type FixtureBlockEvidence = {
   filePath: string;
@@ -166,7 +167,7 @@ export function buildDuplicatedFixtureDriftEvidence(
 
   const copies: FixtureBlockEvidence[] = [];
   for (const file of projectFiles) {
-    if (!isTestFilePath(file.filePath)) continue;
+    if (!isTestFileContent(file.filePath, file.source)) continue;
     for (const block of collectBlocks(file)) {
       if (block.filePath === owner.filePath && block.fingerprint === ownFingerprint) continue;
       if (fingerprintsMatch(ownFingerprint, block.fingerprint)) copies.push(block);
@@ -195,7 +196,7 @@ export function buildDuplicatedFixtureDriftEvidence(
 
   const imports = moduleImports(program);
   const sharedFactoryExists = projectFiles.some((file) => {
-    if (isTestFilePath(file.filePath)) return false;
+    if (isTestFileContent(file.filePath, file.source)) return false;
     if (!/fixture|factory/i.test(file.filePath)) return false;
     return imports.some((entry) => {
       if (!entry.source.startsWith(".")) return false;

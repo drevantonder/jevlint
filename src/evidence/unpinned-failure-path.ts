@@ -10,7 +10,8 @@ import {
   isInsideNestedFunction,
   nestedFunctionRanges,
 } from "./repository.js";
-import { isTestFilePath, findTransitiveTestPins, type TransitivePin } from "./test-scope.js";
+import { findTransitiveTestPins, isTestFilePath, type TransitivePin } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type FailurePathRecovery =
   | "maps-to-domain-error"
@@ -73,7 +74,7 @@ export function buildUnpinnedFailurePathEvidence(
   projectFiles: ProjectFile[],
 ): UnpinnedFailurePathEvidence | undefined {
   if (candidate.kind !== "function") return undefined;
-  if (isTestFilePath(candidate.filePath)) return undefined;
+  if (isTestFilePath(candidate.filePath, projectFiles)) return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
   const parsed = parseCached(owner.filePath, owner.source);
@@ -125,16 +126,17 @@ export function buildUnpinnedFailurePathEvidence(
   const namePattern = new RegExp(`\\b${name.replace(/\$/g, "\\$")}\\b`);
   for (const file of projectFiles) {
     if (file.filePath === candidate.filePath) continue;
-    if (!isTestFilePath(file.filePath)) continue;
-    if (namePattern.test(file.source) && testReferences.length < 10) {
+    if (!namePattern.test(file.source)) continue;
+    if (testReferences.length < 10
+      && isTestFileContent(file.filePath, file.source)) {
       testReferences.push(file.filePath);
     }
   }
   const testReferenceCount = projectFiles.filter(
     (file) =>
       file.filePath !== candidate.filePath
-      && isTestFilePath(file.filePath)
-      && namePattern.test(file.source),
+      && namePattern.test(file.source)
+      && isTestFileContent(file.filePath, file.source),
   ).length;
 
   const pinning: UnpinnedFailurePathEvidence["pinning"] = {

@@ -93,7 +93,7 @@ function wrapperPaths(projectFiles: ProjectFile[], candidatePath: string): { pat
   const wrappers: { path: string; importerCount: number }[] = [];
   for (const file of projectFiles) {
     if (file.filePath === candidatePath) continue;
-    if (isTestFile(file.filePath)) continue;
+    if (isTestFile(file.filePath, projectFiles)) continue;
     const program = parseProgram(file.filePath, file.source);
     if (!program) continue;
     const bare = moduleImports(program)

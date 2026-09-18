@@ -10,7 +10,8 @@ import {
   nestedFunctionRanges,
   resolveModule,
 } from "./repository.js";
-import { isTestFilePath, parseTestFunction } from "./test-scope.js";
+import { parseTestFunction } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type QuarantinedTestCoverageEvidence = {
   function: {
@@ -120,7 +121,7 @@ export function buildQuarantinedTestCoverageEvidence(
   const titleWords = (scope.title ?? "").split(/\s+/).filter((word) => word.length > 3);
   for (const file of projectFiles) {
     if (file.filePath === owner.filePath) continue;
-    if (!isTestFilePath(file.filePath)) continue;
+    if (!isTestFileContent(file.filePath, file.source)) continue;
     const namesSubject = subjectSymbols.some((symbol) =>
       new RegExp(`\\b${symbol.replace(/\$/g, "\\$")}\\b`).test(file.source)
     );

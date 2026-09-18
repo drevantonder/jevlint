@@ -68,7 +68,7 @@ export function buildStableSurfaceWideningEvidence(
   let runtimeImporters = 0;
   let testImporters = 0;
   for (const edge of module.importEdgesIn) {
-    if (isTestFile(edge.from)) testImporters += 1;
+    if (isTestFile(edge.from, projectFiles)) testImporters += 1;
     else runtimeImporters += 1;
     const area = topDirOf(edge.from) || "(root)";
     const list = byArea.get(area) ?? [];
@@ -95,6 +95,6 @@ export function buildStableSurfaceWideningEvidence(
     testImporters,
     barrelReExportsNew,
     barrelTruncated: module.barrel.reExportsTruncated,
-    testMarked: isTestFile(candidate.filePath),
+    testMarked: isTestFile(candidate.filePath, projectFiles),
   };
 }

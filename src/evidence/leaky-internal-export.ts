@@ -1,4 +1,5 @@
 import { parseCached } from "./parse-cache.js";
+import { isTestFileContent, isTestFilename } from "./test-signals.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   abstractionName,
@@ -12,8 +13,19 @@ import type { ModuleImporter } from "./repository.js";
 const MAX_REEXPORTS = 10;
 const MAX_EXCERPT_CHARS = 500;
 
-const INTERNAL_PATH_PATTERN = /(^|[/\\])(internal|_internal|private|_private|__tests__|__fixtures__|fixtures?|mocks?|test-helpers?|testing|__mocks__)([/\\]|$)/i;
-const INTERNAL_FILE_PATTERN = /(^|[/\\])(internal|_private|_internal)[\w.-]*\.[cm]?[jt]sx?$|\.(test|spec|fixture|mock)\.[cm]?[jt]sx?$/i;
+const INTERNAL_PATH_PATTERN = /(^|[/\\])(internal|_internal|private|_private)([/\\]|$)/i;
+const INTERNAL_FILE_PATTERN = /(^|[/\\])(internal|_private|_internal)[\w.-]*\.[cm]?[jt]sx?$|\.(fixture|mock)\.[cm]?[jt]sx?$/i;
+
+// A re-export target is internal-marked by encapsulation path segments
+// (internal/, private/) or by test/fixture content. Directory names alone
+// no longer decide: test targets classify through the shared content
+// signals, with a filename fallback for unresolvable (external) targets.
+function isInternalTarget(ownerPath: string, target: string, projectFiles: ProjectFile[]): boolean {
+  if (INTERNAL_PATH_PATTERN.test(target) || INTERNAL_FILE_PATTERN.test(target)) return true;
+  const resolved = resolveModule(ownerPath, target, projectFiles);
+  if (resolved) return isTestFileContent(resolved.filePath, resolved.source);
+  return isTestFilename(target);
+}
 const INTERNAL_SYMBOL_PATTERN = /^_|internal/i;
 const INTERNAL_DOC_PATTERN = /@internal\b|internal use only|do not import|private api/i;
 
@@ -71,7 +83,7 @@ export function buildLeakyInternalExportEvidence(
     if (statement.type === "ExportAllDeclaration") {
       const target = statement.source.value;
       const markers: string[] = [];
-      if (INTERNAL_PATH_PATTERN.test(target) || INTERNAL_FILE_PATTERN.test(target)) {
+      if (isInternalTarget(owner.filePath, target, projectFiles)) {
         markers.push(`internal path segment in ${JSON.stringify(target)}`);
       }
       reExports.push({
@@ -85,7 +97,7 @@ export function buildLeakyInternalExportEvidence(
     if (statement.type === "ExportNamedDeclaration" && statement.source) {
       const target = statement.source.value;
       const markers: string[] = [];
-      if (INTERNAL_PATH_PATTERN.test(target) || INTERNAL_FILE_PATTERN.test(target)) {
+      if (isInternalTarget(owner.filePath, target, projectFiles)) {
         markers.push(`internal path segment in ${JSON.stringify(target)}`);
       }
       const leakedSymbols = statement.specifiers.map(exportedName);

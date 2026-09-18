@@ -3,6 +3,7 @@ import { parseCached } from "./parse-cache.js";
 import type { Expression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, nestedFunctionRanges } from "./function-scope.js";
+import { isTestProjectFile } from "./test-signals.js";
 import {
   findDirectFunction,
   findFunctionCallers,
@@ -44,7 +45,6 @@ const CREDENTIAL_NAME_PATTERN = /password|passwd|secret|token|api[_-]?key|auth|p
 const PLACEHOLDER_PATTERN = /example|changeme|xxx+|test|dummy|placeholder|localhost|1234|password|qwerty|asdf|abcd/i;
 const CLIENT_CALL_PATTERN = /client|connect|login|auth|token|secret|password|stripe|openai|sendgrid|twilio|aws|redis|postgres|mongo/i;
 const ENV_PATTERN = /process\.env\.([A-Za-z_][\w]*)/g;
-const TEST_PATH_PATTERN = /(^|\/)(test|tests|__tests__|__fixtures__|fixtures?|mocks?|spec)(^|\/|\.)|\.(test|spec)\.[cm]?[jt]sx?$/i;
 const DOCS_PATH_PATTERN = /(^|\/)(docs|examples?)(^|\/)/i;
 
 function lineAt(source: string, offset: number): number {
@@ -85,8 +85,8 @@ function stringValue(node: Expression, source: string): string | undefined {
   return inner.length === 0 ? undefined : inner;
 }
 
-function fileRole(filePath: string): "test" | "docs" | "service" {
-  if (TEST_PATH_PATTERN.test(filePath)) return "test";
+function fileRole(filePath: string, projectFiles: ProjectFile[]): "test" | "docs" | "service" {
+  if (isTestProjectFile(filePath, projectFiles)) return "test";
   if (DOCS_PATH_PATTERN.test(filePath)) return "docs";
   return "service";
 }
@@ -191,7 +191,7 @@ export function buildLiveCredentialEvidence(
       name,
       exported: isFunctionExported(parsed.program, fn, name),
       filePath: candidate.filePath,
-      fileRole: fileRole(candidate.filePath),
+      fileRole: fileRole(candidate.filePath, projectFiles),
       source: candidate.source,
     },
     secrets: secrets.slice(0, 10),

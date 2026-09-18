@@ -60,7 +60,7 @@ export function buildCrossContextTestReachEvidence(
 ): CrossContextTestReachEvidence | undefined {
   if (candidate.kind !== "module") return undefined;
   if (isFrameworkScaffolded(candidate.filePath)) return undefined;
-  if (isTestFile(candidate.filePath)) return undefined;
+  if (isTestFile(candidate.filePath, projectFiles)) return undefined;
   const module = buildModuleEvidence(candidate.filePath, changes, projectFiles);
   if (!module) return undefined;
 
@@ -76,7 +76,7 @@ export function buildCrossContextTestReachEvidence(
     if (edge.resolved === null) continue;
     if (previous.has(edge.to)) continue;
     if (edge.resolved === candidate.filePath) continue;
-    const testFile = isTestFile(edge.resolved);
+    const testFile = isTestFile(edge.resolved, projectFiles);
     const fixtureSegment = FIXTURE_SEGMENT_PATTERN.test(edge.resolved);
     if (!testFile && !fixtureSegment) continue;
     const targetArea = topDirOf(edge.resolved);

@@ -100,7 +100,7 @@ export function buildSameStemDivergentRoleEvidence(
       exports: twinExports.slice(0, 20),
       sharedExports: shared,
       overlapRatio,
-      testMarked: isTestFile(file.filePath),
+      testMarked: isTestFile(file.filePath, projectFiles),
       siblingSuffixes: Object.fromEntries(suffixEntries(dirOf(file.filePath), projectFiles)),
     });
   }

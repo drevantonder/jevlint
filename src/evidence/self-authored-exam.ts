@@ -3,7 +3,7 @@ import { parseCached } from "./parse-cache.js";
 import type { CallExpression } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { calleeRootName, moduleImports, resolveModule } from "./repository.js";
-import { isTestFilePath } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type ExamAnchor = {
   declaration: string;
@@ -168,10 +168,10 @@ export function buildSelfAuthoredExamEvidence(
 
   const changedPaths = new Set(changes.map(({ filePath }) => filePath));
   const testChanges = changes.filter((change) =>
-    isTestFilePath(change.filePath) && CODE_EXTENSIONS.test(change.filePath)
+    isTestFileContent(change.filePath, change.source) && CODE_EXTENSIONS.test(change.filePath)
   );
   const implChanges = changes.filter((change) =>
-    !isTestFilePath(change.filePath) && CODE_EXTENSIONS.test(change.filePath)
+    !isTestFileContent(change.filePath, change.source) && CODE_EXTENSIONS.test(change.filePath)
   );
   if (testChanges.length === 0 || implChanges.length === 0) return undefined;
 

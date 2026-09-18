@@ -7,7 +7,7 @@ import {
   isFunctionExported,
 } from "./repository.js";
 import type { FunctionCaller, FunctionNode } from "./repository.js";
-import { isTestFilePath } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type ClaimSignal = {
   signal: string;
@@ -178,7 +178,7 @@ function testPinning(
   const pinned: TestPinning[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    if (!isTestFilePath(file.filePath)) continue;
+    if (!isTestFileContent(file.filePath, file.source)) continue;
     for (const line of file.source.split("\n")) {
       if (!reference.test(line)) continue;
       pinned.push({ filePath: file.filePath, excerpt: line.trim().slice(0, 300) });

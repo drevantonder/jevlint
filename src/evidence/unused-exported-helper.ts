@@ -155,7 +155,7 @@ export function buildUnusedExportedHelperEvidence(
   if (MARKER_PATTERN.test(markerWindow)) return undefined;
 
   const coverage = findFunctionCallersWithCoverage(owner.filePath, name, projectFiles);
-  const { production, test } = partitionCallersByTest(coverage.callers);
+  const { production, test } = partitionCallersByTest(coverage.callers, projectFiles);
   if (production.length > 0) return undefined;
 
   const importers = findModuleImporters(owner.filePath, projectFiles)
