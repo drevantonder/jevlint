@@ -12,6 +12,7 @@ import { buildAnemicTypeEvidence } from "./anemic-type.js";
 import { buildAssertionFreeTestEvidence } from "./assertion-free-test.js";
 import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
+import { buildBareJsonParseEvidence } from "./bare-json-parse.js";
 import { buildBarrelBypassEvidence } from "./barrel-bypass.js";
 import { buildBarrelWideReexportEvidence } from "./barrel-wide-reexport.js";
 import { buildBespokeCryptoConstructionEvidence } from "./bespoke-crypto-construction.js";
@@ -321,6 +322,7 @@ type EvidenceRegistry = {
   "jev/no-assertion-free-test": EvidenceBuilder;
   "jev/no-asymmetric-normalization": EvidenceBuilder;
   "jev/no-avoidable-orchestration": EvidenceBuilder;
+  "jev/no-bare-json-parse": EvidenceBuilder;
   "jev/no-barrel-bypass": EvidenceBuilder;
   "jev/no-barrel-wide-reexport": EvidenceBuilder;
   "jev/no-bespoke-crypto-construction": EvidenceBuilder;
@@ -630,6 +632,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildAsymmetricNormalizationEvidence(candidate, projectFiles),
   "jev/no-avoidable-orchestration": (candidate, projectFiles) =>
     buildAvoidableOrchestrationEvidence(candidate, projectFiles),
+  "jev/no-bare-json-parse": (candidate, projectFiles) =>
+    buildBareJsonParseEvidence(candidate, projectFiles),
   "jev/no-barrel-bypass": (candidate, projectFiles, changes) =>
     buildBarrelBypassEvidence(candidate, projectFiles, changes),
   "jev/no-barrel-wide-reexport": (candidate, projectFiles, changes) =>
