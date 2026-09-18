@@ -726,10 +726,13 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this function absorb an operational failure while leaving its caller-facing outcome looking successful or indistinguishable from an ordinary no-result?",
-          inspect: "Use each extracted try block, catch outcome, continuation after the catch, imported dependency contract, and observed callers in the supplied evidence.",
-          focus: "Judge whether the function preserves failure meaning across its boundary, not whether it uses catch syntax or writes a log.",
+          question: "Does this function silence a failure without examining which error it caught, so its caller cannot tell ordinary absence from a breakdown that needs attention?",
+          inspect: "Use each extracted try block, catch outcome, absence-kind guard, reason carrier, stderr write, completeness flip, continuation after the catch, imported dependency contract, and observed callers in the supplied evidence.",
+          focus: "Judge whether the silence is examined — narrowed by error kind or surfaced as data — not whether the function uses catch syntax or writes a log.",
           decision_boundary: [
+            "A catch that examines nothing — no kind guard, no recorded reason, no stderr stream, no completeness flip — and returns empty or success-shaped output treats a vanished path and a real breakdown identically; that unexamined silence is the core shape of this judgment.",
+            "A catch that narrows on the absence family (ENOENT, ENOTDIR, ELOOP, or a not-found-shaped guard) and returns empty for those kinds alone is correct silence; weigh the guard against the claim as a counter-signal.",
+            "A catch that carries the failure forward as data — a per-item reason recorded from the caught error, a stderr stream naming what was skipped, a completeness flag flipped false — mitigates the silence even without throwing; weigh each surfaced fact against the claim.",
             "A catch that logs and then continues into success state, or returns the same sentinel used for an ordinary absence, is strong evidence of a swallowed error.",
             "Logging alone does not preserve the failure for code that must decide what happened.",
             "Rethrowing, returning an explicit failure result, or otherwise making failure distinguishable preserves integrity.",
@@ -740,11 +743,11 @@ export const defaultConfig: JevLintConfig = {
         },
         criteria: {
           true: {
-            what: "The handler prevents a relevant failure from reaching the caller and the remaining return or state can be mistaken for success or normal absence",
-            remedy: "Propagate the error or represent the failure explicitly in the function's contract",
+            what: "The handler silences a failure without examining its kind, and the remaining return or state can be mistaken for success or normal absence",
+            remedy: "Narrow the catch by error kind, propagate the error, or represent the failure explicitly in the function's contract",
           },
           false: {
-            what: "Failure remains explicit, the failed work is genuinely best effort, a fallback preserves the contract, or the evidence cannot establish false success",
+            what: "Failure remains explicit, silence covers only the examined absence family, the failure is surfaced as reason data with completeness marked, the failed work is genuinely best effort, a fallback preserves the contract, or the evidence cannot establish false success",
           },
         },
       },
