@@ -82,6 +82,7 @@ import { buildEntangledMechanicalChangeEvidence } from "./entangled-mechanical-c
 import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
 import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js";
 import { buildFarAwayTestEvidence } from "./far-away-test.js";
+import { buildFarTravelingTerseNameEvidence } from "./far-traveling-terse-name.js";
 import { buildFlagShepherdedControlFlowEvidence } from "./flag-shepherded-control-flow.js";
 import { buildFlakyOrderAssertionEvidence } from "./flaky-order-assertion.js";
 import { buildFloatingMoneyArithmeticEvidence } from "./floating-money-arithmetic.js";
@@ -112,6 +113,7 @@ import { buildHandRolledUuidEvidence } from "./hand-rolled-uuid.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHeterogeneousPrimitiveCallersEvidence } from "./heterogeneous-primitive-callers.js";
 import { buildHiddenCollaboratorReadEvidence } from "./hidden-collaborator-read.js";
+import { buildHiddenHookContractEvidence } from "./hidden-hook-contract.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -391,6 +393,7 @@ type EvidenceRegistry = {
   "jev/no-excess-context-parameter": EvidenceBuilder;
   "jev/no-falsy-absent-conflation": EvidenceBuilder;
   "jev/no-far-away-test": EvidenceBuilder;
+  "jev/no-far-traveling-terse-name": EvidenceBuilder;
   "jev/no-flag-shepherded-control-flow": EvidenceBuilder;
   "jev/no-flaky-order-assertion": EvidenceBuilder;
   "jev/no-floating-money-arithmetic": EvidenceBuilder;
@@ -421,6 +424,7 @@ type EvidenceRegistry = {
   "jev/no-hardcoded-config-shadow": EvidenceBuilder;
   "jev/no-heterogeneous-primitive-callers": EvidenceBuilder;
   "jev/no-hidden-collaborator-read": EvidenceBuilder;
+  "jev/no-hidden-hook-contract": EvidenceBuilder;
   "jev/no-hidden-initialization-order": EvidenceBuilder;
   "jev/no-hidden-input-mutation": EvidenceBuilder;
   "jev/no-hidden-io": EvidenceBuilder;
@@ -770,6 +774,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildFalsyAbsentConflationEvidence(candidate, projectFiles),
   "jev/no-far-away-test": (candidate, projectFiles, changes) =>
     buildFarAwayTestEvidence(candidate, projectFiles, changes),
+  "jev/no-far-traveling-terse-name": (candidate, projectFiles) =>
+    buildFarTravelingTerseNameEvidence(candidate, projectFiles),
   "jev/no-flag-shepherded-control-flow": (candidate, projectFiles) =>
     buildFlagShepherdedControlFlowEvidence(candidate, projectFiles),
   "jev/no-flaky-order-assertion": (candidate, projectFiles) =>
@@ -830,6 +836,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildHeterogeneousPrimitiveCallersEvidence(candidate, projectFiles),
   "jev/no-hidden-collaborator-read": (candidate, projectFiles) =>
     buildHiddenCollaboratorReadEvidence(candidate, projectFiles),
+  "jev/no-hidden-hook-contract": (candidate, projectFiles) =>
+    buildHiddenHookContractEvidence(candidate, projectFiles),
   "jev/no-hidden-initialization-order": (candidate, projectFiles) =>
     buildHiddenInitializationOrderEvidence(candidate, projectFiles),
   "jev/no-hidden-input-mutation": (candidate, projectFiles) =>

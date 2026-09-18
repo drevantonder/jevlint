@@ -6574,6 +6574,33 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This name asserts a property its value contradicts.",
     },
+    "jev/no-hidden-hook-contract": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function call React hooks while bearing a plain name that hides the Rules of Hooks contract from callers?",
+          inspect: "Compare the function name with each hook call in its body, whether each use*-named callee resolves to a genuine hook in the same file, and the repository callers including call sites inside conditions, loops, or nested closures in the supplied evidence.",
+          focus: "Judge whether a caller reading only the name and call sites could tell that Rules of Hooks apply — unconditional top-level invocation — versus a plain helper name suggesting it is safe to call anywhere.",
+          decision_boundary: [
+            "A plain camelCase name such as getUser or loadItems whose body calls useState, useEffect, or another use*-named function that itself calls hooks is strong evidence of a hidden contract.",
+            "Names beginning use followed by a capital letter declare a custom hook, and Capitalized names declare a component; both answer the question negatively.",
+            "A use*-named callee with a same-file definition that calls no hooks is a prefix-sharing helper, not a hook contract; answer negatively unless direct hook calls remain.",
+            "Caller sites inside conditions, loops, or nested closures corroborate the surprise but are not required.",
+            "If the evidence does not establish a hook call in the body, or the function only receives a hook result as an argument, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function invokes hooks in its body while its plain name presents it as an ordinary helper callable from anywhere",
+            remedy: "Rename to a use*-prefixed custom hook, move the hook calls into a component or declared hook, or remove the hook dependency",
+          },
+          false: {
+            what: "The name declares a hook or component, the use*-named callee is a plain helper, or no hook call exists in the body",
+          },
+        },
+      },
+      message: "This plain-named function calls hooks, hiding the Rules of Hooks contract.",
+    },
     "jev/no-punned-name": {
       scope: "function",
       question: {
@@ -6623,6 +6650,31 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "These abbreviations compress real words past recognition.",
+    },
+    "jev/no-far-traveling-terse-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a terse name in this function survive beyond the few-line scope its brevity is justified by?",
+          inspect: "Compare each flagged binding with its declaration-to-last-use span, its capture across nested closures, and whether export carries it into other modules, using the supplied evidence.",
+          focus: "Judge whether a distant reader must re-derive the meaning the declaration site made obvious, because the name is exported, captured across a wide closure, or used far from where it was introduced.",
+          decision_boundary: [
+            "A single-letter or abbreviated binding whose uses stretch across distant branches, or which a nested closure captures far from its declaration, is strong evidence the brevity outlived its scope.",
+            "A terse name confined to its declaration neighborhood, a loop counter inside its own loop, or a catch binding handled where it is caught answers the question negatively.",
+            "An abbreviation that is hard to decode is the sibling rule's concern; here only the distance between introduction and use matters.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A terse binding is read far from its declaration, across closures or module boundaries, where its meaning is no longer obvious",
+            remedy: "Give the traveling binding a name that carries its meaning to the distant use, or narrow the distance between introduction and use",
+          },
+          false: {
+            what: "Each terse name is read beside its declaration, in its canonical loop or handler position, or the names are descriptive throughout",
+          },
+        },
+      },
+      message: "This terse name travels farther than its brevity justifies.",
     },
     "jev/no-negative-boolean-name": {
       scope: "function",
