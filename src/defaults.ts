@@ -6599,6 +6599,32 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This name carries different meanings across its declarations.",
     },
+    "jev/no-stuttering-scope-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function name repeat its enclosing scope's vocabulary so the qualified use site stutters?",
+          inspect: "Compare the function name tokens with the enclosing class name, file stem, and package qualifier tokens, the sibling names sharing the overlap, and the qualified use sites in the supplied evidence.",
+          focus: "Judge whether the repetition restates scope vocabulary the qualifier already carries, so the dotted use reads the same word twice where the bare noun would do.",
+          decision_boundary: [
+            "A name whose tokens duplicate the enclosing class name, file stem, or qualifier, visible as object.member pairs repeating the word, is strong evidence of stuttering.",
+            "Repetition that separates genuine siblings sharing one scope, such as configPath beside configDir, answers the question negatively.",
+            "Domain terms that merely resemble scope tokens without repeating them answer the question negatively.",
+            "If the name shares no token with any enclosing scope, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The name restates a scope token the qualifier already supplies, doubling the word at qualified use sites",
+            remedy: "Drop the scope prefix and keep the bare noun the qualifier implies",
+          },
+          false: {
+            what: "The name stands alone at use sites, or the repetition separates siblings the scope would otherwise blur",
+          },
+        },
+      },
+      message: "This name repeats its enclosing scope's vocabulary.",
+    },
     "jev/no-cryptic-abbreviation": {
       scope: "function",
       question: {

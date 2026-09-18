@@ -236,6 +236,7 @@ const extractedRules = [
   ["jev/no-stale-comment", "comment"],
   ["jev/no-stale-feature-flag", "function"],
   ["jev/no-string-duplicated-enumeration", "change"],
+  ["jev/no-stuttering-scope-name", "function"],
   ["jev/no-subclass-fragility-hook", "function"],
   ["jev/no-superseded-api-use", "function"],
   ["jev/no-swallowed-error", "function"],

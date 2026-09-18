@@ -259,6 +259,7 @@ describe("loadConfig", () => {
       "jev/no-ambiguous-positional-siblings",
       "jev/no-deceptive-name",
       "jev/no-punned-name",
+      "jev/no-stuttering-scope-name",
       "jev/no-cryptic-abbreviation",
       "jev/no-negative-boolean-name",
       "jev/no-unitless-quantity",
