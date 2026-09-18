@@ -221,6 +221,7 @@ import { buildShallowConvenienceLayerEvidence } from "./shallow-convenience-laye
 import { buildSharedKernelNewConsumerEvidence } from "./shared-kernel-new-consumer.js";
 import { buildSharedMutableDefaultEvidence } from "./shared-mutable-default.js";
 import { buildSharedMutableModuleStateEvidence } from "./shared-mutable-module-state.js";
+import { buildSharedTestMutableSetupEvidence } from "./shared-test-mutable-setup.js";
 import { buildShotgunChangeEvidence } from "./shotgun-change.js";
 import { buildSiblingIdentifierSwapEvidence } from "./sibling-identifier-swap.js";
 import { buildSideEffectingConditionalEvidence } from "./side-effecting-conditional-expression.js";
@@ -536,6 +537,7 @@ type EvidenceRegistry = {
   "jev/no-shared-kernel-new-consumer": EvidenceBuilder;
   "jev/no-shared-mutable-default": EvidenceBuilder;
   "jev/no-shared-mutable-module-state": EvidenceBuilder;
+  "jev/no-shared-test-mutable-setup": EvidenceBuilder;
   "jev/no-shotgun-change": EvidenceBuilder;
   "jev/no-sibling-identifier-swap": EvidenceBuilder;
   "jev/no-side-effecting-conditional-expression": EvidenceBuilder;
@@ -1060,6 +1062,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildSharedMutableDefaultEvidence(candidate, projectFiles),
   "jev/no-shared-mutable-module-state": (candidate, projectFiles) =>
     buildSharedMutableModuleStateEvidence(candidate, projectFiles),
+  "jev/no-shared-test-mutable-setup": (candidate, projectFiles) =>
+    buildSharedTestMutableSetupEvidence(candidate, projectFiles),
   "jev/no-shotgun-change": (candidate, projectFiles, changes) =>
     buildShotgunChangeEvidence(candidate, changes, projectFiles),
   "jev/no-sibling-identifier-swap": (candidate, projectFiles) =>

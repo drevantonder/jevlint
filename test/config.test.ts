@@ -318,6 +318,7 @@ describe("loadConfig", () => {
       "jev/no-bare-json-parse",
       "jev/no-indiscriminable-error",
       "jev/no-any-widened-interface",
+      "jev/no-shared-test-mutable-setup",
       // END GENERATED: rule-keys
     ]);
   });

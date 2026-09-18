@@ -8198,6 +8198,34 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This function exposes `any` in its caller-visible signature where a narrower type was available.",
+    },
+
+    "jev/no-shared-test-mutable-setup": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Do tests in this file share mutable setup state across cases instead of arranging isolated state per test?",
+          inspect: "Use the extracted shared variables, where each is written and read, the cross-test flows involving this test, and the isolation signals in the supplied evidence.",
+          focus: "Judge whether this test depends on or feeds mutable state that another case owns, not whether the file uses hooks or helpers at all.",
+          decision_boundary: [
+            "A test reading state assigned in beforeAll or written by another test, with no per-test reset, is strong evidence of shared mutable setup.",
+            "A beforeEach hook that assigns a fresh value before every case answers the question negatively for the state it resets, since each case starts isolated.",
+            "A mutation through a method call on shared state counts as a write alongside direct assignment; a shared binding that no case writes deserves a negative answer.",
+            "A test that arranges all of its inputs in local bindings answers the question negatively for the state it arranges itself.",
+            "If the evidence cannot establish shared mutable state across cases, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test reads setup state another case or a one-time hook wrote, or writes state another case reads, so cases can affect each other",
+            remedy: "Arrange fresh state inside each test or reset the shared binding to a fresh value in beforeEach",
+          },
+          false: {
+            what: "Each test arranges its own state, a hook resets the shared binding per case, or no mutable state crosses case boundaries",
+          },
+        },
+      },
+      message: "These tests share mutable setup state across cases instead of isolating state per test.",
 
     },
   },

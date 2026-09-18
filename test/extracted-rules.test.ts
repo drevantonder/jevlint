@@ -223,6 +223,7 @@ const extractedRules = [
   ["jev/no-shared-kernel-new-consumer", "module"],
   ["jev/no-shared-mutable-default", "function"],
   ["jev/no-shared-mutable-module-state", "abstraction"],
+  ["jev/no-shared-test-mutable-setup", "function"],
   ["jev/no-shotgun-change", "change"],
   ["jev/no-sibling-identifier-swap", "function"],
   ["jev/no-side-effecting-conditional-expression", "function"],
