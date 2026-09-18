@@ -8033,5 +8033,31 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-cardinality-lying-type": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this type name promise a cardinality its declared shape contradicts?",
+          inspect: "Compare the declared name's plural or singular morphology with its declared shape, the conventional-bag flag, and the use sites in the supplied evidence.",
+          focus: "Judge whether a reader reasoning from the name alone would expect many values where the shape holds one, or one value where the shape holds a collection.",
+          decision_boundary: [
+            "A plural name over an object, union, or other single shape, or a singular name over an array, tuple, set, map, or record shape, is strong evidence of a cardinality lie.",
+            "Conventional singulars such as news, series, or status, uncountable nouns such as data or metadata, and established Settings-style bags answer the question negatively.",
+            "Shapes the evidence cannot classify, such as references to other named types or intersections, answer the question negatively.",
+            "If the evidence does not establish both the number the name promises and the number the shape holds, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A type name pluralizes a non-collection or singularizes a collection, misleading readers about cardinality at every use site",
+            remedy: "Rename the type to match the shape's cardinality, or change the shape to honor the name",
+          },
+          false: {
+            what: "Name and shape agree on cardinality, the name is conventionally singular or uncountable, or the shape cannot be classified",
+          },
+        },
+      },
+      message: "This type name misstates the cardinality of its shape.",
+    },
   },
 };

@@ -312,6 +312,7 @@ describe("loadConfig", () => {
       "jev/no-non-exhaustive-domain-handling",
       "jev/no-misplaced-coordination",
       "jev/no-coupled-index-collections",
+      "jev/no-cardinality-lying-type",
       // END GENERATED: rule-keys
     ]);
   });

@@ -20,6 +20,7 @@ import { buildBooleanFanoutEvidence } from "./boolean-fanout.js";
 import { buildBreakingExportEvidence } from "./breaking-export-reshape.js";
 import { buildCallInLoopPersistenceEvidence } from "./call-in-loop-persistence.js";
 import { buildCallbackReturnSplitEvidence } from "./callback-return-split.js";
+import { buildCardinalityLyingTypeEvidence } from "./cardinality-lying-type.js";
 import { buildCascadingFallbackEvidence } from "./cascading-fallback.js";
 import { buildChangeAmplifierCaseEvidence } from "./change-amplifier-case.js";
 import { buildChangeStrandedCodeEvidence } from "./change-stranded-code.js";
@@ -329,6 +330,7 @@ type EvidenceRegistry = {
   "jev/no-breaking-export-reshape": EvidenceBuilder;
   "jev/no-call-in-loop-persistence": EvidenceBuilder;
   "jev/no-callback-return-split": EvidenceBuilder;
+  "jev/no-cardinality-lying-type": EvidenceBuilder;
   "jev/no-cascading-fallback": EvidenceBuilder;
   "jev/no-change-amplifier-case": EvidenceBuilder;
   "jev/no-change-stranded-code": EvidenceBuilder;
@@ -646,6 +648,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildCallInLoopPersistenceEvidence(candidate, projectFiles),
   "jev/no-callback-return-split": (candidate, projectFiles) =>
     buildCallbackReturnSplitEvidence(candidate, projectFiles),
+  "jev/no-cardinality-lying-type": (candidate, projectFiles) =>
+    buildCardinalityLyingTypeEvidence(candidate, projectFiles),
   "jev/no-cascading-fallback": (candidate, projectFiles) =>
     buildCascadingFallbackEvidence(candidate, projectFiles),
   "jev/no-change-amplifier-case": (candidate, projectFiles, changes) =>

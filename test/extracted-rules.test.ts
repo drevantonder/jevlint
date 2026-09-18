@@ -20,6 +20,7 @@ const extractedRules = [
   ["jev/no-breaking-export-reshape", "change"],
   ["jev/no-call-in-loop-persistence", "function"],
   ["jev/no-callback-return-split", "function"],
+  ["jev/no-cardinality-lying-type", "abstraction"],
   ["jev/no-cascading-fallback", "function"],
   ["jev/no-change-amplifier-case", "change"],
   ["jev/no-change-stranded-code", "change"],
