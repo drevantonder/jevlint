@@ -6624,6 +6624,31 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "These abbreviations compress real words past recognition.",
     },
+    "jev/no-far-traveling-terse-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does a terse name in this function survive beyond the few-line scope its brevity is justified by?",
+          inspect: "Compare each flagged binding with its declaration-to-last-use span, its capture across nested closures, and whether export carries it into other modules, using the supplied evidence.",
+          focus: "Judge whether a distant reader must re-derive the meaning the declaration site made obvious, because the name is exported, captured across a wide closure, or used far from where it was introduced.",
+          decision_boundary: [
+            "A single-letter or abbreviated binding whose uses stretch across distant branches, or which a nested closure captures far from its declaration, is strong evidence the brevity outlived its scope.",
+            "A terse name confined to its declaration neighborhood, a loop counter inside its own loop, or a catch binding handled where it is caught answers the question negatively.",
+            "An abbreviation that is hard to decode is the sibling rule's concern; here only the distance between introduction and use matters.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A terse binding is read far from its declaration, across closures or module boundaries, where its meaning is no longer obvious",
+            remedy: "Give the traveling binding a name that carries its meaning to the distant use, or narrow the distance between introduction and use",
+          },
+          false: {
+            what: "Each terse name is read beside its declaration, in its canonical loop or handler position, or the names are descriptive throughout",
+          },
+        },
+      },
+      message: "This terse name travels farther than its brevity justifies.",
+    },
     "jev/no-negative-boolean-name": {
       scope: "function",
       question: {

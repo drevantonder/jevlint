@@ -82,6 +82,7 @@ const extractedRules = [
   ["jev/no-excess-context-parameter", "function"],
   ["jev/no-falsy-absent-conflation", "function"],
   ["jev/no-far-away-test", "module"],
+  ["jev/no-far-traveling-terse-name", "function"],
   ["jev/no-feature-envy", "function"],
   ["jev/no-flag-shepherded-control-flow", "function"],
   ["jev/no-flaky-order-assertion", "function"],

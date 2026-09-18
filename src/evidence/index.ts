@@ -82,6 +82,7 @@ import { buildEntangledMechanicalChangeEvidence } from "./entangled-mechanical-c
 import { buildExcessContextParameterEvidence } from "./excess-context-parameter.js";
 import { buildFalsyAbsentConflationEvidence } from "./falsy-absent-conflation.js";
 import { buildFarAwayTestEvidence } from "./far-away-test.js";
+import { buildFarTravelingTerseNameEvidence } from "./far-traveling-terse-name.js";
 import { buildFlagShepherdedControlFlowEvidence } from "./flag-shepherded-control-flow.js";
 import { buildFlakyOrderAssertionEvidence } from "./flaky-order-assertion.js";
 import { buildFloatingMoneyArithmeticEvidence } from "./floating-money-arithmetic.js";
@@ -391,6 +392,7 @@ type EvidenceRegistry = {
   "jev/no-excess-context-parameter": EvidenceBuilder;
   "jev/no-falsy-absent-conflation": EvidenceBuilder;
   "jev/no-far-away-test": EvidenceBuilder;
+  "jev/no-far-traveling-terse-name": EvidenceBuilder;
   "jev/no-flag-shepherded-control-flow": EvidenceBuilder;
   "jev/no-flaky-order-assertion": EvidenceBuilder;
   "jev/no-floating-money-arithmetic": EvidenceBuilder;
@@ -770,6 +772,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildFalsyAbsentConflationEvidence(candidate, projectFiles),
   "jev/no-far-away-test": (candidate, projectFiles, changes) =>
     buildFarAwayTestEvidence(candidate, projectFiles, changes),
+  "jev/no-far-traveling-terse-name": (candidate, projectFiles) =>
+    buildFarTravelingTerseNameEvidence(candidate, projectFiles),
   "jev/no-flag-shepherded-control-flow": (candidate, projectFiles) =>
     buildFlagShepherdedControlFlowEvidence(candidate, projectFiles),
   "jev/no-flaky-order-assertion": (candidate, projectFiles) =>
