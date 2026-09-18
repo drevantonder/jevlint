@@ -247,6 +247,7 @@ import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildStaleFeatureFlagEvidence } from "./stale-feature-flag.js";
 import { buildStandardMethodSynonymEvidence } from "./standard-method-synonym.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
+import { buildStutteringScopeNameEvidence } from "./stuttering-scope-name.js";
 import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
 import { buildSupersededApiUseEvidence } from "./superseded-api-use.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
@@ -570,6 +571,7 @@ type EvidenceRegistry = {
   "jev/no-stale-feature-flag": EvidenceBuilder;
   "jev/no-standard-method-synonym": EvidenceBuilder;
   "jev/no-string-duplicated-enumeration": EvidenceBuilder;
+  "jev/no-stuttering-scope-name": EvidenceBuilder;
   "jev/no-subclass-fragility-hook": EvidenceBuilder;
   "jev/no-superseded-api-use": EvidenceBuilder;
   "jev/no-swallowed-error": EvidenceBuilder;
@@ -1128,6 +1130,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildStandardMethodSynonymEvidence(candidate, projectFiles),
   "jev/no-string-duplicated-enumeration": (candidate, projectFiles, changes) =>
     buildStringDuplicatedEnumerationEvidence(candidate, changes, projectFiles),
+  "jev/no-stuttering-scope-name": (candidate, projectFiles) =>
+    buildStutteringScopeNameEvidence(candidate, projectFiles),
   "jev/no-subclass-fragility-hook": (candidate, projectFiles) =>
     buildSubclassFragilityHookEvidence(candidate, projectFiles),
   "jev/no-superseded-api-use": (candidate, projectFiles) =>
