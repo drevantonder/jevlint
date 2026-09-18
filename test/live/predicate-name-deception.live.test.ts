@@ -11,7 +11,7 @@ const RULE = "jev/no-predicate-name-deception";
 
 class RecordingEvaluator implements Evaluator {
   probabilities: number[] = [];
-  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.TYPESAFE_API_KEY ?? "" });
 
   async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
     const answers = await this.delegate.evaluate(request);

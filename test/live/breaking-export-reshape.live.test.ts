@@ -18,7 +18,7 @@ type ChangeScenario = {
 };
 
 class PassthroughEvaluator implements Evaluator {
-  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.TYPESAFE_API_KEY ?? "" });
   evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
     return this.delegate.evaluate(request);
   }

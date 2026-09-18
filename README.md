@@ -31,23 +31,16 @@ The name-clarity rules pair identifier text with initializers, types, sibling de
 
 ## Setup
 
-Jevlint requires Node.js 22 or newer. The first live run asks for your Typesafe (Jev) API key and stores it, then continues the run. `jevlint setup` stores a key on demand (run it again to replace the stored key), and `jevlint setup --forget` removes it. The key is kept in the OS keychain when available, otherwise in a private config file.
+Jevlint requires Node.js 22 or newer. It reads one credential, the `TYPESAFE_API_KEY` environment variable.
 
-For runs without prompting, set `JEVLINT_TYPESAFE_API_KEY` or the shared `TYPESAFE_API_KEY` used across Typesafe tools (the per-tool variable wins when both are set), or pass `--token` (used for that run only, never stored); `--no-prompt` fails fast instead of asking. In CI, expose `JEVLINT_TYPESAFE_API_KEY` from your secret store and pass `--no-prompt`.
-
-For development, Varlock loads `JEVLINT_TYPESAFE_API_KEY` from the `typesafe-api-key` item in the `van-tonder-nosudo` 1Password vault. The key never lives in the repository.
-
-The 1Password service-account token must be available as `OP_SERVICE_ACCOUNT_TOKEN`. On the personal host, it comes from the existing nosudo secrets environment.
+`jevlint setup` asks for the key once and saves it to your shell startup files (`~/.bashrc` and `~/.zshrc`), so the variable is set in every new shell. Restart the shell afterwards (or run the printed `source` line). Run setup again to replace the saved key, and `jevlint setup --forget` removes it. In CI, set `TYPESAFE_API_KEY` from the secret store. The key never lives in the repository.
 
 ```sh
 pnpm install
-pnpm env:check
 pnpm build
 ```
 
-`pnpm jevlint` runs the built CLI through Varlock (`varlock run -- node dist/cli.js`, the `jevlint` script in `package.json`).
-
-`pnpm env:check` prints only redacted values.
+`pnpm jevlint` runs the built CLI (`node dist/cli.js`, the `jevlint` script in `package.json`).
 
 ## Usage
 
@@ -189,10 +182,10 @@ pnpm jevlint review --no-cache
 
 Normal runs print no cache status. See [Jev response cache](docs/caching.md) for the cache boundary, key inputs, storage, and security properties.
 
-When using a globally linked binary, wrap it directly:
+When using a globally installed binary, call it directly:
 
 ```sh
-varlock run -- jevlint review
+jevlint review
 ```
 
 Scores never fail the command: a completed review exits 0 no matter how high the probabilities are. Invalid arguments, configuration failures, Git failures, and API failures produce exit code 2. Jevlint keeps judgments from completed batches when an evaluation fails, writes the report in the requested format, reports a bounded failure summary on stderr, and exits 2 to mark the run as incomplete.
@@ -231,7 +224,6 @@ Each rule uses a Jev Noul question, and every completed evaluation is reported a
 ## Development
 
 ```sh
-pnpm env:check
 pnpm test
 pnpm test:live
 pnpm lint
@@ -239,4 +231,4 @@ pnpm check
 pnpm build
 ```
 
-The tests were written before the implementation. The normal suite uses deterministic evaluator fakes and does not spend TypeSafe credits. `pnpm test:live` loads the key through Varlock and checks the rule fixtures against the real Jev API.
+The tests were written before the implementation. The normal suite uses deterministic evaluator fakes and never calls the Jev API. `pnpm test:live` reads the key from `TYPESAFE_API_KEY` and checks the rule fixtures against the real Jev API.

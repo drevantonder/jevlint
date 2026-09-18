@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -24,17 +25,13 @@ import {
 import type { CreateReviewReportInput } from "./format.js";
 import {
   defaultAuthIO,
-  promptForApiKey,
-  readKeyFromStdin,
-  removeStoredCredential,
-  resolveCredential,
-  resolveCredentialWithIO,
-  storeCredential,
-  storedBackendLabel,
-  EMPTY_STDIN_MESSAGE,
+  installShellKey,
   MISSING_CREDENTIAL_MESSAGE,
+  promptForApiKey,
+  removeShellKey,
+  resolveCredentialWithIO,
   SETUP_CANCELLED_MESSAGE,
-  STORED_PREFIX,
+  SETUP_NON_TTY_MESSAGE,
   STORED_REMOVED_MESSAGE,
   SetupCancelledError,
 } from "./auth.js";
@@ -77,8 +74,6 @@ const OPTIONS_SHARED = `Shared options:
   --no-error-on-unmatched-pattern
                      Exit 0 with an empty report when PATH scope matches nothing
   --debug=<mode>     files, timings, cache (comma-separated)
-  --token <value>    Use this Typesafe (Jev) API key for this run only; never stored
-  --no-prompt        Fail with an error instead of asking for an API key
   --print-config     Print effective config as JSON and exit
   --rules            List bundled rule keys and exit
   --help             Show this help
@@ -111,8 +106,8 @@ Commands:
   without needing a diff and runs to completion by default: every
   candidate/rule pair is prepared unless you opt into a limit below.
   Bare, review, and audit all report probabilities only: no
-  pass/fail, no thresholds, no bands. The first live run with no stored
-  key asks for it on first use; jevlint setup stores it on demand.
+  pass/fail, no thresholds, no bands. Live runs read TYPESAFE_API_KEY;
+  jevlint setup saves it to your shell startup files on demand.
 
 Review defaults to changed files; audit defaults to the full tree. PATH filters
 scope to files or directories. Unknown paths follow the unmatched-pattern rule:
@@ -176,9 +171,6 @@ export interface CliDependencies {
 }
 
 interface EnsureCredentialInput {
-  tokenFlag: string | undefined;
-  noPrompt: boolean;
-  stdin: PromptStdin;
   stderr: StderrWriter;
   authIO: AuthIO | undefined;
 }
@@ -206,10 +198,7 @@ interface CliOptions {
   debug: DebugMode[];
   printConfig: boolean;
   listRules: boolean;
-  tokenFlag: string | undefined;
-  noPrompt: boolean;
   setupForget: boolean;
-  setupStdin: boolean;
   help: boolean;
   maxQuestions?: number;
   evidenceBudgetMs?: number;
@@ -257,10 +246,7 @@ function baseOptions(command: "review" | "audit" | "setup"): CliOptions {
     debug: [],
     printConfig: false,
     listRules: false,
-    tokenFlag: undefined,
-    noPrompt: false,
     setupForget: false,
-    setupStdin: false,
     help: false,
     dryRun: false,
   };
@@ -297,18 +283,6 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
       else if (argument === "--dry-run") {
         if (options.command !== "audit") return false;
         options.dryRun = true;
-      } else if (argument === "--no-prompt") {
-        options.noPrompt = true;
-      } else if (argument === "--token" || argument.startsWith("--token=")) {
-        let value: string | undefined;
-        if (argument === "--token") {
-          value = args[index + 1];
-          if (value === undefined) return false;
-          index += 1;
-        } else {
-          value = argument.slice("--token=".length);
-        }
-        options.tokenFlag = value;
       } else if (argument === "--no-error-on-unmatched-pattern") {
         options.noErrorOnUnmatchedPattern = true;
       } else if (argument === "--no-cache" || argument === "--refresh-cache") {
@@ -381,14 +355,8 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
 function parseSetupFlags(args: string[], options: CliOptions): boolean {
   for (let index = 1; index < args.length; index += 1) {
     const argument = args[index] ?? "";
-    if (argument === "--stdin") {
-      if (options.setupForget) return false;
-      options.setupStdin = true;
-    } else if (argument === "--forget") {
-      if (options.setupStdin) return false;
+    if (argument === "--forget") {
       options.setupForget = true;
-    } else if (argument === "--no-prompt") {
-      options.noPrompt = true;
     } else if (argument === "--help") {
       options.help = true;
     } else {
@@ -400,14 +368,12 @@ function parseSetupFlags(args: string[], options: CliOptions): boolean {
 
 const USAGE_SETUP = `Usage: jevlint setup [options]
 
-Ask for your Typesafe (Jev) API key and store it for future runs. The key is
-kept in the OS keychain when available, otherwise in a private config file.
-Run setup again to replace the stored key.
+Ask for your Typesafe (Jev) API key and save it to your shell startup files
+(~/.bashrc and ~/.zshrc) so TYPESAFE_API_KEY is set in every new shell.
+Run setup again to replace the saved key.
 
 Options:
-  --stdin            Read the key from stdin instead of asking (for scripts)
-  --forget           Remove the stored key and exit
-  --no-prompt        Fail with an error instead of asking (for scripts)
+  --forget           Remove the saved key from your shell startup files and exit
   --help             Show this help
 `;
 
@@ -617,32 +583,10 @@ const dryRunEvaluator: Evaluator = {
 };
 
 async function ensureLiveCredential(input: EnsureCredentialInput): Promise<CredentialOutcome> {
-  const resolved = input.authIO === undefined
-    ? await resolveCredential({ tokenFlag: input.tokenFlag })
-    : await resolveCredentialWithIO({ tokenFlag: input.tokenFlag }, input.authIO);
+  const resolved = resolveCredentialWithIO(input.authIO ?? defaultAuthIO());
   if (resolved !== undefined) return { ok: true, credential: resolved };
-  const io = input.authIO ?? defaultAuthIO();
-  if (input.tokenFlag !== undefined || input.noPrompt || input.stdin.isTTY !== true) {
-    input.stderr(`${MISSING_CREDENTIAL_MESSAGE}\n`);
-    return { ok: false, exitCode: 2 };
-  }
-  let entered: string;
-  try {
-    entered = await promptForApiKey(input.stdin, input.stderr);
-  } catch (error) {
-    if (error instanceof SetupCancelledError) {
-      input.stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
-      return { ok: false, exitCode: 2 };
-    }
-    throw error;
-  }
-  const token = entered.trim();
-  if (token.length === 0) {
-    input.stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
-    return { ok: false, exitCode: 2 };
-  }
-  const backend = await storeCredential(token, io);
-  return { ok: true, credential: { token, source: backend } };
+  input.stderr(`${MISSING_CREDENTIAL_MESSAGE}\n`);
+  return { ok: false, exitCode: 2 };
 }
 
 async function runSetup(
@@ -653,23 +597,12 @@ async function runSetup(
   const io = dependencies.authIO ?? defaultAuthIO();
   const stdin: PromptStdin = dependencies.stdin ?? process.stdin;
   if (options.setupForget) {
-    await removeStoredCredential(io);
+    await removeShellKey(io);
     stderr(`${STORED_REMOVED_MESSAGE}\n`);
     return 0;
   }
-  if (options.setupStdin) {
-    const raw = await readKeyFromStdin(stdin);
-    const token = raw.trim();
-    if (token.length === 0) {
-      stderr(`${EMPTY_STDIN_MESSAGE}\n`);
-      return 2;
-    }
-    const backend = await storeCredential(token, io);
-    stderr(`${STORED_PREFIX} (${storedBackendLabel(backend)}).\n`);
-    return 0;
-  }
   if (stdin.isTTY !== true) {
-    stderr(`${MISSING_CREDENTIAL_MESSAGE}\n`);
+    stderr(`${SETUP_NON_TTY_MESSAGE}\n`);
     return 2;
   }
   let entered: string;
@@ -687,8 +620,10 @@ async function runSetup(
     stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
     return 2;
   }
-  const backend = await storeCredential(token, io);
-  stderr(`${STORED_PREFIX} (${storedBackendLabel(backend)}).\n`);
+  const saved = await installShellKey(token, io);
+  const files = saved.map((entry) => entry.display).join(", ");
+  const first = saved[0]?.display ?? "~/.bashrc";
+  stderr(`jevlint: API key saved to ${files}. Restart your shell or run: source ${first}\n`);
   return 0;
 }
 
@@ -769,13 +704,7 @@ async function runAudit(
   if (!options.dryRun) {
     let credential: LiveCredential | undefined;
     if (dependencies.evaluator === undefined) {
-      const outcome = await ensureLiveCredential({
-        tokenFlag: options.tokenFlag,
-        noPrompt: options.noPrompt,
-        stdin: dependencies.stdin ?? process.stdin,
-        stderr,
-        authIO: dependencies.authIO,
-      });
+      const outcome = await ensureLiveCredential({ stderr, authIO: dependencies.authIO });
       if (!outcome.ok) return outcome.exitCode;
       credential = outcome.credential;
     }
@@ -860,13 +789,7 @@ async function runReview(
 
   let credential: LiveCredential | undefined;
   if (dependencies.evaluator === undefined) {
-    const outcome = await ensureLiveCredential({
-      tokenFlag: options.tokenFlag,
-      noPrompt: options.noPrompt,
-      stdin: dependencies.stdin ?? process.stdin,
-      stderr,
-      authIO: dependencies.authIO,
-    });
+    const outcome = await ensureLiveCredential({ stderr, authIO: dependencies.authIO });
     if (!outcome.ok) return outcome.exitCode;
     credential = outcome.credential;
   }
@@ -1008,7 +931,15 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
   }
 }
 
-const invokedPath = process.argv[1];
-if (invokedPath && import.meta.url === pathToFileURL(invokedPath).href) {
+export function mainModuleMatches(invokedPath: string | undefined, moduleUrl: string): boolean {
+  if (invokedPath === undefined) return false;
+  try {
+    return moduleUrl === pathToFileURL(realpathSync(invokedPath)).href;
+  } catch {
+    return moduleUrl === pathToFileURL(invokedPath).href;
+  }
+}
+
+if (mainModuleMatches(process.argv[1], import.meta.url)) {
   process.exitCode = await runCli(process.argv.slice(2));
 }
