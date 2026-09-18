@@ -1,14 +1,17 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
-import type { Node } from "oxc-parser";
+import type { Expression, Node, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
   findFunctionCallers,
+  findNamedFunction,
   functionName,
   isFunctionExported,
   isInsideNestedFunction,
+  moduleImports,
   nestedFunctionRanges,
+  resolveModule,
 } from "./repository.js";
 import type { FunctionCaller } from "./repository.js";
 
@@ -19,6 +22,7 @@ export type LoadBearingAsyncEvidence = {
     filePath: string;
     source: string;
   };
+  awaitingBranches: string[];
   callerUsage: {
     awaitingCallSites: string[];
     thenChains: string[];
@@ -36,6 +40,58 @@ function containsCallTo(source: string, name: string): boolean {
   return new RegExp(`\\b${name}\\s*\\(`).test(source);
 }
 
+const AWAITING_BRANCH_LIMIT = 10;
+const AWAITING_BRANCH_SLICE_LIMIT = 200;
+
+function unwrapBranchValue(expression: Expression): Expression {
+  let current = expression;
+  while (
+    current.type === "ParenthesizedExpression"
+    || current.type === "TSAsExpression"
+    || current.type === "TSNonNullExpression"
+    || current.type === "TSSatisfiesExpression"
+    || current.type === "TSTypeAssertion"
+  ) current = current.expression;
+  return current;
+}
+
+function branchAlternatives(expression: Expression): Expression[] {
+  const unwrapped = unwrapBranchValue(expression);
+  if (unwrapped.type === "ConditionalExpression") {
+    return [...branchAlternatives(unwrapped.consequent), ...branchAlternatives(unwrapped.alternate)];
+  }
+  if (unwrapped.type === "LogicalExpression") {
+    return [...branchAlternatives(unwrapped.left), ...branchAlternatives(unwrapped.right)];
+  }
+  if (unwrapped.type === "SequenceExpression") {
+    const last = unwrapped.expressions[unwrapped.expressions.length - 1];
+    return last === undefined ? [unwrapped] : branchAlternatives(last);
+  }
+  return [unwrapped];
+}
+
+function collectAsyncFunctionNames(program: Program): Set<string> {
+  const names = new Set<string>();
+  new Visitor({
+    FunctionDeclaration(node) {
+      if (node.async && node.id) names.add(node.id.name);
+    },
+    VariableDeclarator(node) {
+      if (node.id.type !== "Identifier") return;
+      if (
+        (node.init?.type === "ArrowFunctionExpression" || node.init?.type === "FunctionExpression")
+        && node.init.async
+      ) names.add(node.id.name);
+    },
+  }).visit(program);
+  return names;
+}
+
+// A return branch earns the async marker without an await keyword when it
+// hands a project-local async call's promise outward while sibling branches
+// return sync values: the marker unifies both shapes behind one signature.
+// Only calls that resolve to an async declaration in the project count;
+// unresolved or non-async callees never qualify.
 export function buildLoadBearingAsyncEvidence(
   candidate: Candidate,
   projectFiles: ProjectFile[],
@@ -72,6 +128,38 @@ export function buildLoadBearingAsyncEvidence(
   }).visit(parsed.program);
   if (hasAwait || hasThenableReturn) return undefined;
 
+  const asyncNames = collectAsyncFunctionNames(parsed.program);
+  for (const imported of moduleImports(parsed.program)) {
+    const resolved = resolveModule(candidate.filePath, imported.source, projectFiles);
+    if (!resolved || resolved.filePath === candidate.filePath) continue;
+    const resolvedParsed = parseCached(resolved.filePath, resolved.source);
+    if (resolvedParsed.errors.some((error) => error.severity === "Error")) continue;
+    if (findNamedFunction(resolvedParsed.program, imported.imported)?.async) {
+      asyncNames.add(imported.local);
+    }
+  }
+  const awaitingBranches: string[] = [];
+  const recordBranch = (expression: Expression): void => {
+    for (const alternative of branchAlternatives(expression)) {
+      if (alternative.type !== "CallExpression" || alternative.callee.type !== "Identifier") continue;
+      if (!asyncNames.has(alternative.callee.name)) continue;
+      if (awaitingBranches.length >= AWAITING_BRANCH_LIMIT) return;
+      const slice = owner.source.slice(alternative.start, alternative.end).slice(0, AWAITING_BRANCH_SLICE_LIMIT);
+      if (!awaitingBranches.includes(slice)) awaitingBranches.push(slice);
+    }
+  };
+  new Visitor({
+    ReturnStatement(node) {
+      if (!inScope(node) || !node.argument) return;
+      recordBranch(node.argument);
+    },
+    ArrowFunctionExpression(node) {
+      if (node.start !== candidate.start || node.end !== candidate.end) return;
+      if (node.body.type === "BlockStatement") return;
+      recordBranch(node.body);
+    },
+  }).visit(parsed.program);
+
   const awaitingCallSites: string[] = [];
   const thenChains: string[] = [];
   const promiseCombinators: string[] = [];
@@ -106,6 +194,7 @@ export function buildLoadBearingAsyncEvidence(
       filePath: candidate.filePath,
       source: candidate.source,
     },
+    awaitingBranches,
     callerUsage: {
       awaitingCallSites: awaitingCallSites.slice(0, 10),
       thenChains: thenChains.slice(0, 10),
