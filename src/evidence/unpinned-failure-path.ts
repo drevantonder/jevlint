@@ -10,7 +10,7 @@ import {
   isInsideNestedFunction,
   nestedFunctionRanges,
 } from "./repository.js";
-import { isTestFilePath } from "./test-scope.js";
+import { isTestFilePath, findTransitiveTestPins, type TransitivePin } from "./test-scope.js";
 
 export type FailurePathRecovery =
   | "maps-to-domain-error"
@@ -34,6 +34,8 @@ export type UnpinnedFailurePathEvidence = {
     testReferences: string[];
     testReferenceCount: number;
     callers: { filePath: string; call: string; line: number }[];
+    /** Present only when a test reaches the function through a named seam. */
+    transitivePins?: TransitivePin[];
   };
   relatedModules: { filePath: string; importedSymbols: string[]; source: string }[];
 };
@@ -135,6 +137,14 @@ export function buildUnpinnedFailurePathEvidence(
       && namePattern.test(file.source),
   ).length;
 
+  const pinning: UnpinnedFailurePathEvidence["pinning"] = {
+    testReferences,
+    testReferenceCount,
+    callers: callers.slice(0, 10),
+  };
+  const transitivePins = findTransitiveTestPins(candidate.filePath, name, projectFiles);
+  if (transitivePins.length > 0) pinning.transitivePins = transitivePins;
+
   return {
     function: {
       name,
@@ -142,11 +152,7 @@ export function buildUnpinnedFailurePathEvidence(
       source: candidate.source,
     },
     failurePaths: failurePaths.slice(0, 10),
-    pinning: {
-      testReferences,
-      testReferenceCount,
-      callers: callers.slice(0, 10),
-    },
+    pinning,
     relatedModules: findRelatedProjectModules(candidate.filePath, parsed.program, projectFiles),
   };
 }

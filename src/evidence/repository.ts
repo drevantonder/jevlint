@@ -299,6 +299,99 @@ export function findFunctionCallersWithCoverage(
   return { callers, total: callers.length };
 }
 
+export type SeamCallSite = FunctionCaller & {
+  /** Innermost enclosing named function in the caller file, or null at module
+   * top level or under anonymous-only nesting (no nameable seam). */
+  seam: string | null;
+};
+
+type NamedFunctionRange = {
+  name: string;
+  start: number;
+  end: number;
+};
+
+function namedFunctionRanges(program: Program): NamedFunctionRange[] {
+  const ranges: NamedFunctionRange[] = [];
+  const declaratorBound = new Set<string>();
+  new Visitor({
+    VariableDeclarator(node) {
+      if (node.id.type !== "Identifier") return;
+      if (
+        node.init?.type !== "ArrowFunctionExpression"
+        && node.init?.type !== "FunctionExpression"
+      ) return;
+      ranges.push({ name: node.id.name, start: node.init.start, end: node.init.end });
+      declaratorBound.add(`${node.init.start}:${node.init.end}`);
+    },
+    FunctionDeclaration(node) {
+      if (node.id?.name === undefined) return;
+      ranges.push({ name: node.id.name, start: node.start, end: node.end });
+    },
+    FunctionExpression(node) {
+      if (node.id?.name === undefined) return;
+      if (declaratorBound.has(`${node.start}:${node.end}`)) return;
+      ranges.push({ name: node.id.name, start: node.start, end: node.end });
+    },
+  }).visit(program);
+  return ranges;
+}
+
+function collectSeamCallSites(
+  ownerPath: string,
+  functionName: string,
+  projectFiles: ProjectFile[],
+): SeamCallSite[] {
+  const result: SeamCallSite[] = [];
+  for (const file of projectFiles) {
+    const parsed = parseCached(file.filePath, file.source);
+    if (parsed.errors.some((error) => error.severity === "Error")) continue;
+    const names = file.filePath === ownerPath
+      ? { identifiers: new Set([functionName]), namespaces: new Set<string>() }
+      : importedCallNames(
+        parsed.program,
+        file.filePath,
+        ownerPath,
+        functionName,
+        projectFiles,
+      );
+    if (names.identifiers.size === 0 && names.namespaces.size === 0) continue;
+    const seams = namedFunctionRanges(parsed.program);
+    new Visitor({
+      CallExpression(call) {
+        if (!isMatchingCall(call, functionName, names.identifiers, names.namespaces)) return;
+        let seam: string | null = null;
+        let narrowest = Number.POSITIVE_INFINITY;
+        for (const range of seams) {
+          if (range.start <= call.start && range.end >= call.end) {
+            const width = range.end - range.start;
+            if (width < narrowest) {
+              narrowest = width;
+              seam = range.name;
+            }
+          }
+        }
+        result.push({
+          filePath: file.filePath,
+          call: file.source.slice(call.start, call.end),
+          arguments: call.arguments.map((argument) => file.source.slice(argument.start, argument.end)),
+          line: lineAt(file.source, call.start),
+          seam,
+        });
+      },
+    }).visit(parsed.program);
+  }
+  return result;
+}
+
+export function findSeamCallSites(
+  ownerPath: string,
+  functionName: string,
+  projectFiles: ProjectFile[],
+): SeamCallSite[] {
+  return collectSeamCallSites(ownerPath, functionName, projectFiles).slice(0, 20);
+}
+
 export type AbstractionNode = TSInterfaceDeclaration | TSTypeAliasDeclaration;
 
 export function findDirectAbstraction(

@@ -4267,10 +4267,11 @@ export const defaultConfig: JevLintConfig = {
       question: {
         instructions: {
           question: "Does this branch decide a boundary value that no test or caller pins, so a plausible-but-wrong comparison here stays green?",
-          inspect: "Compare each extracted boundary predicate with the test references, repository callers, and related modules in the supplied evidence.",
+          inspect: "Compare each extracted boundary predicate with the test references, repository callers, transitive pinning chains, and related modules in the supplied evidence. A named transitive chain (test → seam → candidate) is one hop of test coverage reaching the function; weigh it against direct test references.",
           focus: "Judge the pinning gap, not whether the comparison is correct — correctness without a spec is undecidable, but an unpinned boundary is observable.",
           decision_boundary: [
             "A boundary comparison with callers reaching both sides and zero tests touching either side is strong evidence of an unpinned branch.",
+            "A test that exercises a public seam which calls the function pins the boundary one hop away; weigh the named chain against direct test references.",
             "Tests asserting both sides of the boundary pin the decision even when the comparison looks unusual.",
             "Comparisons over internal counters or loop bounds with no domain meaning deserve less weight than tier, amount, or limit decisions.",
             "A single boundary arm with no evidence that callers ever reach the edge answers the question negatively.",
@@ -6978,10 +6979,11 @@ export const defaultConfig: JevLintConfig = {
       question: {
         instructions: {
           question: "Does this function contain an error or failure path that no test or caller pins, so a wrong recovery stays green?",
-          inspect: "Compare each extracted catch, throw, and error-return path with the test references naming the function, the repository callers, and the related modules owning the error contract in the supplied evidence.",
+          inspect: "Compare each extracted catch, throw, and error-return path with the test references naming the function, the repository callers, transitive pinning chains, and the related modules owning the error contract in the supplied evidence. A named transitive chain (test → seam → candidate) is one hop of test coverage reaching the function; weigh it against direct test references.",
           focus: "Judge the pinning gap, not whether the recovery is correct — a catch that maps a dependency failure to a domain error is only guarded when a test or caller depends on the mapping.",
           decision_boundary: [
             "A catch mapping a dependency failure to a domain error with zero test references and no caller depending on the mapped error is strong evidence of an unpinned failure path.",
+            "A test that exercises a public seam which calls the function pins the failure path one hop away; weigh the named chain against direct test references.",
             "The same catch shape with callers visibly depending on the mapped error, or tests triggering the failure, pins the path even when the recovery looks odd.",
             "A rethrow that preserves the original error carries less weight than a mapping or a swallow, since callers still observe the failure.",
             "A function with no catch, throw, or error-return shape answers the question negatively.",
@@ -7734,10 +7736,11 @@ export const defaultConfig: JevLintConfig = {
       question: {
         instructions: {
           question: "Does this function contain behavior that looks redundant or wrong on its face — a special case, redundant path, or unusual return — that existing in-repo callers actually depend on, with no comment or test pinning the dependency, so a well-meaning cleanup would silently break them?",
-          inspect: "Use the quirk spans with their source, the observed callers with their argument lists, which callers exercise each quirk, and the pinning signals in the supplied evidence.",
+          inspect: "Use the quirk spans with their source, the observed callers with their argument lists, which callers exercise each quirk, the pinning signals, and any transitive pinning chains in the supplied evidence. A named transitive chain (test → seam → candidate) is one hop of test coverage reaching the function; weigh it against direct test references.",
           focus: "Judge whether removal of the odd-looking span would silently break current callers. Undocumented-or-apparently-wrong does not make change harmless.",
           decision_boundary: [
             "A special case or unusual return that callers demonstrably exercise, with no comment or test naming the compatibility obligation, is strong evidence of an unpinned quirk.",
+            "A test that exercises a public seam which calls the function pins the quirk one hop away; weigh the named chain against direct test references.",
             "A span no caller exercises is dead weight, not a compat quirk.",
             "A comment above the function or a test referencing the quirky behavior pins the obligation and answers the question negatively.",
             "A span that states the module's documented convention is not a quirk merely because it looks unusual in isolation.",

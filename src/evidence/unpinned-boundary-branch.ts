@@ -15,6 +15,7 @@ import {
   isFunctionExported,
 } from "./repository.js";
 import type { FunctionCaller, RelatedProjectModule } from "./repository.js";
+import { findTransitiveTestPins, type TransitivePin } from "./test-scope.js";
 
 export type BoundaryBranchKind = "comparison" | "equality-tier" | "rounding";
 
@@ -37,6 +38,8 @@ export type UnpinnedBoundaryBranchEvidence = {
   pinning: {
     callers: FunctionCaller[];
     testReferences: string[];
+    /** Present only when a test reaches the function through a named seam. */
+    transitivePins?: TransitivePin[];
   };
   repository: {
     relatedModules: RelatedProjectModule[];
@@ -175,6 +178,14 @@ export function buildUnpinnedBoundaryBranchEvidence(
   if (branches.length === 0) return undefined;
 
   const name = functionName(parsed.program, fn);
+  const pinning: UnpinnedBoundaryBranchEvidence["pinning"] = {
+    callers: name ? findFunctionCallers(candidate.filePath, name, projectFiles) : [],
+    testReferences: name ? testReferences(name, projectFiles) : [],
+  };
+  if (name) {
+    const transitivePins = findTransitiveTestPins(candidate.filePath, name, projectFiles);
+    if (transitivePins.length > 0) pinning.transitivePins = transitivePins;
+  }
   return {
     function: {
       name: name ?? null,
@@ -184,10 +195,7 @@ export function buildUnpinnedBoundaryBranchEvidence(
       moduleSource: ownerFile.source.slice(0, 16_000),
     },
     branches: branches.slice(0, 10),
-    pinning: {
-      callers: name ? findFunctionCallers(candidate.filePath, name, projectFiles) : [],
-      testReferences: name ? testReferences(name, projectFiles) : [],
-    },
+    pinning,
     repository: {
       relatedModules: findRelatedProjectModules(
         candidate.filePath,
