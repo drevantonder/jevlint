@@ -5590,28 +5590,28 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this exported helper serve exactly one production caller and belong living with that caller instead of as a public export?",
-          inspect: "Use the single production caller, whether it lives in the same file or imports the helper, the named test callers exercising it, and whether any public entry point re-exports the helper in the supplied evidence.",
-          focus: "Judge whether the export promises reuse the repository never demonstrates, not whether the helper itself is well written. Test callers exercise the helper without demonstrating reuse.",
+          question: "Does this exported helper serve exactly one production caller and belong living with that caller once the keep-signal facts are weighed?",
+          inspect: "Weigh the single production caller against the keep-signal facts: whether the caller lives in the same file, the direct contract tests and transitive test pins exercising the helper, whether the package exports map or an index barrel reaches the helper as public API, and the co-change seam history of helper versus caller.",
+          focus: "Judge whether the export promises reuse the repository never demonstrates, weighing every named fact in both directions. Absence from the exports map and barrel is one fact among others, never proof on its own. Test callers exercise the helper without demonstrating reuse.",
           decision_boundary: [
-            "An exported helper with one caller in the same module and no re-export through a public entry point is strong evidence of premature publicity.",
-            "Re-export through the package index or a barrel answers the question negatively even with a single current caller.",
+            "A same-file caller, direct contract tests, reachability through the package exports map or an index barrel, and a seam history where the helper sits untouched while the caller evolves each pull against the claim; no single fact decides it.",
+            "Reachability through the package exports map or an index barrel pulls the answer toward no even with a single current caller, since the export promises reuse beyond the repository.",
             "A caller in another module that imports the helper shows at least cross-module intent, which weakens the claim.",
-            "Named test callers do not add reuse: one production caller plus test callers is still the single-caller seam.",
-            "One caller is not enough on its own. If the helper is part of a public entry point, answer no.",
+            "Direct contract tests and transitive test pins exercise the helper without demonstrating production reuse; they inform the judgment without adding callers.",
+            "One caller is never enough on its own. Absence from the exports map and barrel is a fact, not proof: weigh it with colocation, contract tests, and seam history before answering yes.",
           ],
         },
         criteria: {
           true: {
-            what: "An exported helper with exactly one production caller that no public entry point re-exports",
+            what: "An exported helper with exactly one production caller whose colocation, contract-test, reachability, and seam-history facts together favor living beside its caller",
             remedy: "Move the helper beside its caller or unexport it until a second consumer demonstrates reuse",
           },
           false: {
-            what: "The helper is re-exported as public API, serves several production callers, or shows genuine cross-module reuse",
+            what: "The helper is reachable as public API, shows genuine cross-module intent, or its keep-signal facts together favor keeping the export",
           },
         },
       },
-      message: "This exported helper serves exactly one production caller and is not public API.",
+      message: "This exported helper serves exactly one production caller; weighed against its keep-signal facts it belongs living with that caller.",
     },
     "jev/no-string-duplicated-enumeration": {
       scope: "change",
