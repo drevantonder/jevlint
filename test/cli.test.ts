@@ -112,7 +112,7 @@ describe("runCli", () => {
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
     expect(stdout).toContain("0.990  changed.ts:1:8");
-    expect(stdout).toContain("function  jev/no-pass-through-wrapper");
+    expect(stdout).toContain("function  maintainability  jev/no-pass-through-wrapper");
     expect(stdout).toMatch(/\d+ evaluated; \d+ displayed;/);
   });
 

@@ -31,26 +31,31 @@ const auditConfig: JevLintConfig = {
   rules: {
     "test/function-rule": {
       scope: "function",
+      category: "maintainability",
       question: { instructions: "Is this a function?" },
       message: "Function found.",
     },
     "test/abstraction-rule": {
       scope: "abstraction",
+      category: "maintainability",
       question: { instructions: "Is this an abstraction?" },
       message: "Abstraction found.",
     },
     "test/comment-rule": {
       scope: "comment",
+      category: "style",
       question: { instructions: "Is this a comment?" },
       message: "Comment found.",
     },
     "test/module-rule": {
       scope: "module",
+      category: "maintainability",
       question: { instructions: "Is this a module?" },
       message: "Module found.",
     },
     "test/change-rule": {
       scope: "change",
+      category: "maintainability",
       question: { instructions: "Is this a change?" },
       message: "Change found.",
     },

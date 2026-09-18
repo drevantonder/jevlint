@@ -1,4 +1,5 @@
 import type { EntryType, JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
+import type { RuleCategory } from "./categories.js";
 
 export type CandidateKind = "comment" | "function" | "abstraction" | "change" | "module";
 
@@ -37,6 +38,7 @@ export interface RuleQuestion {
 
 export interface RuleConfig {
   scope: CandidateKind;
+  category: RuleCategory;
   question: RuleQuestion;
   message: string;
 }
@@ -57,6 +59,7 @@ export type CustomEvidenceBuilder = (
 export interface CustomRuleDescriptor {
   name: string;
   scope: CandidateKind;
+  category: RuleCategory;
   question: RuleQuestion;
   message: string;
   buildEvidence: CustomEvidenceBuilder;
@@ -134,6 +137,7 @@ export interface Judgment {
   ruleId: string;
   message: string;
   probability: number;
+  category: RuleCategory;
   filePath: string;
   span: SourceSpan;
   candidateKind: CandidateKind;

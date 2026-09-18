@@ -147,6 +147,7 @@ const delegationConfig: JevLintConfig = {
   rules: {
     "jev/no-inline-lifecycle-phases": {
       scope: "function",
+      category: "maintainability",
       question: { instructions: "Do genuinely-inline phase regions lack named seams?" },
       message: "Inline lifecycle phases.",
     },

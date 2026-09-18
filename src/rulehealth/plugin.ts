@@ -238,6 +238,7 @@ export const buildUnfalsifiableEvidence: CustomEvidenceBuilder = (
 const unboundedRule: CustomRuleDescriptor = {
   name: "no-unbounded-evidence",
   scope: "module",
+  category: "maintainability",
   question: {
     instructions:
       "Does this rule's evidence builder walk every project file for each candidate without a named cap on how many files or items it collects? A named MAX_ cap, a slice of the file list, or a small count bound on collected items answers no. A repository-wide sweep whose results grow with the size of the tree answers yes.",
@@ -253,6 +254,7 @@ const unboundedRule: CustomRuleDescriptor = {
 const abstentionRule: CustomRuleDescriptor = {
   name: "no-missing-abstention",
   scope: "module",
+  category: "maintainability",
   question: {
     instructions:
       "Can this rule's evidence builder return without evidence when the structure it needs is absent? A builder that always produces an evidence object forces a scored answer on every candidate, even where there is nothing to judge. A builder with an explicit path back to no evidence answers no.",
@@ -268,6 +270,7 @@ const abstentionRule: CustomRuleDescriptor = {
 const falsifiabilityRule: CustomRuleDescriptor = {
   name: "no-unfalsifiable-proposition",
   scope: "module",
+  category: "maintainability",
   question: {
     instructions:
       "Does this rule's stated question give an evaluator a concrete observation to check, with stated conditions for each answer? A question that names what to look at and how each answer shows itself answers no. A question with no answer conditions, or one so short it names neither an observation nor its context, answers yes.",

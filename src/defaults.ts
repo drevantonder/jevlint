@@ -4,6 +4,7 @@ export const defaultConfig: JevLintConfig = {
   rules: {
     "jev/no-hidden-input-mutation": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function mutate a caller-owned input without making that behavior clear in its API contract?",
@@ -31,6 +32,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hidden-io": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this function cross a material I/O boundary whose latency, failure modes, or resource cost are hidden by its API contract?",
@@ -58,6 +60,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-lossy-sentinel-return": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do this function's sentinel return paths collapse distinct outcomes that callers reasonably need to tell apart?",
@@ -85,6 +88,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-query-side-effect": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this value-returning function conceal a material command behind an API that presents itself as a query?",
@@ -112,6 +116,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-narrating-comment": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Does the comment merely narrate behavior already obvious from the nearby code?",
@@ -132,6 +137,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-pass-through-wrapper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does the repository evidence show that callers should bypass this delegating function and call its target directly?",
@@ -170,6 +176,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mysterious-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Do the function name or its important local names fail to communicate their purpose?",
@@ -189,6 +196,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-speculative-generality": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does the repository evidence show that this function carries extension points for hypothetical rather than demonstrated variation?",
@@ -218,6 +226,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-ad-hoc-branching": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do the extracted branches form a patchwork of unrelated special-case policies rather than one coherent decision?",
@@ -245,6 +254,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mixed-responsibilities": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function itself own unrelated responsibilities that would change for different business reasons?",
@@ -272,6 +282,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-data-clump": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is the repeated parameter group a missing domain value that should travel as one concept?",
@@ -299,6 +310,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-scattered-policy": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do the matched branches independently encode one business policy that should have a single owner?",
@@ -326,6 +338,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-correlated-state-booleans": {
       scope: "abstraction",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this type use boolean fields as mutually dependent alternatives of one state, allowing contradictory or meaningless combinations?",
@@ -352,6 +365,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unconstrained-state-string": {
       scope: "abstraction",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this type leave a closed internal state unconstrained as string even though repository decisions rely on a finite set of literal cases?",
@@ -378,6 +392,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-conditionally-valid-state": {
       scope: "abstraction",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this record make payload validity depend on a discriminant while its type permits payloads to be missing or present in the wrong cases?",
@@ -404,6 +419,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-needless-abstraction": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this interface add ceremony and concepts without removing meaningful coupling or enabling demonstrated substitution?",
@@ -430,6 +446,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-generic-magic": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function use reflection or dynamic indirection where explicit code would better fit the concrete variation shown by the repository?",
@@ -456,6 +473,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-disproportionate-configuration": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this configuration surface substantially larger and more interactive than the variation its real callers need?",
@@ -482,6 +500,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-avoidable-orchestration": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this function impose sequential orchestration that the shown data and effect dependencies do not require?",
@@ -508,6 +527,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hidden-runtime-input": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function hide a material runtime input from callers by reading ambient state inside domain or application behavior?",
@@ -534,6 +554,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hidden-initialization-order": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does using this function correctly require a separate initializer to run first, while that prerequisite is absent from the function's type and ownership API?",
@@ -561,6 +582,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-implicit-atomicity": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this function rely on several durable effects succeeding as one domain operation without expressing an atomic boundary or recovery policy?",
@@ -589,6 +611,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-complexity-displacement": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change make one location look simpler mainly by pushing equivalent or greater complexity into callers, wiring, interfaces, or adjacent files?",
@@ -616,6 +639,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-transport-coupled-domain": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function make a domain or application decision depend directly on a transport protocol representation?",
@@ -643,6 +667,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-persistence-model-leak": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function expose a persistence-owned record shape to code that should depend on domain or application meaning instead?",
@@ -670,6 +695,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-interchangeable-domain-primitives": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function make distinct, non-interchangeable domain values unsafe by accepting them as the same bare primitive type?",
@@ -697,6 +723,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-domain-policy-in-adapter": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this adapter make a business policy decision that belongs in the domain or application layer?",
@@ -724,6 +751,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-swallowed-error": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this function absorb an operational failure while leaving its caller-facing outcome looking successful or indistinguishable from an ordinary no-result?",
@@ -752,6 +780,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-lossy-error-translation": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this catch replace a failure with an error that erases distinctions or diagnostic cause needed by the receiving layer?",
@@ -779,6 +808,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unsafe-retry": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this retry repeat an operation without enough policy to make another attempt safe for the shown failure and effect?",
@@ -806,6 +836,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hidden-partial-failure": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this batch allow some items to fail and then present an outcome that hides those failed or omitted items from a caller that relies on completion?",
@@ -834,6 +865,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-duplicated-logic": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function reimplement logic that already exists elsewhere in the repository?",
@@ -862,6 +894,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-type-code-dispatch": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do this function's branches dispatch on a domain type code whose variants should own the behavior instead?",
@@ -889,6 +922,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mode-flag-parameter": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function's boolean parameter select between behaviors that callers should invoke as separate operations?",
@@ -916,6 +950,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-message-chain": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this call chain navigate intermediate objects whose internals the calling function should not need to know?",
@@ -943,6 +978,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mixed-abstraction-levels": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function mix raw implementation mechanics with domain-level operations instead of staying at one level of abstraction?",
@@ -971,6 +1007,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unvalidated-boundary-shape": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function consume a cross-boundary value assuming a shape nothing in the function verifies?",
@@ -997,6 +1034,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-stale-binding-use": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function read a pre-update binding after the updated value was already derived, silently discarding the fresh value?",
@@ -1023,6 +1061,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-pre-gate-side-effect": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this function perform an externally visible effect before the check that can reject the operation, leaving residue observable after rejection?",
@@ -1049,6 +1088,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-inverted-authorization-predicate": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this authorization predicate admit or deny the wrong set of subjects because of its operator or scope selection?",
@@ -1075,6 +1115,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hardcoded-config-shadow": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this literal duplicate a value the repository already owns as configuration, so the two can diverge silently?",
@@ -1101,6 +1142,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-sibling-identifier-swap": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this expression use a near-identical sibling identifier where the surrounding pattern indicates the other one was meant?",
@@ -1128,6 +1170,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-feature-envy": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function primarily inspect or manipulate another object's data in a way that belongs on that object?",
@@ -1146,6 +1189,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-foreign-mutation": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this change mutate objects it does not own — globals, prototypes, or another module's state — so its effects reach code beyond its visible scope?",
@@ -1173,6 +1217,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-temporal-call-coupling": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Must callers invoke a separate setup operation before this one, in an order the code does not enforce?",
@@ -1200,6 +1245,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-shotgun-change": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Did this change have to make parallel edits across many modules for a single concept, suggesting the concept has no single home?",
@@ -1226,6 +1272,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-undocumented-contract": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this exported operation's contract — what it expects, guarantees, and what counts as misuse — stated nowhere a caller can find it?",
@@ -1253,6 +1300,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unbounded-wait": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this network or I/O call wait without a deadline, timeout, or cancellation bound that keeps a hung remote from blocking forever?",
@@ -1280,6 +1328,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-detached-async-work": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Is this asynchronous work detached from completion tracking and error handling, so its failure would surface as an unhandled rejection or silent loss?",
@@ -1307,6 +1356,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-shared-mutable-module-state": {
       scope: "abstraction",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this module couple its functions through hidden shared mutable data that callers cannot see?",
@@ -1335,6 +1385,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-type-checker-escape": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this type-system escape hide a wrong-assumption failure that would otherwise be caught at compile time?",
@@ -1363,6 +1414,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unawaited-iteration-work": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Do the promises produced by this iteration's callbacks escape the surrounding flow, so per-item failures avoid the visible error handling?",
@@ -1390,6 +1442,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-asymmetric-normalization": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this comparison normalize one side while leaving the other raw, so equivalent inputs can compare unequal or blocked inputs can pass?",
@@ -1417,6 +1470,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unguarded-nullable-dereference": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this member access or call dereference a value whose source can be absent, with no guard between the source and the use?",
@@ -1444,6 +1498,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-falsy-absent-conflation": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this presence check treat a valid falsy value such as 0, empty string, or false as absent, silently dropping legitimate input?",
@@ -1471,6 +1526,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unanchored-domain-check": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this host or domain allow-check match substrings rather than domain boundaries, so an attacker-controlled superstring can pass it?",
@@ -1498,6 +1554,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-contract-signature-drift": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Has this implementation or call site drifted from the contract it claims to satisfy in arity, abstract members, or nullability, so conforming callers hit runtime failures?",
@@ -1525,6 +1582,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-accidental-serialization": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Are this loop's iterations independent, so awaiting each one inside the loop serializes work that could proceed concurrently?",
@@ -1552,6 +1610,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-discarded-transformation": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Is this array transformation's result discarded, so either the transformation computes something nobody needs or the method choice hides intended side effects?",
@@ -1579,6 +1638,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-load-bearing-async": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Do callers depend on this function's promised return, so the async marker carries API meaning its body alone does not show?",
@@ -1607,6 +1667,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-untrusted-sink-input": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this sink call incorporate input an adversary can influence without parameterization or escaping the evidence can see?",
@@ -1634,6 +1695,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unreleased-subscription": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this subscription or acquisition have no release tied to its owner's lifetime, so repeated owners accumulate unreleased registrations?",
@@ -1662,6 +1724,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unwieldy-signature": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Must a new caller read the implementation to use this signature correctly?",
@@ -1689,6 +1752,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-inappropriate-intimacy": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function depend on another module's internals in ways that module's interface does not advertise?",
@@ -1716,6 +1780,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-anemic-type": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this type's behavior live entirely in its clients, so every change to what it means must be made elsewhere?",
@@ -1742,6 +1807,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-temporary-field": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this field hold a value during only part of the object's lifetime, forcing readers to reconstruct when it is meaningful?",
@@ -1769,6 +1835,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-low-cohesion-class": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this class bundle members that share little state or purpose and would be clearer as separate units?",
@@ -1796,6 +1863,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-divergent-change": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this module changed for unrelated reasons, so edits that should be independent keep colliding in one file?",
@@ -1823,6 +1891,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-divergent-sibling-interfaces": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do these sibling implementations expose needlessly different interfaces for the same operation, so clients must learn each one?",
@@ -1850,6 +1919,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-refused-inheritance": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this subclass discard or neutralize behavior it inherits, so the inheritance link misleads readers about what it does?",
@@ -1878,6 +1948,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unnamed-parameter-object": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this positional parameter list describe a coherent object the code never names, forcing every caller to keep argument order in mind?",
@@ -1905,6 +1976,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-predictable-token": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this weak randomness guard something an adversary can exploit, rather than providing benign variability?",
@@ -1932,6 +2004,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unreachable-guard": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this defensive check guard a case no caller can produce, misleading readers about the function's real contract?",
@@ -1959,6 +2032,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unaccountable-todo": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Does this deferred-work marker carry no accountable follow-through, leaving the deferral open-ended?",
@@ -1986,6 +2060,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-adversarial-regex": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this nested-quantifier pattern run against input an adversary can shape, exposing the service to disproportionate backtracking cost?",
@@ -2013,6 +2088,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-live-credential": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Is this hard-coded secret a live credential rather than a test placeholder or obviously inert example?",
@@ -2041,6 +2117,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-output-argument": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function deliver its result by writing into a caller-supplied container instead of returning it, forcing call sites to read backwards?",
@@ -2068,6 +2145,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-contextless-error": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this raised or re-raised error carry no facts about the failure, leaving handlers nothing to tell what happened?",
@@ -2095,6 +2173,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unchecked-precondition": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function assume a precondition its callers observably violate, with no assertion or guard stating the assumption?",
@@ -2122,6 +2201,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unenforced-warning-comment": {
       scope: "comment",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this comment admit a hazard that no code enforces, leaving the warning as the entire safety mechanism?",
@@ -2150,6 +2230,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-table-shaped-conditional": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this conditional map inputs to outcomes as data per arm, so a lookup would state the mapping the branches only enumerate?",
@@ -2177,6 +2258,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-sequential-step-soup": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function perform sequential phases that share no dataflow between them, so each phase is a hidden function its callers never needed together?",
@@ -2204,6 +2286,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mirrored-derived-state": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this value duplicate state owned elsewhere and stay in sync only through manual sync code, so the copies can disagree silently?",
@@ -2230,6 +2313,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-construction-in-use": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this business-logic function build its own concrete collaborators instead of receiving them, so tests and new callers inherit its wiring choices?",
@@ -2259,6 +2343,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-retry-storm-shape": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Do these sibling callers retry the same dependency without spread or bounds, so one slow dependency synchronizes their retries into a storm?",
@@ -2286,6 +2371,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unbounded-accumulation": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this collection grow with input or time and have no eviction or size bound, so a long-lived process exhausts memory?",
@@ -2313,6 +2399,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-call-in-loop-persistence": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this loop perform one persistence round-trip per item, so cost grows with input size where a single set operation would do?",
@@ -2341,6 +2428,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unbounded-parallel-fanout": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this fan-out launch one concurrent unit per input item with no concurrency bound, so a large input exhausts connections, memory, or downstream quota?",
@@ -2368,6 +2456,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-concurrent-shared-mutation": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Is this binding read, modified, and written back from concurrent callbacks with no coordination, so interleavings silently win or lose updates?",
@@ -2396,6 +2485,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-sensitive-data-in-log": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this logging or telemetry call record secrets or personal data that outlive the request in log storage?",
@@ -2423,6 +2513,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unsafe-redirect-target": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this navigation target come from caller-controlled input with no allow-check, so the application can be steered to an attacker-chosen destination?",
@@ -2449,6 +2540,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-overbroad-origin-trust": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this cross-origin grant trust any origin rather than a named set, so any site can claim the privilege?",
@@ -2475,6 +2567,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-path-traversal-join": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this filesystem path incorporate an unvalidated segment that can escape its intended directory?",
@@ -2503,6 +2596,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-phantom-member-access": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this member access name something the owning module never defines, so the call can only fail at compile or runtime?",
@@ -2530,6 +2624,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-laundered-absence": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this fallback convert a contract breach into an ordinary empty value, so callers can no longer distinguish none from broken?",
@@ -2557,6 +2652,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unverified-claim": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Does this comment assert behavior about nearby code that no test or caller pins, so readers cannot tell confidence from knowledge?",
@@ -2584,6 +2680,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-convention-breaking-addition": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this added code follow a different local convention than its owning module, so readers must hold two conventions for one file?",
@@ -2611,6 +2708,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-repeated-handler-preamble": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this guard preamble or handler repeat failure handling the module already owns in one place, instead of sharing it?",
@@ -2638,6 +2736,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-non-narrowing-guard": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this defensive check change no path's assumptions, so it performs care without providing any?",
@@ -2666,6 +2765,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-excess-context-parameter": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this parameter carry a wider object than the function uses, so every caller assembles context the callee never reads?",
@@ -2693,6 +2793,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-shallow-convenience-layer": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this layer add an interface over a collaborator without adding meaning, so readers learn two APIs for one capability?",
@@ -2720,6 +2821,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-prototype-in-production": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this code carry prototype-maturity markers yet serve production callers, so readers cannot tell which corners were never finished?",
@@ -2747,6 +2849,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hidden-loop-exit": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Is this loop's exit decided mid-body by a conditional break, continue, or return, so readers cannot tell the iteration shape from the loop header?",
@@ -2775,6 +2878,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-inconsistent-error-contract": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Do sibling operations report the same failure class in incompatible ways, so callers cannot handle the failure once?",
@@ -2802,6 +2906,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-breaking-export-reshape": {
       scope: "change",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this change reshape a contract existing consumers rely on, so current callers break without a migration path?",
@@ -2829,6 +2934,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-positional-extension-drift": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function grow by positional optional parameters while its neighbors already extend through an options bag, so the module's extension direction is inconsistent?",
@@ -2856,6 +2962,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mixed-absence-convention": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do sibling operations spell the same absence differently, so callers checking one convention mishandle the other?",
@@ -2883,6 +2990,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-shared-mutable-default": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Is this default parameter value created once and mutated per call, so one caller's state leaks into the next call?",
@@ -2911,6 +3019,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-blocking-event-loop-call": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this call block the single event loop inside a serving path, stalling every concurrent request for its duration?",
@@ -2938,6 +3047,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unguarded-async-init": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Can this lazily initialized value be initialized twice under concurrent first use, because the in-flight attempt is not shared?",
@@ -2965,6 +3075,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-promise-combinator-mismatch": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this promise combinator discard work or failures the surrounding flow needs: fail-fast over legs whose partial results matter, or first-settled over legs needing cleanup?",
@@ -2992,6 +3103,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-orphaned-timer": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this timer keep firing or holding resources after its owning lifecycle ends, because no teardown releases it?",
@@ -3019,6 +3131,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unsynchronized-shared-memory": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this code share memory between workers without atomic access, so readers can observe torn or stale writes?",
@@ -3047,6 +3160,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-timezone-naive-arithmetic": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this date computation assume fixed-length days or local fields that shift under daylight saving and zone changes?",
@@ -3073,6 +3187,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-floating-money-arithmetic": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this monetary amount pass through binary floating arithmetic that accumulates representational error?",
@@ -3099,6 +3214,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-offset-pagination-drift": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this listing paginate by offset over data that changes between pages, so items shift, repeat, or vanish?",
@@ -3125,6 +3241,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unit-scale-mismatch": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this call mix unit scales the surrounding convention distinguishes, so the value is off by orders of magnitude?",
@@ -3151,6 +3268,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-truncating-numeric-parse": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this parse silently truncate or coerce input at the edges, so malformed input looks valid?",
@@ -3177,6 +3295,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-locale-date-serialization": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this date cross a persistence or wire boundary in a locale-rendered form that cannot round-trip outside the writer locale?",
@@ -3204,6 +3323,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-overload-resolution-ambiguity": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do these overload signatures admit the same call shape for different meanings, so callers cannot tell which behavior they get?",
@@ -3231,6 +3351,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-sync-async-sibling-ambiguity": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do these same-stem siblings mix blocking and asynchronous behavior without naming the difference, so callers await what never suspends or block on what never resolves inline?",
@@ -3258,6 +3379,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-leaky-internal-export": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this barrel or index re-export internals its clients were never meant to depend on, widening the supported surface by accident?",
@@ -3285,6 +3407,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-weak-crypto-primitive": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this code protect data with a hash or cipher the industry no longer accepts for that purpose?",
@@ -3313,6 +3436,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-disabled-tls-verification": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this connection disable the identity check that makes the encrypted channel trustworthy?",
@@ -3340,6 +3464,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-dynamic-code-execution": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this code compile text into behavior at runtime from a source no static reader can audit?",
@@ -3367,6 +3492,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-locale-blind-ordering": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this ordering use code-unit comparison for human-visible text, so sort order is wrong across locales?",
@@ -3395,6 +3521,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-cascading-fallback": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this fallback path depend on the same failing capability it replaces, so the failure cascades instead of degrading?",
@@ -3423,6 +3550,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-silent-queue-drop": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this producer enqueue work with no handling for a full or unavailable queue, so load-shedding happens by accident?",
@@ -3449,6 +3577,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-missing-shutdown-drain": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this server start accepting work with no graceful shutdown path, so deploys cut in-flight requests mid-handling?",
@@ -3475,6 +3604,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-missing-health-signal": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this serving entry expose traffic endpoints but no health or readiness signal, so orchestrators cannot tell serving from stuck?",
@@ -3501,6 +3631,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-deployment-coupled-assumption": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this code assume its deployment environment instead of receiving it, so it breaks outside the machine it was written on?",
@@ -3528,6 +3659,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-assertion-free-test": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test exercise its subject without stating any expectation, so it cannot distinguish working from broken behavior?",
@@ -3555,6 +3687,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-sleep-in-test": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test wait a fixed duration for asynchronous work instead of awaiting a condition, making it slow when generous and flaky when tight?",
@@ -3582,6 +3715,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-logic-in-test": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test contain branches or loops that decide what to check, so the test can be wrong in the same way as the code it checks?",
@@ -3609,6 +3743,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mock-everything": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test replace every collaborator including the behavior under test, so it verifies its own doubles rather than the subject?",
@@ -3636,6 +3771,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-owned-module-mock": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test replace a module the repository itself owns with a mock, rather than mocking at a genuine system boundary?",
@@ -3663,6 +3799,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-duplicated-fixture-drift": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test setup duplicate a fixture block maintained separately elsewhere, where the copies already disagree about what a valid fixture is?",
@@ -3690,6 +3827,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-stale-feature-flag": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this feature flag no longer gate live behavior, so every reader still reasons through a dead arm?",
@@ -3716,6 +3854,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unlabeled-interactive-element": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this interactive element expose no accessible name, so assistive technology announces an unlabeled control?",
@@ -3742,6 +3881,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unlocalized-user-string": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Is this user-visible string baked into code with no internationalization path, so every new locale needs a code change?",
@@ -3768,6 +3908,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-console-residue": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this debugging output sit in a shipped path, where it leaks internals to consoles and costs I/O per call?",
@@ -3794,6 +3935,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-deep-happy-path-nesting": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this function's nominal path buried under layers of nesting, so readers must simulate the whole staircase to find the normal outcome?",
@@ -3820,6 +3962,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-drilled-prop": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this prop pass unchanged through components that never read it while the repository already provides a nearer state channel for the same value?",
@@ -3846,6 +3989,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-stale-comment": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Does this comment assert behavior the adjoining code no longer exhibits, so readers inherit instructions that contradict the implementation?",
@@ -3872,6 +4016,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-paraphrased-sibling-logic": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function compute what a neighboring helper already provides, spelled differently enough to evade textual matching?",
@@ -3899,6 +4044,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unclosed-handle": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this function acquire a releasable resource on a path that can exit without releasing it?",
@@ -3925,6 +4071,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-bespoke-crypto-construction": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Does this function assemble a cryptographic construction from bitwise and arithmetic operations instead of calling a vetted primitive?",
@@ -3951,6 +4098,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-duplicated-style-object": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this style object repeat literal values a shared theme, token set, or style helper already owns?",
@@ -3977,6 +4125,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unmeasured-performance-machinery": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this function reuse prior results to avoid recomputation latency without a shown benchmark, hotspot, or invalidation policy, so readers maintain latency machinery that may optimize nothing?",
@@ -4005,6 +4154,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unmigrated-schema-change": {
       scope: "change",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this schema or model edit constrain stored or wire data more tightly while showing no migration, default, or reader-compatibility handling, so existing rows and old readers break?",
@@ -4031,6 +4181,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unconsumed-telemetry": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this metric, log channel, or span emitted where nothing in the repository consumes it, so it adds volume and maintenance without informing any response?",
@@ -4057,6 +4208,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-english-only-pluralization": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this user string branch quantity wording on English grammar while the repository locale reach requires plural rules, so a second locale renders wrong?",
@@ -4083,6 +4235,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-duplicate-config-source": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change read configuration through a new channel while the repository already owns one, so precedence, validation, and documentation now live in two places?",
@@ -4109,6 +4262,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unowned-feature-flag": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this new flag gate behavior with no named owner, tracked ticket, or expiry note, so no future reader can tell when it may be removed?",
@@ -4136,6 +4290,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-superseded-api-use": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this call use a member the owning module marks superseded while sibling code already uses the successor?",
@@ -4163,6 +4318,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-phantom-package-import": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this import name a package no manifest or workspace in the repository declares, so resolution can only fail?",
@@ -4190,6 +4346,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-interaction-pinning-test": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do this test's decisive assertions pin the subject's internal interactions rather than its observable outcome?",
@@ -4217,6 +4374,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-single-use-dependency": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change add a dependency whose entire use is one trivial call site the platform or existing shelf already covers?",
@@ -4244,6 +4402,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-second-shelf-dependency": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this import provide a capability the repository's manifest and module norms already cover with a different library?",
@@ -4271,6 +4430,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-repeated-test-preamble": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test's setup block repeat fixture construction the module already owns in one shared helper or hook?",
@@ -4299,6 +4459,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unpinned-boundary-branch": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this branch decide a boundary value that no test or caller pins, so a plausible-but-wrong comparison here stays green?",
@@ -4326,6 +4487,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-client-only-authorization": {
       scope: "function",
+      category: "security",
       question: {
         instructions: {
           question: "Is this access decision enforced only in client or routing code while the serving endpoint it protects shows no corresponding check?",
@@ -4352,6 +4514,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-check-then-act-race": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Are this check and its dependent mutation separated by an await, so concurrent executions can invalidate the check before the mutation lands?",
@@ -4378,6 +4541,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-non-idempotent-retry": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this retry repeat a state-changing operation that carries no idempotency identity, so a slow first attempt becomes two effects?",
@@ -4404,6 +4568,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-parallel-abstraction": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this module own a concept the repository already owns elsewhere, so one idea now has two addresses?",
@@ -4430,6 +4595,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-misplaced-error-boundary": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this error boundary guard code whose callees cannot produce the caught failure while a neighboring fallible call sits outside it?",
@@ -4457,6 +4623,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-rare-case-first": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does a shallow branch handle the rare case first and park the nominal outcome in else?",
@@ -4483,6 +4650,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-side-effecting-conditional-expression": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does a conditional expression perform side effects or nest so deep that readers must execute it like statements?",
@@ -4509,6 +4677,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unexplained-complex-condition": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does one boolean expression combine so many operators that no reader can hold it, with no local name explaining any part?",
@@ -4535,6 +4704,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-clever-expression": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does an expression use expert-only idioms that force readers to decode mechanics before intent?",
@@ -4562,6 +4732,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-hand-rolled-group-by": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this grouping helper reimplement Object.groupBy or Map.groupBy with no demonstrated need for its differences?",
@@ -4589,6 +4760,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-deep-clone": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this copy routine reimplement structuredClone with no demonstrated need for its differences?",
@@ -4616,6 +4788,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-set-ops": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this loop reimplement dedupe, intersection, or difference that Set expresses directly, with no custom equality doing real work?",
@@ -4643,6 +4816,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-flatten": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this recursion reimplement Array.flat or flatMap with no demonstrated need for its differences?",
@@ -4670,6 +4844,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-deep-equal": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this comparison routine reimplement a deep-equality capability the repository already owns, with no demonstrated need for its differences?",
@@ -4698,6 +4873,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-hand-rolled-schema-check": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this validator reimplement a schema capability an installed dependency already owns, with no demonstrated need for its differences?",
@@ -4724,6 +4900,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-retry-loop": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this retry loop reimplement an installed retry dependency with no demonstrated need for its differences?",
@@ -4750,6 +4927,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-concurrency-limit": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this limiter reimplement an installed concurrency dependency with no demonstrated need for its differences?",
@@ -4776,6 +4954,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-debounce": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this timing wrapper reimplement debounce semantics an installed dependency already owns, with generality its callers do not exercise?",
@@ -4802,6 +4981,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-csv-split": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this row splitter reimplement an installed CSV dependency with no demonstrated flat-shape safety?",
@@ -4829,6 +5009,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-nested-conditional-expression": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this function's decisive logic hide inside nested conditional expressions that force readers to simulate the evaluator?",
@@ -4855,6 +5036,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unexplained-behavioral-literal": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function repeat a behavior-steering value across sites that must stay in sync, with no name holding them together?",
@@ -4881,6 +5063,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-shadowed-meaning": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this function reuse a visible outer name for a different meaning, so readers carry the wrong assumption into the inner scope?",
@@ -4907,6 +5090,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-oversized-working-set": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this function force readers to track more live values than its outcome requires?",
@@ -4934,6 +5118,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-hand-rolled-date-format": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this date assembly reimplement Intl.DateTimeFormat with no demonstrated need for pinned output?",
@@ -4960,6 +5145,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-relative-time": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this time-ago ladder reimplement Intl.RelativeTimeFormat with no demonstrated need for its exact copy?",
@@ -4986,6 +5172,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-number-format": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this number assembly reimplement Intl.NumberFormat with no demonstrated need for pinned output?",
@@ -5012,6 +5199,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-url-query": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this query parse or build reimplement URLSearchParams with no demonstrated need for syntax it cannot express?",
@@ -5039,6 +5227,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-far-away-test": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change's test file live far from its subject although this repo colocates tests with sources?",
@@ -5066,6 +5255,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-utils-grab-bag-growth": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Were new unrelated exports added to a miscellaneous utils, helpers, or common module instead of an owned home?",
@@ -5093,6 +5283,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-barrel-bypass": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does a new import reach deep into a feature's internals although that feature publishes a barrel entry point?",
@@ -5120,6 +5311,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-skipped-level-import": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does a new import climb multiple directory levels to reach a module that has a nearer sanctioned entry?",
@@ -5147,6 +5339,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-deep-delegation-chain": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function sit mid-chain in a multi-module delegation path whose depth hides the policy decisions callers transitively depend on?",
@@ -5174,6 +5367,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-stability-inversion": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this widely used abstraction depend on a volatile detail, so churn below threatens calm above?",
@@ -5201,6 +5395,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-options-style-split": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do this module's exports mix options-object and positional parameter styles for overlapping call shapes, so callers cannot predict how to pass arguments?",
@@ -5228,6 +5423,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-concrete-stable-module": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this module widely imported yet offering no abstract surface, so its stability rests on concrete details?",
@@ -5255,6 +5451,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-import-use-skew": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this file import a wide surface from one module but exercise a narrow slice, keeping a dependency edge heavier than its use justifies?",
@@ -5282,6 +5479,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unverified-mock-contract": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test's mocked layer diverge from the real module contract it stands in for, so the test verifies the mock rather than the interaction?",
@@ -5309,6 +5507,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-implementation-mirrored-expectation": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do this test's expected values mirror literals copied from the subject implementation rather than from an independent contract, so the assertion pins the implementation's current assumption?",
@@ -5335,6 +5534,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-implementation-named-test": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test's title name the implementation under test instead of stating the behavior and expected outcome, so a failure tells the reader where, not what broke?",
@@ -5363,6 +5563,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-self-authored-exam": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change author the implementation, its doubles, and its assertions together with no pre-existing anchor, so the same diff writes the exam it takes?",
@@ -5389,6 +5590,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-change-stranded-code": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change strand previously-live code — a retained function or module whose last in-repo callers or importers disappear inside this diff — that should have been removed in the same change?",
@@ -5415,6 +5617,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-impossible-error-branch": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this error-handling branch guard a failure its repo-visible callee cannot produce, making the branch untestable weight?",
@@ -5441,6 +5644,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-retained-superseded-implementation": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this implementation marked superseded by its owning module, with no live in-repo callers, yet retained beside its successor instead of removed?",
@@ -5467,6 +5671,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-doubled-pure-helper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test double a side-effect-free repo helper it could call directly, maintaining a double that verifies nothing the real helper would not?",
@@ -5494,6 +5699,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-import-cycle-tangle": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change create a module dependency cycle that collapses a layering boundary?",
@@ -5520,6 +5726,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-domain-upward-import": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this domain-owned function depend directly on an outer-layer module?",
@@ -5546,6 +5753,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-barrel-wide-reexport": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this barrel change widen one module's public surface across unrelated responsibilities?",
@@ -5572,6 +5780,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-utility-module-grab-bag": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this new export land in a shared utility module whose existing exports serve unrelated responsibilities?",
@@ -5598,6 +5807,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-duplicate-module-role": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this added file duplicate the responsibility already owned by an existing module?",
@@ -5625,6 +5835,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-clone-and-tweak-sibling": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this added function duplicate a same-module sibling with only small edits, where one parameterized function would serve both callers?",
@@ -5651,6 +5862,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-single-caller-exported-helper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this exported helper serve exactly one production caller and belong living with that caller once the keep-signal facts are weighed?",
@@ -5678,6 +5890,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-string-duplicated-enumeration": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change restate a literal value set already owned by another module instead of reusing the canonical type?",
@@ -5704,6 +5917,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-convergent-twin-types": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this type duplicate a field shape already owned by another module, so the two copies must be kept in agreement by hand?",
@@ -5730,6 +5944,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-change-amplifier-case": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change add one case that sibling code must mirror to stay consistent, while nothing forces the mirror?",
@@ -5756,6 +5971,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mutable-surface-expansion": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change widen the exported mutable surface that other modules can come to depend on?",
@@ -5782,6 +5998,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-subclass-fragility-hook": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this override duplicate its base method's logic with edits instead of reusing it, so the next base-class fix silently misses this copy?",
@@ -5808,6 +6025,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-contract-narrowing-after-ship": {
       scope: "change",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this change narrow what existing callers may pass while leaving current call sites to break?",
@@ -5834,6 +6052,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-nondeterministic-test-input": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test draw unseeded randomness or live time into values its expectations depend on, so it can pass or fail by luck?",
@@ -5861,6 +6080,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-untestable-singleton-grab": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this domain function reach ambient singleton state that tests cannot substitute through its contract?",
@@ -5889,6 +6109,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-giant-test-arrange": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test bury its behavior under inline setup mass that hides what is actually being verified?",
@@ -5916,6 +6137,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-private-internals-assertion": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test pin module internals rather than observable behavior, so refactoring breaks the test without breaking users?",
@@ -5943,6 +6165,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-flaky-order-assertion": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test assert an order over concurrent work that nothing synchronizes, so it passes by scheduling luck?",
@@ -5970,6 +6193,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-redundant-conditional-arm": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this conditional contain an arm whose test adds no decision the remaining arms do not already make?",
@@ -5996,6 +6220,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-double-negation": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this code express a positive concept through two or more stacked negations?",
@@ -6022,6 +6247,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hollow-delegation-chain": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this value cross three or more function hops whose combined effect is observationally close to the identity?",
@@ -6048,6 +6274,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-transitive-plumbing": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function receive a value only to forward it unchanged to the next layer, as one link in a chain of three or more?",
@@ -6074,6 +6301,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-distrustful-type-guard": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this guard re-check at runtime what the declared static type already guarantees, inside code with no boundary crossing?",
@@ -6101,6 +6329,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-divergent-inverses": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function and its named inverse cover different sets of cases, so a round trip can silently lose information?",
@@ -6128,6 +6357,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-lopsided-error-handling": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this function handle failure for some same-kind operations while leaving their siblings without handling?",
@@ -6156,6 +6386,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-repeated-predicate": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function test one identical predicate two or more times instead of testing it once and naming the outcome?",
@@ -6183,6 +6414,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-overloaded-boolean-return": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do callers read this function's boolean result under two or more distinct meanings?",
@@ -6210,6 +6442,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-parallel-enumerations": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do two literal sets in this codebase have to agree with each other while nothing derives one from the other?",
@@ -6236,6 +6469,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-synonym-vocabulary": {
       scope: "abstraction",
+      category: "style",
       question: {
         instructions: {
           question: "Does this module use three or more verbs for one operation concept, forcing readers to learn false distinctions?",
@@ -6262,6 +6496,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-standard-method-synonym": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this exported operation invent a synonym (fetch, retrieve, load) for a standard-method concept the API surface already expresses with another verb, fragmenting one resource operation across two vocabularies?",
@@ -6289,6 +6524,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-knob-multiplicity": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is one operational concept governed by three or more distinct control mechanisms with no stated precedence?",
@@ -6315,6 +6551,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-boolean-fanout": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do three or more booleans sharing one stem enumerate the states of a single discriminant that is never named?",
@@ -6343,6 +6580,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-hand-rolled-uuid": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this id generator reimplement crypto.randomUUID with no demonstrated need for a different id shape?",
@@ -6370,6 +6608,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-promise-timeout": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this timeout race reimplement AbortSignal.timeout with no demonstrated need for its differences?",
@@ -6397,6 +6636,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-event-bus": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this pub/sub wrapper reimplement EventTarget with no demonstrated need for its differences?",
@@ -6424,6 +6664,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-fetch-wrapper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this transport helper rebuild what global fetch already does with no demonstrated need for lower-level control?",
@@ -6451,6 +6692,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-fs-recursive-reinvent": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this recursive walk reimplement the node:fs recursive options with no demonstrated extra semantics?",
@@ -6478,6 +6720,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hand-rolled-string-hash": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this hash function reimplement available hashing for non-security bucketing with no demonstrated need for its exact values?",
@@ -6506,6 +6749,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-mystery-literal-argument": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does a changed call site pass a literal whose meaning a reader cannot recover without opening the callee?",
@@ -6533,6 +6777,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unexplained-domain-threshold": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does a comparison, equality check, index, or slice in this function embody domain knowledge no reader can recover?",
@@ -6560,6 +6805,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-verbless-function-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this function name state no action, so callers cannot tell what the call does without reading the body?",
@@ -6587,6 +6833,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-misdirecting-error-message": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does an error message assert a cause the throwing code cannot establish, sending readers to the wrong fix?",
@@ -6614,6 +6861,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-ambiguous-positional-siblings": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Do adjacent same-type parameters stay silently swappable at every call site, so readers cannot verify order without the callee open?",
@@ -6642,6 +6890,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-deceptive-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does a name in this function assert a property its value contradicts?",
@@ -6668,6 +6917,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-hidden-hook-contract": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function call React hooks while bearing a plain name that hides the Rules of Hooks contract from callers?",
@@ -6695,6 +6945,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-punned-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this function name carry a different meaning in another declaration, so callers import the wrong meaning?",
@@ -6720,6 +6971,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-stuttering-scope-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this function name repeat its enclosing scope's vocabulary so the qualified use site stutters?",
@@ -6746,6 +6998,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-cryptic-abbreviation": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Do abbreviated names in this function compress real words past recognition?",
@@ -6771,6 +7024,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-far-traveling-terse-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does a terse name in this function survive beyond the few-line scope its brevity is justified by?",
@@ -6796,6 +7050,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-negative-boolean-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does a negated boolean name in this function force double negatives at read sites?",
@@ -6821,6 +7076,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unitless-quantity": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does a numeric value flow through a time, size, angle, or rate position with no unit in its name or type?",
@@ -6847,6 +7103,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-layer-skipping-call": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function call a deeper-layer module directly while bypassing an intermediate layer that enforces policy?",
@@ -6874,6 +7131,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-chatty-interface": {
       scope: "function",
+      category: "performance",
       question: {
         instructions: {
           question: "Does this function make repeated cross-module calls in a loop where one call would serve?",
@@ -6901,6 +7159,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-partitioned-fat-interface": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this class expose a wide surface whose methods serve disjoint caller populations?",
@@ -6928,6 +7187,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-dev-dependency-runtime-leak": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this runtime file reach a development-only dependency or test-marked module from a shipped path?",
@@ -6955,6 +7215,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-cross-module-call-order": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this function call two same-target-module functions in an order the caller cannot verify, where the second reads state the first writes?",
@@ -6983,6 +7244,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-callback-return-split": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function use a completion style that contradicts the surrounding module surface, forcing clients to hold two conventions?",
@@ -7010,6 +7272,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-reentrant-entry": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Is this exported function likely to run reentrantly against module state it mutates, through both registered-callback and direct-call reachability?",
@@ -7037,6 +7300,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-implementation-type-in-signature": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this exported signature expose an infrastructure or library implementation type that binds callers to a detail they should not know?",
@@ -7064,6 +7328,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unversioned-envelope-change": {
       scope: "change",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this changed message or envelope type alter its data contract without a versioning or compatibility affordance while cross-module consumers exist?",
@@ -7091,6 +7356,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-context-homonym-type": {
       scope: "abstraction",
+      category: "style",
       question: {
         instructions: {
           question: "Does this type share its name with a different-shaped type in another module, so the same word means two things across contexts?",
@@ -7118,6 +7384,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-wide-fan-in-edit": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this edit touch a function with wide caller fan-in, so its ripple plausibly extends beyond the visible call sites?",
@@ -7146,6 +7413,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unpinned-failure-path": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function contain an error or failure path that no test or caller pins, so a wrong recovery stays green?",
@@ -7174,6 +7442,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-incidental-snapshot": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do this test's snapshot assertions freeze incidental output that churns on unrelated changes, rather than pinning contractual behavior?",
@@ -7201,6 +7470,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-quarantined-test-coverage": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this disabled test leave behavior unpinned that no other test or caller covers, so the suite silently stops guarding it?",
@@ -7229,6 +7499,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-flag-shepherded-control-flow": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function use a mutable local binding only to shepherd execution between statements instead of expressing the control flow directly?",
@@ -7256,6 +7527,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-inline-lifecycle-phases": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function implement multiple lifecycle phases — input parsing or validation, computation, durable effects, presentation formatting — in regions that remain genuinely inline, with no named seam where ordering, transaction, exception, or resource boundaries could attach?",
@@ -7288,6 +7560,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unused-exported-helper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this exported function retained in the codebase although no production code uses it?",
@@ -7314,6 +7587,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-commented-out-implementation": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Is this comment block a disabled implementation retained in the source rather than documentation of the live code?",
@@ -7340,6 +7614,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unmarked-abandoned-compat-layer": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this compatibility-named implementation retained although its migration appears complete?",
@@ -7367,6 +7642,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-variant-partitioned-helper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this shared helper route disjoint caller slices through per-variant special cases behind a string or options discriminant, so each slice would be clearer as its own operation?",
@@ -7394,6 +7670,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-coincidental-similarity": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Is this structural similarity a mergeable duplication worth consolidating into one shared unit?",
@@ -7421,6 +7698,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-entangled-mechanical-change": {
       scope: "change",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change mix mechanical-only edits with behavior-changing edits, so the behavioral delta is obscured by mechanical noise?",
@@ -7449,6 +7727,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-predicate-name-deception": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this predicate-shaped name return a non-boolean value, so callers branching on it test the wrong thing?",
@@ -7475,6 +7754,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-confusion-confessing-comment": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Does this comment transfer the author's confusion to the reader instead of recording what was tried or verified?",
@@ -7501,6 +7781,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unexplained-suppression": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: {
           question: "Does this suppression disable a check without recording why, so future readers cannot tell whether the exception is still earned?",
@@ -7528,6 +7809,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-ambient-dependency-grab": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function reach a shared dependency through an ambient accessor instead of receiving it through its parameters, so callers can neither see nor substitute the dependency?",
@@ -7556,6 +7838,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-singly-owned-lazy-shared-state": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this function lazily create module-shared state on first use, so the dependency's creation timing, lifetime, and invalidation stay invisible to callers and persist across calls?",
@@ -7583,6 +7866,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unit-ambiguous-quantity": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Is this quantity's unit stated nowhere in its name, type, or documentation, so a caller must guess the scale?",
@@ -7610,6 +7894,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-partially-narrowed-nullable": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this value's type admit two absences while the code narrows only one before use, leaving the other to reach the use unhandled?",
@@ -7637,6 +7922,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-heterogeneous-primitive-callers": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do callers pass differently-stemmed values into this one bare-primitive parameter, so the type accepts what the domain distinguishes?",
@@ -7665,6 +7951,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-cross-area-export-break": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this module's export change break consumers spread across distinct repo areas, so the ripple exceeds what the author can verify from the changed file alone?",
@@ -7692,6 +7979,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-efferent-coupling-burst": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this diff scatter the module's outbound dependencies across architectural areas it previously did not touch?",
@@ -7718,6 +8006,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-stable-to-volatile-edge": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this widely-imported module add a new dependency on a volatile detail, so churn below now threatens the calm surface above?",
@@ -7744,6 +8033,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-new-foreign-state-write-edge": {
       scope: "module",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this change open the first cross-module write channel into another module's state?",
@@ -7771,6 +8061,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-shared-kernel-new-consumer": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change make a previously-unconnected context a consumer of the shared kernel, widening the blast radius of every future kernel change?",
@@ -7798,6 +8089,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-direction-reversing-edge": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this new dependency run against the established direction between the two areas, making the reliance mutual without closing a cycle?",
@@ -7825,6 +8117,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-cross-context-test-reach": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this runtime module newly depend on another context's test or fixture sources, promoting a private test seam to a cross-context contract?",
@@ -7852,6 +8145,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-twin-gateway-emergence": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change wrap an external package that another context already gateways, creating a second anticorruption layer for the same outside world?",
@@ -7879,6 +8173,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-unwrapped-service-edge": {
       scope: "module",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this change call an external service host never before seen in the repo without going through the established client wrapper, adding an unmediated outbound edge?",
@@ -7907,6 +8202,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-unpinned-compat-quirk": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function contain behavior that looks redundant or wrong on its face — a special case, redundant path, or unusual return — that existing in-repo callers actually depend on, with no comment or test pinning the dependency, so a well-meaning cleanup would silently break them?",
@@ -7936,6 +8232,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-hidden-collaborator-read": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function let an imported binding's state or receiver state change its result, decision, or effect while that input is absent from its parameters?",
@@ -7963,6 +8260,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-mixed-calculation-and-interaction": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function interleave deterministic calculation with environmental interaction so the calculation cannot be exercised or reasoned about without the environment?",
@@ -7991,6 +8289,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-fragmented-stateful-procedure": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this function scatter one stateful procedure across single-use helpers so the order of its state transitions is only visible by following calls?",
@@ -8019,6 +8318,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-stable-surface-widening": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change widen the export surface of an already widely-consumed module, growing the contract every future change must preserve?",
@@ -8046,6 +8346,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-team-boundary-crossing": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this new dependency reach into an area owned by a different team, creating coordination cost no in-team review can clear alone?",
@@ -8073,6 +8374,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-cross-service-source-reach": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this change wire two separately-deployable units together at source level, so neither can be built, versioned, or deployed in isolation anymore?",
@@ -8100,6 +8402,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-same-stem-divergent-role": {
       scope: "module",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this module's file stem collide with a same-named module elsewhere whose exports serve a different role, so the shared name promises a sameness the code does not keep?",
@@ -8128,6 +8431,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-non-exhaustive-domain-handling": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function branch over a declared finite domain while leaving member cases unhandled with no explicit fallback policy?",
@@ -8155,6 +8459,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-misplaced-coordination": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this entity method perform application coordination that belongs in a coordinating service or use-case owner rather than on the data it operates on?",
@@ -8182,6 +8487,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-coupled-index-collections": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Do two collections in this function advance in lockstep under one shared index, so that pairing by position is the real structure?",
@@ -8209,6 +8515,7 @@ export const defaultConfig: JevLintConfig = {
     },
     "jev/no-tautological-test": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this test assert an expected value recomputed the same way the code under test computes it, so the assertion passes by construction and cannot catch an implementation error?",
@@ -8237,6 +8544,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-stacked-error-boilerplate": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this changed error construction restate the obvious or duplicate context the cause chain already carries, instead of adding new information?",
@@ -8265,6 +8573,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-bare-json-parse": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this production path decode external JSON with bare JSON.parse so malformed input throws an un-actionable error?",
@@ -8292,6 +8601,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-indiscriminable-error": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this change throw or propagate an error callers cannot discriminate, where distinct failures need distinct handling?",
@@ -8321,6 +8631,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-any-widened-interface": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this change expose `any` in this function's caller-visible signature (parameters, return) where a narrower type was available, rather than confining `any` to generic internals?",
@@ -8349,6 +8660,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-shared-test-mutable-setup": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Do tests in this file share mutable setup state across cases instead of arranging isolated state per test?",
@@ -8377,6 +8689,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-import-time-side-effect": {
       scope: "module",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this changed module perform I/O, spawn timers or workers, mutate shared state, or start async work at import time rather than inside an explicit init or start function?",
@@ -8405,6 +8718,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-log-and-propagate": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this changed catch block both record the error and propagate it, handling one failure twice?",
@@ -8434,6 +8748,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-mechanism-bound-name": {
       scope: "function",
+      category: "style",
       question: {
         instructions: {
           question: "Does this function or variable name describe the mechanism or algorithm (how it works) rather than the caller's goal, so the name lies after any reimplementation?",
@@ -8462,6 +8777,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-retained-caller-alias": {
       scope: "function",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this function store a caller-provided array or object reference into longer-lived state without copying, so later mutation on either side can break the other's invariants?",
@@ -8491,6 +8807,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-content-free-nominal": {
       scope: "abstraction",
+      category: "maintainability",
       question: {
         instructions: {
           question: "Does this class or type name end in a content-free nominal that promises no domain role while its members span unrelated responsibilities?",
@@ -8521,6 +8838,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-cardinality-lying-type": {
       scope: "abstraction",
+      category: "correctness",
       question: {
         instructions: {
           question: "Does this type name promise a cardinality its declared shape contradicts?",
@@ -8548,6 +8866,7 @@ export const defaultConfig: JevLintConfig = {
 
     "jev/no-verb-named-field": {
       scope: "abstraction",
+      category: "style",
       question: {
         instructions: {
           question: "Does this stored type field or property use a verb or action phrase implying computation, where the member is plain stored state with no such behavior?",
