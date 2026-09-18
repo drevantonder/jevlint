@@ -48,8 +48,8 @@ Notes: `--staged` is rejected by `audit`; `--max-questions`, `--evidence-budget-
 
 ## Output shapes
 
-- `--format text` (default): judgments ranked by descending probability, top 5 shown (`--limit` default 5, may be raised, lowered, or 0), summary line `N evaluated; M displayed; A structurally abstained; F failed`, plus a hint line when judgments are hidden. `--min-score` filters before `--limit`.
-- `--format json`: every completed judgment in `judgments`, full `coverage` object on audits, echoed display options; text and JSON summaries are identical.
+- `--format text` (default): judgments ordered by category rank (security, correctness, reliability, performance, maintainability, style), then descending probability within each category; top 5 shown (`--limit` default 5, may be raised, lowered, or 0), summary line `N evaluated; M displayed; A structurally abstained; F failed`, plus a hint line when judgments are hidden. `--min-score` filters before `--limit`. Categories order display only; they never filter or decide.
+- `--format json`: every completed judgment in `judgments` in the same category-then-probability order, full `coverage` object on audits, echoed display options; text and JSON summaries are identical.
 - Stdout carries only the report or config JSON. Everything else — failure summaries, `--debug` output, `--debug=files` scope list — goes to stderr. Exit 0 means a completed review regardless of scores; exit 2 means invalid arguments, config/Git/API failure, or at least one evaluation failure (completed judgments are still reported).
 
 ## Contract

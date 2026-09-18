@@ -8,6 +8,7 @@ export default {
     "no-todo-without-ticket": {
       name: "no-todo-without-ticket",
       scope: "comment",
+      category: "style",
       question: {
         instructions: "Does this TODO comment name a trackable ticket?",
         criteria: {
@@ -24,6 +25,7 @@ export default {
     "no-forwarding-function": {
       name: "no-forwarding-function",
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: "Does this function merely forward its arguments?",
       },

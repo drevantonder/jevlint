@@ -63,6 +63,7 @@ declares `name`; see key rule below — in practice authors use form (b) or set
 defineRule({
   name: "no-todo-without-ticket",   // suffix; kebab-case, no `/`
   scope: "comment",                 // candidacy kind: 1 of the 5 CandidateKinds
+  category: "style",                // display-order kind: 1 of the 6 RuleCategorys (§2a)
   question: {                       // identical shape to RuleConfig.question
     instructions: { question, inspect?, focus?, decision_boundary? },
     criteria: { true: { what, remedy? }, false: { what } },
@@ -77,6 +78,14 @@ Field-by-field justification:
 - `scope` IS the candidacy kind (`comment | function | abstraction | change |
   module`). Dispatch filters `rule.scope !== candidate.kind` exactly as for
   bundled rules, so candidacy is identical by construction.
+- `category` IS the display-order kind (`security | correctness | reliability
+  | performance | maintainability | style`, highest rank first). It rides the
+  judgment as metadata and orders the report; it never filters, never gates,
+  and never enters the proposition or evidence. It is not a severity: custom
+  rules emit probabilities only, and a severity tag would smuggle threshold-
+  style reading back in (§7). A `rules`-record override may reshape `category`
+  alongside `scope`/`question`/`message` (§4); omitting it keeps the
+  descriptor's category.
 - `question` / `message` reuse the `RuleConfig` zod schema verbatim
   (`ruleConfigSchema` minus nothing) — the proposition flows into
   `EvaluationRequest` byte-for-byte like a built-in.
@@ -103,6 +112,7 @@ Validation at load (zod, same style as `userConfigSchema`):
 
 - `name`: `^[a-z0-9][a-z0-9-]+$`, no `/`, must not start with `jev`.
 - `scope`: enum of the five kinds.
+- `category`: enum of the six display-order kinds.
 - `question`/`message`: existing `ruleConfigSchema` shapes.
 - `buildEvidence`: `typeof === "function"` and not an `AsyncFunction`
   (sync enforced at load; a thenable returned at review time is an evaluation
@@ -133,11 +143,12 @@ Extended:
   plugin entry order after bundled defaults — uniform with built-ins (no
   parallel enable-list; decision D3).
 - `"off"` on a custom key removes it — identical to built-ins.
-- A full `RuleConfig` value on a custom key reshapes `scope`/`question`/
-  `message` only; the plugin's `buildEvidence` is retained (evidence stays
+- A full `RuleConfig` value on a custom key reshapes `scope`/`category`/
+  `question`/`message`; the plugin's `buildEvidence` is retained (evidence stays
   attached to the key, proposition text stays user-overridable — same split
   as bundled rules, whose builders live in-repo while their text is
-  config-overridable).
+  config-overridable). Omitting `category` keeps the descriptor's category;
+  an unknown `category` is a load error like any other invalid value.
 - Hardening (flagged behavior change): a `rules` key that matches NEITHER a
   bundled id NOR a plugin-provided key is a load error (today it is silently
   accepted and judged evidence-free). Rationale: typo-safety; with custom keys
@@ -185,12 +196,13 @@ evaluation; a review with an unloaded plugin never runs.
 | E7 | custom key squats `jev/` | `jevlint: custom rule key "<key>" is reserved (jev/ is bundled-only).` |
 | E8 | `scope` outside the five kinds ("moon") | `jevlint: plugin "acme" rule "<suffix>": scope must be one of comment, function, abstraction, change, module.` (subsumed by E4 in practice; listed so scope-requests are never silently coerced) |
 | E9 | `buildEvidence` async or not a function | `jevlint: plugin "acme" rule "<suffix>": evidence builder must be a synchronous function.` |
-| E10 | `rules` key matches nothing known | `jevlint: unknown rule "<key>". Did you mean "<closest>"?` |
-| E11 | builder throws at review time | evaluation failure for those questions (no probability, review incomplete) — same as evaluator errors; message capped like `FAILURE_MESSAGE_LIMIT`, never the plugin's raw stack. |
-| E12 | builder returns thenable or non-JSON at review time | evaluation failure (same treatment as E11); `undefined` remains the ONLY abstention signal. |
+| E10 | `category` missing or outside the six kinds | `jevlint: plugin "acme" rule "<suffix>": category must be one of security, correctness, reliability, performance, maintainability, style.` |
+| E11 | `rules` key matches nothing known | `jevlint: unknown rule "<key>". Did you mean "<closest>"?` |
+| E12 | builder throws at review time | evaluation failure for those questions (no probability, review incomplete) — same as evaluator errors; message capped like `FAILURE_MESSAGE_LIMIT`, never the plugin's raw stack. |
+| E13 | builder returns thenable or non-JSON at review time | evaluation failure (same treatment as E12); `undefined` remains the ONLY abstention signal. |
 
-Ordering: E1–E3 (registration) → E4/E8/E9 (descriptor) → E5–E7 (namespacing) →
-E10 (selection) — first failure aborts; reports all issues found within the
+Ordering: E1–E3 (registration) → E4/E8–E10 (descriptor) → E5–E7 (namespacing) →
+E11 (selection) — first failure aborts; reports all issues found within the
 current stage where cheap (descriptor issues per rule), else first error wins.
 
 ## 7. Explicit non-goals
@@ -200,6 +212,8 @@ current stage where cheap (descriptor issues per rule), else first error wins.
   is the pattern explicitly NOT copied.)
 - **No severity levels**: custom rules emit probabilities only; no
   error/warn/off severity, no impact on the no-pass/fail contract (ADR-0001).
+  The required `category` is display-order metadata, not a severity — it
+  cannot filter, gate, or reweight a probability.
 - **No threshold/cutoff knobs on custom rules**: display filtering (`minScore`,
   `limit`) stays global and post-hoc; per-rule cutoffs would smuggle pass/fail
   back in.
@@ -225,7 +239,7 @@ current stage where cheap (descriptor issues per rule), else first error wins.
   Why: codegen is repo-build-time with a checked-in freshness gate; project
   rules are review-time data. Keeps `pnpm check` and generated test blocks
   untouched.
-- **D5 — unknown `rules` keys become errors (E10)**: behavior change flagged.
+- **D5 — unknown `rules` keys become errors (E11)**: behavior change flagged.
   Why: with two key namespaces, silent acceptance turns typos into
   evidence-free ghost judgments.
 - **D6 — builder failures are evaluation failures, never silent skips**:

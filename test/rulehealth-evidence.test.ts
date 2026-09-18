@@ -333,16 +333,19 @@ describe("rulehealth wiring", () => {
       rules: {
         "rulehealth/no-unbounded-evidence": {
           scope: "module",
+          category: "maintainability",
           question: { instructions: "Does this builder sweep without a cap?" },
           message: "Uncapped sweep.",
         },
         "rulehealth/no-missing-abstention": {
           scope: "module",
+          category: "maintainability",
           question: { instructions: "Can this builder return without evidence?" },
           message: "Never abstains.",
         },
         "rulehealth/no-unfalsifiable-proposition": {
           scope: "module",
+          category: "maintainability",
           question: { instructions: "Does this question name a checkable observation?" },
           message: "Uncheckable question.",
         },

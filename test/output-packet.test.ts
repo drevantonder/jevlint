@@ -93,7 +93,7 @@ describe("github format", () => {
     expect(lines.length).toBeGreaterThan(0);
     for (const line of lines) {
       expect(line).toMatch(
-        /^::notice file=\S+,line=\d+,col=\d+,endLine=\d+,endColumn=\d+::\d\.\d{3} \S+ .+$/,
+        /^::notice file=\S+,line=\d+,col=\d+,endLine=\d+,endColumn=\d+,category=\S+::\d\.\d{3} \S+ .+$/,
       );
     }
     expect(lines[0]).toContain("file=a.ts,");
@@ -191,6 +191,7 @@ describe("github format", () => {
       ruleId: "test/rule",
       message: "100% certain,\nwith: details\rhere",
       probability: 0.5,
+      category: "security",
       filePath: "src/a.ts",
       span: {
         start: { line: 3, column: 2 },
@@ -209,7 +210,7 @@ describe("github format", () => {
       statistics: { evaluation: { requests: 1, questions: 1 } },
     });
     expect(output).toBe(
-      "::notice file=src/a.ts,line=3,col=2,endLine=4,endColumn=9"
+      "::notice file=src/a.ts,line=3,col=2,endLine=4,endColumn=9,category=security"
       + "::0.500 test/rule 100%25 certain,%0Awith: details%0Dhere",
     );
   });

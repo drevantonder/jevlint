@@ -1,5 +1,6 @@
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
 import { z } from "zod";
+import { categoryRank } from "./categories.js";
 import { CredentialRejectedError } from "./auth.js";
 import type { CustomEvidenceBuilder } from "./types.js";
 import {
@@ -393,6 +394,7 @@ function judgment(item: PreparedQuestion, probability: number): Judgment {
     ruleId: item.ruleId,
     message: item.rule.message,
     probability,
+    category: item.rule.category,
     filePath: item.candidate.filePath,
     span: {
       start: { line: item.candidate.startLine, column: item.candidate.startColumn },
@@ -405,7 +407,8 @@ function judgment(item: PreparedQuestion, probability: number): Judgment {
 
 export function sortJudgments(judgments: Judgment[]): Judgment[] {
   return [...judgments].sort((left, right) =>
-    right.probability - left.probability
+    categoryRank(left.category) - categoryRank(right.category)
+    || right.probability - left.probability
     || left.filePath.localeCompare(right.filePath)
     || left.span.start.line - right.span.start.line
     || left.span.start.column - right.span.start.column

@@ -66,6 +66,7 @@ describe("custom rules", () => {
 
     expect(config.rules["acme/no-todo-without-ticket"]).toEqual({
       scope: "comment",
+      category: "style",
       question: {
         instructions: "Does this TODO comment name a trackable ticket?",
         criteria: {
@@ -108,6 +109,7 @@ describe("custom rules", () => {
 
     expect(config.rules["acme/no-forwarding-function"]).toEqual({
       scope: "comment",
+      category: "maintainability",
       question: { instructions: "Reshaped question?" },
       message: "Reshaped message.",
     });
@@ -145,24 +147,27 @@ describe("custom rules", () => {
     );
 
     expect(result.failures).toEqual([]);
+    // Tied probabilities order by category rank: maintainability before style.
     expect(result.judgments).toEqual([
-      expect.objectContaining({
-        ruleId: "acme/no-todo-without-ticket",
-        message: "TODO comment names no trackable ticket.",
-        probability: 0.8,
-        candidateKind: "comment",
-        evidence: expect.objectContaining({ hasTicket: false }),
-      }),
       expect.objectContaining({
         ruleId: "acme/no-forwarding-function",
         message: "Function only forwards its arguments.",
         probability: 0.8,
+        category: "maintainability",
         filePath: "src/a.ts",
         candidateKind: "function",
         span: expect.objectContaining({
           start: expect.objectContaining({ line: 2 }),
         }),
         evidence: expect.objectContaining({ source: expect.any(String) }),
+      }),
+      expect.objectContaining({
+        ruleId: "acme/no-todo-without-ticket",
+        message: "TODO comment names no trackable ticket.",
+        probability: 0.8,
+        category: "style",
+        candidateKind: "comment",
+        evidence: expect.objectContaining({ hasTicket: false }),
       }),
     ]);
     const questionTexts = evaluator.requests.flatMap((request) =>
@@ -201,11 +206,13 @@ describe("custom rules", () => {
       rules: {
         "acme/ok-rule": {
           scope: "function",
+          category: "maintainability",
           question: { instructions: "Is this fine?" },
           message: "Fine.",
         } satisfies RuleConfig,
         "acme/boom-rule": {
           scope: "function",
+          category: "maintainability",
           question: { instructions: "Does this explode?" },
           message: "Exploded.",
         } satisfies RuleConfig,
@@ -241,12 +248,12 @@ describe("custom rules", () => {
   it("reports promise and non-JSON builders as evaluation failures", async () => {
     const directory = await projectWith({
       "rules/late.ts": `export default { rules: { "late-rule": {
-        name: "late-rule", scope: "function",
+        name: "late-rule", scope: "function", category: "maintainability",
         question: { instructions: "Late?" }, message: "Late.",
         buildEvidence: () => Promise.resolve({ late: true }),
       } } };\n`,
       "rules/strange.ts": `export default { rules: { "strange-rule": {
-        name: "strange-rule", scope: "function",
+        name: "strange-rule", scope: "function", category: "maintainability",
         question: { instructions: "Strange?" }, message: "Strange.",
         buildEvidence: () => (() => 1),
       } } };\n`,
@@ -288,6 +295,7 @@ describe("custom rules", () => {
     };
     config.rules["acme/change-rule"] = {
       scope: "change",
+      category: "maintainability",
       question: { instructions: "Whole change?" },
       message: "Change.",
     };
@@ -374,7 +382,7 @@ describe("custom rules", () => {
   it("rejects descriptors with invalid shape, scope, or builder", async () => {
     const badDescriptor = await projectWith({
       "rules/bad.ts": `export default { name: "acme", rules: { "bad-rule": {
-        name: "bad-rule", scope: "comment",
+        name: "bad-rule", scope: "comment", category: "style",
         question: { instructions: "Bad?" },
         buildEvidence: () => ({}),
       } } };\n`,
@@ -402,7 +410,7 @@ describe("custom rules", () => {
 
     const asyncBuilder = await projectWith({
       "rules/bad.ts": `export default { name: "acme", rules: { "bad-rule": {
-        name: "bad-rule", scope: "comment",
+        name: "bad-rule", scope: "comment", category: "style",
         question: { instructions: "Bad?" }, message: "Bad.",
         buildEvidence: async () => ({}),
       } } };\n`,
@@ -418,7 +426,7 @@ describe("custom rules", () => {
   it("requires an explicit rule name and rejects module name mismatches", async () => {
     const nameless = await projectWith({
       "rules/bad.ts": `export default {
-        scope: "comment",
+        scope: "comment", category: "style",
         question: { instructions: "Nameless?" }, message: "Nameless.",
         buildEvidence: () => ({}),
       };\n`,
@@ -460,7 +468,7 @@ describe("custom rules", () => {
 
     const colliding = await projectWith({
       "rules/a.ts": `export default { rules: { "same-rule": {
-        name: "same-rule", scope: "comment",
+        name: "same-rule", scope: "comment", category: "style",
         question: { instructions: "Same?" }, message: "Same.",
         buildEvidence: () => ({}),
       } } };\n`,
@@ -479,7 +487,7 @@ describe("custom rules", () => {
   it("allows the same file under two entry names when the module declares no name", async () => {
     const directory = await projectWith({
       "rules/shared.ts": `export default { rules: { "shared-rule": {
-        name: "shared-rule", scope: "comment",
+        name: "shared-rule", scope: "comment", category: "style",
         question: { instructions: "Shared?" }, message: "Shared.",
         buildEvidence: () => ({ shared: true }),
       } } };\n`,
@@ -505,6 +513,7 @@ describe("custom rules", () => {
       rules: {
         "acme/tag-rule": {
           scope: "function",
+          category: "maintainability",
           question: { instructions: "Tagged?" },
           message: "Tagged.",
         },

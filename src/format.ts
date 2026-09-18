@@ -84,7 +84,7 @@ export function formatText(report: ReviewReport): string {
     .slice(0, report.display.limit ?? DEFAULT_DISPLAY_LIMIT)
     .map((judgment) =>
       `${judgment.probability.toFixed(3)}  ${location(judgment)}  `
-      + `${judgment.candidateKind}  ${judgment.ruleId}  ${judgment.message}`
+      + `${judgment.candidateKind}  ${judgment.category}  ${judgment.ruleId}  ${judgment.message}`
     );
   const summary = `${report.summary.evaluated} evaluated; ${report.summary.displayed} displayed; `
     + `${report.summary.abstained} structurally abstained; ${report.summary.failed} failed`
@@ -113,7 +113,8 @@ export function formatGithub(report: ReviewReport): string {
     const start = judgment.span.start;
     const end = judgment.span.end;
     const properties = `file=${escapeAnnotationProperty(judgment.filePath)}`
-      + `,line=${start.line},col=${start.column},endLine=${end.line},endColumn=${end.column}`;
+      + `,line=${start.line},col=${start.column},endLine=${end.line},endColumn=${end.column}`
+      + `,category=${escapeAnnotationProperty(judgment.category)}`;
     const message = escapeAnnotationData(
       `${judgment.probability.toFixed(3)} ${judgment.ruleId} ${judgment.message}`,
     );

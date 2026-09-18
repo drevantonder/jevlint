@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { RuleCategory } from "../src/categories.js";
 import { createReviewReport, formatJson, formatText } from "../src/format.js";
 import type { Judgment, ReviewReport } from "../src/types.js";
 
@@ -7,11 +8,13 @@ function judgment(
   probability: number,
   filePath: string,
   line: number,
+  category: RuleCategory = "maintainability",
 ): Judgment {
   return {
     ruleId,
     message: `${ruleId} proposition`,
     probability,
+    category,
     filePath,
     span: {
       start: { line, column: 1 },
@@ -59,7 +62,7 @@ describe("review report formatting", () => {
       "test/low",
     ]);
     expect(formatText(report)).toContain(
-      "0.950  src/z.ts:2:1-3:2  function  test/high  test/high proposition",
+      "0.950  src/z.ts:2:1-3:2  function  maintainability  test/high  test/high proposition",
     );
     expect(formatText(report)).toContain(
       "4 evaluated; 4 displayed; 0 structurally abstained; 0 failed",
@@ -91,10 +94,10 @@ describe("review report formatting", () => {
     ]);
     const text = formatText(report);
     expect(text).toContain(
-      "0.950  src/z.ts:2:1-3:2  function  test/high  test/high proposition",
+      "0.950  src/z.ts:2:1-3:2  function  maintainability  test/high  test/high proposition",
     );
     expect(text).toContain(
-      "0.800  src/a.ts:6:1-7:2  function  test/tie-a  test/tie-a proposition",
+      "0.800  src/a.ts:6:1-7:2  function  maintainability  test/tie-a  test/tie-a proposition",
     );
     expect(text).not.toContain("0.200");
     expect(text).not.toContain("test/tie-b");

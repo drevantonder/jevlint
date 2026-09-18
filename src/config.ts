@@ -2,6 +2,8 @@ import { access } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createJiti } from "jiti";
 import { z } from "zod";
+import { RULE_CATEGORIES, isRuleCategory } from "./categories.js";
+import type { RuleCategory } from "./categories.js";
 import { defaultConfig } from "./defaults.js";
 import type {
   CandidateKind,
@@ -46,9 +48,10 @@ const messageSchema = z.string().min(1);
 
 const ruleConfigSchema = z.object({
   scope: z.enum(["comment", "function", "abstraction", "change", "module"]),
+  category: z.enum(RULE_CATEGORIES).optional(),
   question: questionSchema,
   message: messageSchema,
-}).strict().transform((parsed): RuleConfig => {
+}).strict().transform((parsed): Omit<RuleConfig, "category"> & { category?: RuleCategory } => {
   const question: RuleQuestion = { instructions: parsed.question.instructions };
   if (parsed.question.criteria !== undefined) {
     const criteria: NonNullable<RuleQuestion["criteria"]> = {};
@@ -56,11 +59,13 @@ const ruleConfigSchema = z.object({
     if (parsed.question.criteria.false !== undefined) criteria.false = parsed.question.criteria.false;
     question.criteria = criteria;
   }
-  return {
+  const rule: Omit<RuleConfig, "category"> & { category?: RuleCategory } = {
     scope: parsed.scope,
     question,
     message: parsed.message,
   };
+  if (parsed.category !== undefined) rule.category = parsed.category;
+  return rule;
 });
 
 const userConfigSchema = z.object({
@@ -183,6 +188,11 @@ function validateRuleDescriptor(
       `jevlint: plugin "${pluginName}" rule "${suffix}": scope must be one of comment, function, abstraction, change, module.`,
     );
   }
+  if (!isRuleCategory(raw.category)) {
+    throw new Error(
+      `jevlint: plugin "${pluginName}" rule "${suffix}": category must be one of security, correctness, reliability, performance, maintainability, style.`,
+    );
+  }
   const builder: CustomEvidenceBuilder = raw.buildEvidence;
   if (!(builder instanceof Function) || builder.constructor.name === "AsyncFunction") {
     throw new Error(
@@ -191,9 +201,10 @@ function validateRuleDescriptor(
   }
   const parsed = z.object({
     scope: z.enum(["comment", "function", "abstraction", "change", "module"]),
+    category: z.enum(RULE_CATEGORIES),
     question: questionSchema,
     message: messageSchema,
-  }).strict().safeParse({ scope: raw.scope, question: raw.question, message: raw.message });
+  }).strict().safeParse({ scope: raw.scope, category: raw.category, question: raw.question, message: raw.message });
   if (!parsed.success) {
     throw new Error(
       `jevlint: plugin "${pluginName}" rule "${suffix}": ${zodIssueInPlainWords(parsed.error)} (in ${relpath}).`,
@@ -207,7 +218,7 @@ function validateRuleDescriptor(
     question.criteria = criteria;
   }
   return {
-    rule: { scope: parsed.data.scope, question, message: parsed.data.message },
+    rule: { scope: parsed.data.scope, category: parsed.data.category, question, message: parsed.data.message },
     builder,
   };
 }
@@ -283,7 +294,7 @@ async function loadPluginRules(
 }
 
 function mergeConfig(
-  userRules: Record<string, RuleConfig | "off"> | undefined,
+  userRules: Record<string, Omit<RuleConfig, "category"> & { category?: RuleCategory } | "off"> | undefined,
   customRules: LoadedCustomRule[],
 ): JevLintConfig {
   const rules = new Map<string, RuleConfig>(Object.entries(defaultConfig.rules));
@@ -301,7 +312,17 @@ function mergeConfig(
       rules.delete(ruleId);
       delete customEvidence[ruleId];
     } else {
-      rules.set(ruleId, setting);
+      const base = rules.get(ruleId);
+      // SAFETY: knownKeys guards the lookup above, so base is always defined here.
+      const category = setting.category ?? base?.category ?? "maintainability";
+      rules.set(ruleId, { ...setting, category });
+    }
+  }
+  for (const [ruleId, rule] of rules) {
+    if (!isRuleCategory(rule.category)) {
+      throw new Error(
+        `jevlint: unknown category ${JSON.stringify(rule.category)} for rule "${ruleId}". Expected one of security, correctness, reliability, performance, maintainability, style.`,
+      );
     }
   }
   const config: JevLintConfig = { rules: Object.fromEntries(rules) };

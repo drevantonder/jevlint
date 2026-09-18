@@ -81,8 +81,9 @@ const OPTIONS_SHARED = `Shared options:
 
 --rules prints every bundled rule key, one per line (a JSON array with
 --format json), and exits without evaluating. --format github prints one
-workflow annotation per judgment (file with its line/column span and the
-probability in the message); display filters do not apply to annotations.
+workflow annotation per judgment (file with its line/column span, a category
+property, and the probability in the message); display filters do not apply
+to annotations.
 --out-dir writes artifacts alongside the normal stdout report without
 replacing it.
 --debug=files prints the resolved scope file list to stderr and exits without

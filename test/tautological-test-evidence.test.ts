@@ -66,6 +66,7 @@ const config: JevLintConfig = {
   rules: {
     "jev/no-tautological-test": {
       scope: "function",
+      category: "maintainability",
       question: { instructions: "Is the expected value recomputed from the exercised computation?" },
       message: "Tautological test.",
     },

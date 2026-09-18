@@ -68,6 +68,7 @@ const ruleConfig: JevLintConfig = {
   rules: {
     "jev/no-bare-json-parse": {
       scope: "function",
+      category: "reliability",
       question: {
         instructions: {
           question: "Does this production path decode external JSON with bare JSON.parse so malformed input throws an un-actionable error?",

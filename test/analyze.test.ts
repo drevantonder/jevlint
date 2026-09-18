@@ -29,6 +29,7 @@ const config: JevLintConfig = {
   rules: {
     "jev/no-pass-through-wrapper": {
       scope: "function",
+      category: "maintainability",
       question: {
         instructions: "Does this function merely forward an operation?",
         criteria: {
@@ -40,6 +41,7 @@ const config: JevLintConfig = {
     },
     "jev/no-narrating-comment": {
       scope: "comment",
+      category: "style",
       question: {
         instructions: "Does this comment narrate obvious code?",
       },
@@ -52,6 +54,7 @@ const functionConfig: JevLintConfig = {
   rules: {
     "test/function": {
       scope: "function",
+      category: "maintainability",
       question: { instructions: "Is this a function?" },
       message: "Function found.",
     },
@@ -166,6 +169,7 @@ describe("analyzeFile", () => {
       rules: {
         "jev/no-complexity-displacement": {
           scope: "change",
+          category: "maintainability",
           question: { instructions: "Does the whole change displace complexity?" },
           message: "Complexity moved.",
         },
@@ -284,6 +288,7 @@ describe("analyzeFile", () => {
       rules: {
         "jev/no-avoidable-orchestration": {
           scope: "function",
+          category: "performance",
           question: { instructions: "Is this avoidable orchestration?" },
           message: "Avoidable orchestration.",
         },
