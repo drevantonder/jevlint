@@ -6,7 +6,7 @@ import { TypeSafeEvaluator } from "../../src/typesafe-evaluator.js";
 import type { JevLintConfig } from "../../src/types.js";
 
 const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
-const evaluator = new TypeSafeEvaluator();
+const evaluator = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
 
 const cases = [
   {

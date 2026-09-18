@@ -42,8 +42,8 @@ liveDescribe("impossible error branch with callee capability evidence", () => {
     ]);
 
     const [clean, external] = await Promise.all([
-      lint(projectFiles, "src/service.ts", new TypeSafeEvaluator()),
-      lint(projectFiles, "src/remote.ts", new TypeSafeEvaluator()),
+      lint(projectFiles, "src/service.ts", new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
+      lint(projectFiles, "src/remote.ts", new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
     ]);
 
     expect(clean.length).toBeGreaterThan(0);

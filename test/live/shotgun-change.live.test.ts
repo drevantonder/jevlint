@@ -8,7 +8,7 @@ const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip
 
 class RecordingEvaluator implements Evaluator {
   probabilities: number[] = [];
-  readonly delegate = new TypeSafeEvaluator();
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
   async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
     const answers = await this.delegate.evaluate(request);
     if (answers.q0 !== undefined) this.probabilities.push(answers.q0);

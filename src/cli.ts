@@ -22,6 +22,28 @@ import {
   MAX_REPORTED_FAILURES,
 } from "./format.js";
 import type { CreateReviewReportInput } from "./format.js";
+import {
+  defaultAuthIO,
+  promptForApiKey,
+  readKeyFromStdin,
+  removeStoredCredential,
+  resolveCredential,
+  resolveCredentialWithIO,
+  storeCredential,
+  storedBackendLabel,
+  EMPTY_STDIN_MESSAGE,
+  MISSING_CREDENTIAL_MESSAGE,
+  SETUP_CANCELLED_MESSAGE,
+  STORED_PREFIX,
+  STORED_REMOVED_MESSAGE,
+  SetupCancelledError,
+} from "./auth.js";
+import type {
+  AuthIO,
+  CredentialSource,
+  PromptStdin,
+  StderrWriter,
+} from "./auth.js";
 import { createFileArtifact, writeFileArtifact, writeSummaryArtifact } from "./out-dir.js";
 import type { DisplayOptions } from "./types.js";
 import { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
@@ -40,7 +62,7 @@ import type { NoulQuestion } from "@typesafe-ai/sdk";
 
 type DebugMode = "files" | "timings" | "cache";
 
-type HelpCommand = "general" | "review" | "audit";
+type HelpCommand = "general" | "review" | "audit" | "setup";
 
 const OPTIONS_SHARED = `Shared options:
   --format <format>  Output text, json, or github (also -f)
@@ -55,6 +77,8 @@ const OPTIONS_SHARED = `Shared options:
   --no-error-on-unmatched-pattern
                      Exit 0 with an empty report when PATH scope matches nothing
   --debug=<mode>     files, timings, cache (comma-separated)
+  --token <value>    Use this Typesafe (Jev) API key for this run only; never stored
+  --no-prompt        Fail with an error instead of asking for an API key
   --print-config     Print effective config as JSON and exit
   --rules            List bundled rule keys and exit
   --help             Show this help
@@ -79,6 +103,7 @@ Commands:
   (none)            Audit the full tree; bare jevlint is audit with no subcommand
   review            Review changed code and report probability scores
   audit             Survey the whole codebase and report probability scores
+  setup             Store your Typesafe (Jev) API key for future runs
 
   With no subcommand, jevlint audits the full tree, or the given files or
   directories when PATHs are given. review stays explicit for change-scoped
@@ -86,7 +111,8 @@ Commands:
   without needing a diff and runs to completion by default: every
   candidate/rule pair is prepared unless you opt into a limit below.
   Bare, review, and audit all report probabilities only: no
-  pass/fail, no thresholds, no bands.
+  pass/fail, no thresholds, no bands. The first live run with no stored
+  key asks for it on first use; jevlint setup stores it on demand.
 
 Review defaults to changed files; audit defaults to the full tree. PATH filters
 scope to files or directories. Unknown paths follow the unmatched-pattern rule:
@@ -140,15 +166,34 @@ Options:
                             reports coverage and cost with zero live requests
 ${OPTIONS_SHARED}`;
 
-interface CliDependencies {
+export interface CliDependencies {
   cwd?: string;
   evaluator?: Evaluator;
   stdout?: (text: string) => void;
   stderr?: (text: string) => void;
+  authIO?: AuthIO;
+  stdin?: PromptStdin;
 }
 
+interface EnsureCredentialInput {
+  tokenFlag: string | undefined;
+  noPrompt: boolean;
+  stdin: PromptStdin;
+  stderr: StderrWriter;
+  authIO: AuthIO | undefined;
+}
+
+interface LiveCredential {
+  token: string;
+  source: CredentialSource;
+}
+
+type CredentialOutcome =
+  | { ok: true; credential: LiveCredential }
+  | { ok: false; exitCode: number };
+
 interface CliOptions {
-  command: "review" | "audit";
+  command: "review" | "audit" | "setup";
   paths: string[];
   staged: boolean;
   format: "text" | "json" | "github";
@@ -161,6 +206,10 @@ interface CliOptions {
   debug: DebugMode[];
   printConfig: boolean;
   listRules: boolean;
+  tokenFlag: string | undefined;
+  noPrompt: boolean;
+  setupForget: boolean;
+  setupStdin: boolean;
   help: boolean;
   maxQuestions?: number;
   evidenceBudgetMs?: number;
@@ -196,8 +245,8 @@ function parseDebugModes(raw: string): DebugMode[] | undefined {
   return [...new Set(modes)];
 }
 
-function baseOptions(command: "review" | "audit"): CliOptions {
-  return {
+function baseOptions(command: "review" | "audit" | "setup"): CliOptions {
+  const options: CliOptions = {
     command,
     paths: [],
     staged: false,
@@ -208,9 +257,14 @@ function baseOptions(command: "review" | "audit"): CliOptions {
     debug: [],
     printConfig: false,
     listRules: false,
+    tokenFlag: undefined,
+    noPrompt: false,
+    setupForget: false,
+    setupStdin: false,
     help: false,
     dryRun: false,
   };
+  return options;
 }
 
 function parseFlags(args: string[], start: number, options: CliOptions): boolean {
@@ -243,6 +297,18 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
       else if (argument === "--dry-run") {
         if (options.command !== "audit") return false;
         options.dryRun = true;
+      } else if (argument === "--no-prompt") {
+        options.noPrompt = true;
+      } else if (argument === "--token" || argument.startsWith("--token=")) {
+        let value: string | undefined;
+        if (argument === "--token") {
+          value = args[index + 1];
+          if (value === undefined) return false;
+          index += 1;
+        } else {
+          value = argument.slice("--token=".length);
+        }
+        options.tokenFlag = value;
       } else if (argument === "--no-error-on-unmatched-pattern") {
         options.noErrorOnUnmatchedPattern = true;
       } else if (argument === "--no-cache" || argument === "--refresh-cache") {
@@ -312,10 +378,49 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
   return true;
 }
 
+function parseSetupFlags(args: string[], options: CliOptions): boolean {
+  for (let index = 1; index < args.length; index += 1) {
+    const argument = args[index] ?? "";
+    if (argument === "--stdin") {
+      if (options.setupForget) return false;
+      options.setupStdin = true;
+    } else if (argument === "--forget") {
+      if (options.setupStdin) return false;
+      options.setupForget = true;
+    } else if (argument === "--no-prompt") {
+      options.noPrompt = true;
+    } else if (argument === "--help") {
+      options.help = true;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+const USAGE_SETUP = `Usage: jevlint setup [options]
+
+Ask for your Typesafe (Jev) API key and store it for future runs. The key is
+kept in the OS keychain when available, otherwise in a private config file.
+Run setup again to replace the stored key.
+
+Options:
+  --stdin            Read the key from stdin instead of asking (for scripts)
+  --forget           Remove the stored key and exit
+  --no-prompt        Fail with an error instead of asking (for scripts)
+  --help             Show this help
+`;
+
 function parseArgs(args: string[]): ParsedArgs {
   if (args.length === 0) return { ok: true, options: baseOptions("audit") };
   if (args[0] === "--help" && args.length === 1) return { ok: false, help: "general" };
   const command = args[0];
+  if (command === "setup") {
+    const options = baseOptions("setup");
+    if (!parseSetupFlags(args, options)) return { ok: false };
+    if (options.help) return { ok: false, help: "setup" };
+    return { ok: true, options };
+  }
   if (command === "review" || command === "audit") {
     const options = baseOptions(command);
     if (!parseFlags(args, 1, options)) return { ok: false };
@@ -511,16 +616,97 @@ const dryRunEvaluator: Evaluator = {
   },
 };
 
+async function ensureLiveCredential(input: EnsureCredentialInput): Promise<CredentialOutcome> {
+  const resolved = input.authIO === undefined
+    ? await resolveCredential({ tokenFlag: input.tokenFlag })
+    : await resolveCredentialWithIO({ tokenFlag: input.tokenFlag }, input.authIO);
+  if (resolved !== undefined) return { ok: true, credential: resolved };
+  const io = input.authIO ?? defaultAuthIO();
+  if (input.tokenFlag !== undefined || input.noPrompt || input.stdin.isTTY !== true) {
+    input.stderr(`${MISSING_CREDENTIAL_MESSAGE}\n`);
+    return { ok: false, exitCode: 2 };
+  }
+  let entered: string;
+  try {
+    entered = await promptForApiKey(input.stdin, input.stderr);
+  } catch (error) {
+    if (error instanceof SetupCancelledError) {
+      input.stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
+      return { ok: false, exitCode: 2 };
+    }
+    throw error;
+  }
+  const token = entered.trim();
+  if (token.length === 0) {
+    input.stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
+    return { ok: false, exitCode: 2 };
+  }
+  const backend = await storeCredential(token, io);
+  return { ok: true, credential: { token, source: backend } };
+}
+
+async function runSetup(
+  options: CliOptions,
+  dependencies: CliDependencies,
+  stderr: (text: string) => void,
+): Promise<number> {
+  const io = dependencies.authIO ?? defaultAuthIO();
+  const stdin: PromptStdin = dependencies.stdin ?? process.stdin;
+  if (options.setupForget) {
+    await removeStoredCredential(io);
+    stderr(`${STORED_REMOVED_MESSAGE}\n`);
+    return 0;
+  }
+  if (options.setupStdin) {
+    const raw = await readKeyFromStdin(stdin);
+    const token = raw.trim();
+    if (token.length === 0) {
+      stderr(`${EMPTY_STDIN_MESSAGE}\n`);
+      return 2;
+    }
+    const backend = await storeCredential(token, io);
+    stderr(`${STORED_PREFIX} (${storedBackendLabel(backend)}).\n`);
+    return 0;
+  }
+  if (stdin.isTTY !== true) {
+    stderr(`${MISSING_CREDENTIAL_MESSAGE}\n`);
+    return 2;
+  }
+  let entered: string;
+  try {
+    entered = await promptForApiKey(stdin, stderr);
+  } catch (error) {
+    if (error instanceof SetupCancelledError) {
+      stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
+      return 2;
+    }
+    throw error;
+  }
+  const token = entered.trim();
+  if (token.length === 0) {
+    stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
+    return 2;
+  }
+  const backend = await storeCredential(token, io);
+  stderr(`${STORED_PREFIX} (${storedBackendLabel(backend)}).\n`);
+  return 0;
+}
+
 async function resolveEvaluator(
   cwd: string,
   options: CliOptions,
   dependencies: CliDependencies,
+  credential: LiveCredential | undefined,
 ): Promise<{ evaluator: Evaluator; cachedEvaluator: CachedEvaluator | undefined }> {
   let cachedEvaluator: CachedEvaluator | undefined;
   let evaluator = dependencies.evaluator;
   if (evaluator instanceof CachedEvaluator) cachedEvaluator = evaluator;
   if (!evaluator) {
-    const liveEvaluator = new TypeSafeEvaluator();
+    if (credential === undefined) throw new Error("live evaluation needs a Typesafe API key");
+    const liveEvaluator = new TypeSafeEvaluator({
+      apiKey: credential.token,
+      credentialSource: credential.source,
+    });
     if (options.cacheMode === "disabled") {
       evaluator = liveEvaluator;
     } else {
@@ -581,7 +767,19 @@ async function runAudit(
   let cachedEvaluator: CachedEvaluator | undefined;
   let evaluator: Evaluator = dryRunEvaluator;
   if (!options.dryRun) {
-    const resolved = await resolveEvaluator(cwd, options, dependencies);
+    let credential: LiveCredential | undefined;
+    if (dependencies.evaluator === undefined) {
+      const outcome = await ensureLiveCredential({
+        tokenFlag: options.tokenFlag,
+        noPrompt: options.noPrompt,
+        stdin: dependencies.stdin ?? process.stdin,
+        stderr,
+        authIO: dependencies.authIO,
+      });
+      if (!outcome.ok) return outcome.exitCode;
+      credential = outcome.credential;
+    }
+    const resolved = await resolveEvaluator(cwd, options, dependencies, credential);
     evaluator = resolved.evaluator;
     cachedEvaluator = resolved.cachedEvaluator;
   } else if (dependencies.evaluator) {
@@ -660,7 +858,19 @@ async function runReview(
     return 2;
   }
 
-  const { evaluator: resolvedEvaluator, cachedEvaluator } = await resolveEvaluator(cwd, options, dependencies);
+  let credential: LiveCredential | undefined;
+  if (dependencies.evaluator === undefined) {
+    const outcome = await ensureLiveCredential({
+      tokenFlag: options.tokenFlag,
+      noPrompt: options.noPrompt,
+      stdin: dependencies.stdin ?? process.stdin,
+      stderr,
+      authIO: dependencies.authIO,
+    });
+    if (!outcome.ok) return outcome.exitCode;
+    credential = outcome.credential;
+  }
+  const { evaluator: resolvedEvaluator, cachedEvaluator } = await resolveEvaluator(cwd, options, dependencies, credential);
   let evaluator = resolvedEvaluator;
   const timings = new Map<string, RuleTiming>();
   if (options.debug.includes("timings")) {
@@ -762,6 +972,10 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
   const parsed = parseArgs(args);
 
   if (!parsed.ok) {
+    if (parsed.help === "setup") {
+      stdout(USAGE_SETUP);
+      return 0;
+    }
     if (parsed.help === "review") {
       stdout(USAGE_REVIEW);
       return 0;
@@ -780,6 +994,9 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
 
   const cwd = dependencies.cwd ?? process.cwd();
   try {
+    if (parsed.options.command === "setup") {
+      return await runSetup(parsed.options, dependencies, stderr);
+    }
     if (parsed.options.command === "audit") {
       return await runAudit(cwd, parsed.options, dependencies, stdout, stderr);
     }

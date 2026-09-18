@@ -3,4 +3,5 @@ dist/
 coverage/
 .worktrees/
 .env
+credentials
 *.log

@@ -65,8 +65,8 @@ liveDescribe("change stranded code with before/after evidence", () => {
     ];
 
     const [strandedJudgments, removedJudgments] = await Promise.all([
-      lint(stranded, new TypeSafeEvaluator()),
-      lint(removed, new TypeSafeEvaluator()),
+      lint(stranded, new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
+      lint(removed, new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
     ]);
 
     expect(strandedJudgments.length).toBeGreaterThan(0);

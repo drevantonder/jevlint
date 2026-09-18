@@ -1,4 +1,5 @@
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
+import { CredentialRejectedError } from "./auth.js";
 import {
   countImporterInDegree,
   extractCandidates,
@@ -340,6 +341,7 @@ async function evaluateBatch(
   try {
     answers = await evaluator.evaluate(request);
   } catch (cause) {
+    if (cause instanceof CredentialRejectedError) throw cause;
     const error = cause instanceof Error ? cause : new Error(String(cause));
     if (isTokenLimitError(error) && prepared.length > 1) {
       const middle = Math.floor(prepared.length / 2);

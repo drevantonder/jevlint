@@ -243,7 +243,7 @@ describe("CachedEvaluator", () => {
 
   it("persists only the probability and content digest", async () => {
     const directory = await mkdtemp(join(tmpdir(), "jevlint-cache-secrets-"));
-    const marker = "TYPESAFE_API_KEY=do-not-persist-this";
+    const marker = "JEVLINT_TYPESAFE_API_KEY=do-not-persist-this";
     const delegate = new CountingEvaluator();
     await new CachedEvaluator(delegate, await options(directory)).evaluate(request(marker));
     const [path] = await cacheFiles(directory);
@@ -252,7 +252,7 @@ describe("CachedEvaluator", () => {
 
     const stored = await readFile(path, "utf8");
     expect(stored).not.toContain(marker);
-    expect(stored).not.toContain("TYPESAFE_API_KEY");
+    expect(stored).not.toContain("JEVLINT_TYPESAFE_API_KEY");
     expect(stored).toContain('"probability":0.73');
   });
 });
