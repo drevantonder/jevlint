@@ -67,6 +67,93 @@ function propertiesOf(source: string, node: AbstractionNode): string[] {
   return [...names].sort();
 }
 
+function memberAnnotationTexts(source: string, node: AbstractionNode): (string | null)[] {
+  const members = node.type === "TSInterfaceDeclaration"
+    ? node.body.body
+    : node.typeAnnotation.type === "TSTypeLiteral"
+      ? node.typeAnnotation.members
+      : [];
+  const texts: (string | null)[] = [];
+  for (const member of members) {
+    if (member.type !== "TSPropertySignature" || member.computed) continue;
+    if (member.typeAnnotation === null) {
+      texts.push(null);
+      continue;
+    }
+    texts.push(
+      source
+        .slice(member.typeAnnotation.start, member.typeAnnotation.end)
+        .replace(/^:\s*/, "")
+        .trim(),
+    );
+  }
+  return texts;
+}
+
+function isWireAnnotation(annotation: string): boolean {
+  const normalized = annotation.replace(/[\s()]/g, "");
+  return /^(unknown|any)(\|(undefined|null|void))*$/.test(normalized);
+}
+
+function isConcreteAnnotation(annotation: string): boolean {
+  return annotation.length > 0 && !/\bunknown\b|\bany\b/.test(annotation);
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasNarrowingStep(
+  first: string,
+  second: string,
+  projectFiles: ProjectFile[],
+): boolean {
+  const firstPattern = escapeRegExp(first);
+  const secondPattern = escapeRegExp(second);
+  const eitherPattern = `(?:${firstPattern}|${secondPattern})`;
+  const predicate = new RegExp(`\\bis\\s+${eitherPattern}\\b`);
+  const takesFirst = new RegExp(`:\\s*${firstPattern}\\b`);
+  const returnsSecond = new RegExp(`\\)\\s*:\\s*${secondPattern}\\b`);
+  const takesSecond = new RegExp(`:\\s*${secondPattern}\\b`);
+  const returnsFirst = new RegExp(`\\)\\s*:\\s*${firstPattern}\\b`);
+  return projectFiles.some((file) => {
+    if (predicate.test(file.source)) return true;
+    if (!file.source.includes(first) && !file.source.includes(second)) return false;
+    if ((takesFirst.test(file.source) && returnsSecond.test(file.source)) ||
+      (takesSecond.test(file.source) && returnsFirst.test(file.source))) return true;
+    if (/z\.object\(|\.safeParse\(|z\.infer<|Schema\.parse\(/.test(file.source)) return true;
+    return false;
+  });
+}
+
+// Validation-boundary bar: abstain only when all three hold —
+// 1. one twin is an all-unknown/any wire shape (every member annotated
+//    `unknown` or `any`, bare or unioned with null/undefined),
+// 2. the other twin is concretely typed (every member annotated with
+//    neither `unknown` nor `any`),
+// 3. a narrowing step sits between them (a type predicate over either twin,
+//    a function taking one twin and returning the other, or a zod-style
+//    schema step in a file that also names a twin).
+// Either twin may be the wire side. Anything less specific stays a twin.
+function isValidationBoundary(
+  candidateName: string,
+  candidateAnnotations: (string | null)[],
+  twinName: string,
+  twinAnnotations: (string | null)[],
+  projectFiles: ProjectFile[],
+): boolean {
+  const allWire = (annotations: (string | null)[]): boolean =>
+    annotations.length > 0 &&
+    annotations.every((annotation) => annotation !== null && isWireAnnotation(annotation));
+  const allConcrete = (annotations: (string | null)[]): boolean =>
+    annotations.length > 0 &&
+    annotations.every((annotation) => annotation !== null && isConcreteAnnotation(annotation));
+  const split = (allWire(candidateAnnotations) && allConcrete(twinAnnotations)) ||
+    (allConcrete(candidateAnnotations) && allWire(twinAnnotations));
+  if (!split) return false;
+  return hasNarrowingStep(candidateName, twinName, projectFiles);
+}
+
 function abstractionsIn(file: ProjectFile): { node: AbstractionNode; name: string }[] {
   const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
@@ -99,6 +186,8 @@ export function buildConvergentTwinTypesEvidence(
   const own = new Set(properties);
 
   let best: TwinType | undefined;
+  let bestFile: ProjectFile | undefined;
+  let bestNode: AbstractionNode | undefined;
   let bestShared: string[] = [];
   let bestScore = 0;
   for (const file of projectFiles) {
@@ -119,10 +208,24 @@ export function buildConvergentTwinTypesEvidence(
           properties: otherProperties,
           sourceExcerpt: file.source.slice(other.node.start, other.node.end).slice(0, 2_000),
         };
+        bestFile = file;
+        bestNode = other.node;
       }
     }
   }
   if (!best || bestScore < 0.5) return undefined;
+  if (
+    bestFile && bestNode &&
+    isValidationBoundary(
+      name,
+      memberAnnotationTexts(owner.source, node),
+      best.name,
+      memberAnnotationTexts(bestFile.source, bestNode),
+      projectFiles,
+    )
+  ) {
+    return undefined;
+  }
 
   const candidateImporters = new Set(
     findModuleImporters(owner.filePath, projectFiles).map(({ filePath }) => filePath),
