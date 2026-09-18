@@ -114,6 +114,7 @@ import { buildHandRolledUuidEvidence } from "./hand-rolled-uuid.js";
 import { buildHardcodedConfigShadowEvidence } from "./hardcoded-config-shadow.js";
 import { buildHeterogeneousPrimitiveCallersEvidence } from "./heterogeneous-primitive-callers.js";
 import { buildHiddenCollaboratorReadEvidence } from "./hidden-collaborator-read.js";
+import { buildHiddenHookContractEvidence } from "./hidden-hook-contract.js";
 import { buildHiddenInitializationOrderEvidence } from "./hidden-initialization-order.js";
 import { buildHiddenInputMutationEvidence } from "./hidden-input-mutation.js";
 import { buildHiddenIoEvidence } from "./hidden-io.js";
@@ -435,6 +436,7 @@ type EvidenceRegistry = {
   "jev/no-hardcoded-config-shadow": EvidenceBuilder;
   "jev/no-heterogeneous-primitive-callers": EvidenceBuilder;
   "jev/no-hidden-collaborator-read": EvidenceBuilder;
+  "jev/no-hidden-hook-contract": EvidenceBuilder;
   "jev/no-hidden-initialization-order": EvidenceBuilder;
   "jev/no-hidden-input-mutation": EvidenceBuilder;
   "jev/no-hidden-io": EvidenceBuilder;
@@ -858,6 +860,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildHeterogeneousPrimitiveCallersEvidence(candidate, projectFiles),
   "jev/no-hidden-collaborator-read": (candidate, projectFiles) =>
     buildHiddenCollaboratorReadEvidence(candidate, projectFiles),
+  "jev/no-hidden-hook-contract": (candidate, projectFiles) =>
+    buildHiddenHookContractEvidence(candidate, projectFiles),
   "jev/no-hidden-initialization-order": (candidate, projectFiles) =>
     buildHiddenInitializationOrderEvidence(candidate, projectFiles),
   "jev/no-hidden-input-mutation": (candidate, projectFiles) =>
