@@ -8114,6 +8114,33 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This error message restates the obvious or duplicates the cause chain instead of adding new information.",
+    },
+
+    "jev/no-bare-json-parse": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this production path decode external JSON with bare JSON.parse so malformed input throws an un-actionable error?",
+          inspect: "Compare each parse site and its input provenance with the try coverage, contextual catch, schema validation, and safe wrapper in the supplied evidence.",
+          focus: "Judge whether malformed input reaches JSON.parse with no context added and no shape established afterwards.",
+          decision_boundary: [
+            "JSON.parse on request or body input with no try coverage and no validator is strong evidence of an un-actionable throw.",
+            "A contextual catch that rewraps the error or a schema check after the parse weakens the claim.",
+            "Parsing a closed literal weakens the claim.",
+            "If no JSON.parse site is established, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "External input reaches bare JSON.parse with no contextual catch or schema check",
+            remedy: "Catch the parse to add input context or decode through a validating parser",
+          },
+          false: {
+            what: "The parse is guarded, validated, wrapped, or decodes a closed constant",
+          },
+        },
+      },
+      message: "This path decodes external JSON with bare JSON.parse.",
 
     },
   },

@@ -315,6 +315,7 @@ describe("loadConfig", () => {
       "jev/no-coupled-index-collections",
       "jev/no-tautological-test",
       "jev/no-stacked-error-boilerplate",
+      "jev/no-bare-json-parse",
       // END GENERATED: rule-keys
     ]);
   });

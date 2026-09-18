@@ -12,6 +12,7 @@ const extractedRules = [
   ["jev/no-assertion-free-test", "function"],
   ["jev/no-asymmetric-normalization", "function"],
   ["jev/no-avoidable-orchestration", "function"],
+  ["jev/no-bare-json-parse", "function"],
   ["jev/no-barrel-bypass", "module"],
   ["jev/no-barrel-wide-reexport", "change"],
   ["jev/no-bespoke-crypto-construction", "function"],
