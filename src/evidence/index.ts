@@ -297,6 +297,7 @@ import { buildUnwrappedServiceEdgeEvidence } from "./unwrapped-service-edge.js";
 import { buildUtilityModuleGrabBagEvidence } from "./utility-module-grab-bag.js";
 import { buildUtilsGrabBagGrowthEvidence } from "./utils-grab-bag-growth.js";
 import { buildVariantPartitionedHelperEvidence } from "./variant-partitioned-helper.js";
+import { buildVerbNamedFieldEvidence } from "./verb-named-field.js";
 import { buildVerblessFunctionNameEvidence } from "./verbless-function-name.js";
 import { buildWeakCryptoPrimitiveEvidence } from "./weak-crypto-primitive.js";
 import { buildWideFanInEditEvidence } from "./wide-fan-in-edit.js";
@@ -606,6 +607,7 @@ type EvidenceRegistry = {
   "jev/no-utility-module-grab-bag": EvidenceBuilder;
   "jev/no-utils-grab-bag-growth": EvidenceBuilder;
   "jev/no-variant-partitioned-helper": EvidenceBuilder;
+  "jev/no-verb-named-field": EvidenceBuilder;
   "jev/no-verbless-function-name": EvidenceBuilder;
   "jev/no-weak-crypto-primitive": EvidenceBuilder;
   "jev/no-wide-fan-in-edit": EvidenceBuilder;
@@ -1200,6 +1202,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildUtilsGrabBagGrowthEvidence(candidate, projectFiles, changes),
   "jev/no-variant-partitioned-helper": (candidate, projectFiles) =>
     buildVariantPartitionedHelperEvidence(candidate, projectFiles),
+  "jev/no-verb-named-field": (candidate, projectFiles) =>
+    buildVerbNamedFieldEvidence(candidate, projectFiles),
   "jev/no-verbless-function-name": (candidate, projectFiles) =>
     buildVerblessFunctionNameEvidence(candidate, projectFiles),
   "jev/no-weak-crypto-primitive": (candidate, projectFiles) =>

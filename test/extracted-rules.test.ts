@@ -300,6 +300,7 @@ const extractedRules = [
   ["jev/no-utility-module-grab-bag", "change"],
   ["jev/no-utils-grab-bag-growth", "module"],
   ["jev/no-variant-partitioned-helper", "function"],
+  ["jev/no-verb-named-field", "abstraction"],
   ["jev/no-verbless-function-name", "function"],
   ["jev/no-weak-crypto-primitive", "function"],
   ["jev/no-wide-fan-in-edit", "change"],

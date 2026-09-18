@@ -8033,5 +8033,31 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-verb-named-field": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this stored type field or property use a verb or action phrase implying computation, where the member is plain stored state with no such behavior?",
+          inspect: "Compare each verb-first member name with its declared type, initializer shape, and the neighboring method signatures in the supplied evidence.",
+          focus: "Judge whether a reader trusting the verb would expect behavior the stored value does not provide, distinguishing genuine callback nouns from state masquerading as action.",
+          decision_boundary: [
+            "A verb-first name on a plain data-typed member with no function type and no closure initializer is strong evidence the name implies behavior the state does not provide.",
+            "A verb-first member whose declared type is a function, or whose initializer is a closure, is a callback noun and answers the question negatively.",
+            "Predicate prefixes such as is, has, or can belong to predicate-name reasoning and never answer this question.",
+            "If the evidence does not establish the member's stored type, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A verb-first field or property name implies computation while the member holds plain stored state",
+            remedy: "Rename the member to state what it holds, or give it the behavior the name promises",
+          },
+          false: {
+            what: "Verb-first members are callbacks or predicates, or the evidence does not establish stored state masquerading as action",
+          },
+        },
+      },
+      message: "This field name implies computation its stored value does not provide.",
+    },
   },
 };
