@@ -162,7 +162,7 @@ export function buildUnusedExportedHelperEvidence(
     projectFiles,
     { start: fn.start, end: fn.end },
   );
-  const { production, test } = partitionCallersByTest(coverage.callers);
+  const { production, test } = partitionCallersByTest(coverage.callers, projectFiles);
   if (production.length > 0) return undefined;
 
   const importers = findModuleImporters(owner.filePath, projectFiles)

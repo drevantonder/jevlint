@@ -328,7 +328,7 @@ export function buildSingleCallerExportedHelperEvidence(
     projectFiles,
     { start: fn.start, end: fn.end },
   );
-  const { production, test } = partitionCallersByTest(coverage.callers);
+  const { production, test } = partitionCallersByTest(coverage.callers, projectFiles);
   if (production.length !== 1) return undefined;
   const caller = production[0];
   if (!caller) return undefined;
