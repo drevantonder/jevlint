@@ -194,6 +194,8 @@ Scores never fail the command: a completed review exits 0 no matter how high the
 
 Repository evidence resolves relative JavaScript and TypeScript imports. TypeScript `paths` aliases and workspace package aliases are not resolved yet. Supporting them requires loading each repository's effective tsconfig and package export map; guessing from an import prefix would produce incorrect caller evidence.
 
+Transitive test pinning follows one hop: when a test calls a public seam and the seam calls the candidate, the pinning-aware rules (`jev/no-unpinned-failure-path`, `jev/no-unpinned-boundary-branch`, `jev/no-unpinned-compat-quirk`) name the chain (test → seam → candidate) as a pinning fact for Jev to weigh. Two-hop chains are out of scope by design — they explode combinatorially and blur pinning attribution. Pinning informs, never silences: chains add evidence facts without changing abstention semantics.
+
 ## Configuration
 
 Jevlint looks for `jevlint.config.ts` and common JavaScript module variants in the current directory. User rules extend the bundled rules. Set a bundled rule to `"off"` to disable it.

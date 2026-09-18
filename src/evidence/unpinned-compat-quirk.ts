@@ -9,6 +9,7 @@ import {
   functionName,
   isFunctionExported,
 } from "./repository.js";
+import { findTransitiveTestPins, type TransitivePin } from "./test-scope.js";
 
 const MAX_QUIRKS = 5;
 const MAX_CALLERS = 3;
@@ -39,6 +40,8 @@ export type UnpinnedCompatQuirkEvidence = {
   pinning: {
     commentAbove: boolean;
     testReferences: string[];
+    /** Present only when a test reaches the function through a named seam. */
+    transitivePins?: TransitivePin[];
   };
 };
 
@@ -170,6 +173,13 @@ export function buildUnpinnedCompatQuirkEvidence(
     .map((file) => file.filePath)
     .slice(0, MAX_CALLERS);
 
+  const pinning: UnpinnedCompatQuirkEvidence["pinning"] = {
+    commentAbove: beforeFunction.includes("//") || beforeFunction.includes("/*"),
+    testReferences,
+  };
+  const transitivePins = findTransitiveTestPins(candidate.filePath, name, projectFiles);
+  if (transitivePins.length > 0) pinning.transitivePins = transitivePins;
+
   return {
     function: {
       name,
@@ -183,9 +193,6 @@ export function buildUnpinnedCompatQuirkEvidence(
       files: [...new Set(coverage.callers.map(({ filePath }) => filePath))].slice(0, MAX_CALLERS),
       sampleCalls: sampled.map(({ call }) => call.slice(0, MAX_CALL_CHARS)),
     },
-    pinning: {
-      commentAbove: beforeFunction.includes("//") || beforeFunction.includes("/*"),
-      testReferences,
-    },
+    pinning,
   };
 }

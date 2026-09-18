@@ -2,7 +2,7 @@ import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
-import { calleeRootName, findDirectFunction } from "./repository.js";
+import { calleeRootName, findDirectFunction, findFunctionCallersWithCoverage, findSeamCallSites } from "./repository.js";
 import type { FunctionCaller, FunctionNode } from "./repository.js";
 
 export interface TestFunctionScope {
@@ -36,6 +36,63 @@ export function partitionCallersByTest(callers: FunctionCaller[]): PartitionedCa
     else production.push(caller);
   }
   return { production, test };
+}
+
+/** One hop of transitive test pinning: a test exercises a public seam that
+ * calls the candidate, so the candidate is pinned even though no test names
+ * it directly. The walk stops after one hop — two-hop chains (test → S1 →
+ * S2 → candidate) explode combinatorially and blur pinning attribution, so
+ * only test → seam → candidate chains are reported. Pinning informs, never
+ * silences: chains are evidence facts for Jev to weigh, with no change to
+ * abstention semantics. */
+export type TransitivePin = {
+  /** Test file exercising the seam. */
+  test: string;
+  /** Seam the test calls. */
+  seam: string;
+  /** Module owning the seam. */
+  seamFile: string;
+  /** The seam call observed in the test, truncated for evidence. */
+  seamCall: string;
+  /** Candidate the seam reaches. */
+  candidate: string;
+};
+
+const TRANSITIVE_PIN_LIMIT = 10;
+const TRANSITIVE_SEAM_CALL_CHARS = 240;
+
+export function findTransitiveTestPins(
+  ownerPath: string,
+  candidateName: string,
+  projectFiles: ProjectFile[],
+): TransitivePin[] {
+  const pins: TransitivePin[] = [];
+  const seen = new Set<string>();
+  for (const site of findSeamCallSites(ownerPath, candidateName, projectFiles)) {
+    if (site.seam === null) continue;
+    if (isTestFilePath(site.filePath)) continue;
+    if (site.filePath === ownerPath && site.seam === candidateName) continue;
+    const seamCallers = findFunctionCallersWithCoverage(site.filePath, site.seam, projectFiles);
+    for (const caller of seamCallers.callers) {
+      if (!isTestFilePath(caller.filePath)) continue;
+      const key = `${caller.filePath}\u0000${site.filePath}\u0000${site.seam}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pins.push({
+        test: caller.filePath,
+        seam: site.seam,
+        seamFile: site.filePath,
+        seamCall: caller.call.slice(0, TRANSITIVE_SEAM_CALL_CHARS),
+        candidate: candidateName,
+      });
+    }
+  }
+  pins.sort((left, right) =>
+    left.test.localeCompare(right.test)
+    || left.seamFile.localeCompare(right.seamFile)
+    || left.seam.localeCompare(right.seam)
+  );
+  return pins.slice(0, TRANSITIVE_PIN_LIMIT);
 }
 
 export function parseTestFunction(
