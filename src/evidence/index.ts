@@ -123,6 +123,7 @@ import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildHollowDelegationChainEvidence } from "./hollow-delegation-chain.js";
 import { buildImplementationMirroredExpectationEvidence } from "./implementation-mirrored-expectation.js";
+import { buildImplementationNamedTestEvidence } from "./implementation-named-test.js";
 import { buildImplementationTypeInSignatureEvidence } from "./implementation-type-in-signature.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildImportCycleTangleEvidence } from "./import-cycle-tangle.js";
@@ -445,6 +446,7 @@ type EvidenceRegistry = {
   "jev/no-hidden-runtime-input": EvidenceBuilder;
   "jev/no-hollow-delegation-chain": EvidenceBuilder;
   "jev/no-implementation-mirrored-expectation": EvidenceBuilder;
+  "jev/no-implementation-named-test": EvidenceBuilder;
   "jev/no-implementation-type-in-signature": EvidenceBuilder;
   "jev/no-implicit-atomicity": EvidenceBuilder;
   "jev/no-import-cycle-tangle": EvidenceBuilder;
@@ -878,6 +880,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildHollowDelegationChainEvidence(candidate, projectFiles),
   "jev/no-implementation-mirrored-expectation": (candidate, projectFiles) =>
     buildImplementationMirroredExpectationEvidence(candidate, projectFiles),
+  "jev/no-implementation-named-test": (candidate, projectFiles) =>
+    buildImplementationNamedTestEvidence(candidate, projectFiles),
   "jev/no-implementation-type-in-signature": (candidate, projectFiles) =>
     buildImplementationTypeInSignatureEvidence(candidate, projectFiles),
   "jev/no-implicit-atomicity": (candidate, projectFiles) =>
