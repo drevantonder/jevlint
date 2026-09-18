@@ -5298,6 +5298,34 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test's expectations mirror the implementation's own literals rather than an independent contract.",
     },
+    "jev/no-implementation-named-test": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test's title name the implementation under test instead of stating the behavior and expected outcome, so a failure tells the reader where, not what broke?",
+          inspect: "Compare the test title and the enclosing describe titles against the imported unit's identifiers and the test file stem, and check whether the title states an outcome the assertions pin.",
+          focus: "Judge whether the title states behavior with an expected outcome, not whether the test exercises the right subject.",
+          decision_boundary: [
+            "A title that is just the function, method, or file name under test, with no outcome verb or condition, is strong evidence of an implementation-named test.",
+            "A title pairing the unit with its expected outcome under a condition states behavior even when it names the implementation.",
+            "An endpoint plus its expected status names an observable contract, not an internal implementation detail.",
+            "A title-body mismatch, where the title claims one behavior while the assertions pin another, strengthens the signal.",
+            "Assertion literals copied from the subject belong to implementation-mirrored expectation; this question is about the title naming the implementation.",
+            "If the evidence cannot establish a literal test title, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The test title names the implementation without stating the behavior and expected outcome, so a failure reports where, not what broke",
+            remedy: "Rewrite the title to state the behavior and expected outcome under its condition, keeping the implementation reference in the enclosing describe when it aids navigation",
+          },
+          false: {
+            what: "The title states an observable behavior with its expected outcome, or no literal title exists to judge",
+          },
+        },
+      },
+      message: "This test's title names the implementation instead of the behavior it should pin.",
+    },
     "jev/no-self-authored-exam": {
       scope: "change",
       question: {
@@ -6598,6 +6626,32 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This name carries different meanings across its declarations.",
+    },
+    "jev/no-stuttering-scope-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function name repeat its enclosing scope's vocabulary so the qualified use site stutters?",
+          inspect: "Compare the function name tokens with the enclosing class name, file stem, and package qualifier tokens, the sibling names sharing the overlap, and the qualified use sites in the supplied evidence.",
+          focus: "Judge whether the repetition restates scope vocabulary the qualifier already carries, so the dotted use reads the same word twice where the bare noun would do.",
+          decision_boundary: [
+            "A name whose tokens duplicate the enclosing class name, file stem, or qualifier, visible as object.member pairs repeating the word, is strong evidence of stuttering.",
+            "Repetition that separates genuine siblings sharing one scope, such as configPath beside configDir, answers the question negatively.",
+            "Domain terms that merely resemble scope tokens without repeating them answer the question negatively.",
+            "If the name shares no token with any enclosing scope, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The name restates a scope token the qualifier already supplies, doubling the word at qualified use sites",
+            remedy: "Drop the scope prefix and keep the bare noun the qualifier implies",
+          },
+          false: {
+            what: "The name stands alone at use sites, or the repetition separates siblings the scope would otherwise blur",
+          },
+        },
+      },
+      message: "This name repeats its enclosing scope's vocabulary.",
     },
     "jev/no-cryptic-abbreviation": {
       scope: "function",

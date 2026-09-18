@@ -120,6 +120,7 @@ import { buildHiddenPartialFailureEvidence } from "./hidden-partial-failure.js";
 import { buildHiddenRuntimeInputEvidence } from "./hidden-runtime-input.js";
 import { buildHollowDelegationChainEvidence } from "./hollow-delegation-chain.js";
 import { buildImplementationMirroredExpectationEvidence } from "./implementation-mirrored-expectation.js";
+import { buildImplementationNamedTestEvidence } from "./implementation-named-test.js";
 import { buildImplementationTypeInSignatureEvidence } from "./implementation-type-in-signature.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildImportCycleTangleEvidence } from "./import-cycle-tangle.js";
@@ -234,6 +235,7 @@ import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildStaleFeatureFlagEvidence } from "./stale-feature-flag.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
+import { buildStutteringScopeNameEvidence } from "./stuttering-scope-name.js";
 import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
 import { buildSupersededApiUseEvidence } from "./superseded-api-use.js";
 import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
@@ -429,6 +431,7 @@ type EvidenceRegistry = {
   "jev/no-hidden-runtime-input": EvidenceBuilder;
   "jev/no-hollow-delegation-chain": EvidenceBuilder;
   "jev/no-implementation-mirrored-expectation": EvidenceBuilder;
+  "jev/no-implementation-named-test": EvidenceBuilder;
   "jev/no-implementation-type-in-signature": EvidenceBuilder;
   "jev/no-implicit-atomicity": EvidenceBuilder;
   "jev/no-import-cycle-tangle": EvidenceBuilder;
@@ -543,6 +546,7 @@ type EvidenceRegistry = {
   "jev/no-stale-comment": EvidenceBuilder;
   "jev/no-stale-feature-flag": EvidenceBuilder;
   "jev/no-string-duplicated-enumeration": EvidenceBuilder;
+  "jev/no-stuttering-scope-name": EvidenceBuilder;
   "jev/no-subclass-fragility-hook": EvidenceBuilder;
   "jev/no-superseded-api-use": EvidenceBuilder;
   "jev/no-swallowed-error": EvidenceBuilder;
@@ -846,6 +850,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildHollowDelegationChainEvidence(candidate, projectFiles),
   "jev/no-implementation-mirrored-expectation": (candidate, projectFiles) =>
     buildImplementationMirroredExpectationEvidence(candidate, projectFiles),
+  "jev/no-implementation-named-test": (candidate, projectFiles) =>
+    buildImplementationNamedTestEvidence(candidate, projectFiles),
   "jev/no-implementation-type-in-signature": (candidate, projectFiles) =>
     buildImplementationTypeInSignatureEvidence(candidate, projectFiles),
   "jev/no-implicit-atomicity": (candidate, projectFiles) =>
@@ -1074,6 +1080,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildStaleFeatureFlagEvidence(candidate, projectFiles),
   "jev/no-string-duplicated-enumeration": (candidate, projectFiles, changes) =>
     buildStringDuplicatedEnumerationEvidence(candidate, changes, projectFiles),
+  "jev/no-stuttering-scope-name": (candidate, projectFiles) =>
+    buildStutteringScopeNameEvidence(candidate, projectFiles),
   "jev/no-subclass-fragility-hook": (candidate, projectFiles) =>
     buildSubclassFragilityHookEvidence(candidate, projectFiles),
   "jev/no-superseded-api-use": (candidate, projectFiles) =>
