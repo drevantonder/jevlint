@@ -242,6 +242,7 @@ const extractedRules = [
   ["jev/no-sync-async-sibling-ambiguity", "function"],
   ["jev/no-synonym-vocabulary", "abstraction"],
   ["jev/no-table-shaped-conditional", "function"],
+  ["jev/no-tautological-test", "function"],
   ["jev/no-team-boundary-crossing", "module"],
   ["jev/no-temporal-call-coupling", "function"],
   ["jev/no-temporary-field", "abstraction"],

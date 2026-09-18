@@ -240,6 +240,7 @@ import { buildSwallowedErrorEvidence } from "./swallowed-error.js";
 import { buildSyncAsyncSiblingAmbiguityEvidence } from "./sync-async-sibling-ambiguity.js";
 import { buildSynonymVocabularyEvidence } from "./synonym-vocabulary.js";
 import { buildTableConditionalEvidence } from "./table-shaped-conditional.js";
+import { buildTautologicalTestEvidence } from "./tautological-test.js";
 import { buildTeamBoundaryCrossingEvidence } from "./team-boundary-crossing.js";
 import { buildTemporalCallCouplingEvidence } from "./temporal-call-coupling.js";
 import { buildTemporaryFieldEvidence } from "./temporary-field.js";
@@ -549,6 +550,7 @@ type EvidenceRegistry = {
   "jev/no-sync-async-sibling-ambiguity": EvidenceBuilder;
   "jev/no-synonym-vocabulary": EvidenceBuilder;
   "jev/no-table-shaped-conditional": EvidenceBuilder;
+  "jev/no-tautological-test": EvidenceBuilder;
   "jev/no-team-boundary-crossing": EvidenceBuilder;
   "jev/no-temporal-call-coupling": EvidenceBuilder;
   "jev/no-temporary-field": EvidenceBuilder;
@@ -1086,6 +1088,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildSynonymVocabularyEvidence(candidate, projectFiles),
   "jev/no-table-shaped-conditional": (candidate, projectFiles) =>
     buildTableConditionalEvidence(candidate, projectFiles),
+  "jev/no-tautological-test": (candidate, projectFiles) =>
+    buildTautologicalTestEvidence(candidate, projectFiles),
   "jev/no-team-boundary-crossing": (candidate, projectFiles, changes) =>
     buildTeamBoundaryCrossingEvidence(candidate, projectFiles, changes),
   "jev/no-temporal-call-coupling": (candidate, projectFiles) =>
