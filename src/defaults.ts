@@ -7088,11 +7088,14 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this function implement multiple lifecycle phases — input parsing or validation, computation, durable effects, presentation formatting — inline as one body, leaving no named seam where ordering, transaction, exception, or resource boundaries could attach?",
-          inspect: "Compare the extracted phase regions and their spans, mixed statements, bindings shared across phases, per-phase collaborators and import sources, same-module phase helpers, and scopes spanning phases in the supplied evidence.",
-          focus: "Judge whether the phases are implemented inline without seams, not how many collaborators the function touches or how long it is.",
+          question: "Does this function implement multiple lifecycle phases — input parsing or validation, computation, durable effects, presentation formatting — in regions that remain genuinely inline, with no named seam where ordering, transaction, exception, or resource boundaries could attach?",
+          inspect: "Compare the extracted phase regions and their spans, which regions delegate their substance to named helpers versus which remain genuinely inline, the orchestrator-shape fact, mixed statements, bindings shared across phases, per-phase collaborators and import sources, same-module phase helpers, and scopes spanning phases in the supplied evidence.",
+          focus: "Judge whether the genuinely-inline regions implement phases without seams, not how many collaborators the function touches or how long it is. Delegated regions and the orchestrator finished shape are counter-signal facts to weigh in both directions; they never satisfy the claim on their own.",
           decision_boundary: [
             "Parsing, pricing, persisting, and rendering one record inline with shared bindings threaded through is the central shape even when the outcome is single.",
+            "A region whose statement calls a named helper carrying the region's substance is delegated; weigh delegated regions against the claim and genuinely-inline regions for it.",
+            "An orchestrator whose every phase region delegates to a named step, composed top-to-bottom, already has the finished shape and answers the question negatively; splitting it further would manufacture single-caller wrappers.",
+            "Never recommend extracting a step that already delegates: a new wrapper with one caller trades this claim for jev/no-single-caller-exported-helper.",
             "A boundary controller that parses input, invokes one use case, and maps its result already has seams at the use-case call and answers the question negatively.",
             "Pipelines threading one accumulator answer negatively where the work is one phase rather than several phases sharing dataflow.",
             "Same-module helpers that wrap a single phase, or a collaborator owning the middle of the pipeline, are seams even without extraction.",
@@ -7102,15 +7105,15 @@ export const defaultConfig: JevLintConfig = {
         },
         criteria: {
           true: {
-            what: "The body implements several lifecycle phases inline with no named seam between them, so ordering, transaction, exception, and resource boundaries have nowhere to attach",
-            remedy: "Split the phases behind named helpers or use-case calls so each boundary has a seam, preserving execution order",
+            what: "The body implements several lifecycle phases in genuinely-inline regions with no named seam between them, so ordering, transaction, exception, and resource boundaries have nowhere to attach",
+            remedy: "Split the genuinely-inline phases behind named helpers or use-case calls so each boundary has a seam, preserving execution order; leave already-delegated steps where they are",
           },
           false: {
-            what: "The body covers one phase, delegates phases to named seams, or is already a thin boundary sandwich around a use-case call",
+            what: "The body covers one phase, delegates its phases to named seams, or is already a thin boundary sandwich or a finished orchestrator of named steps",
           },
         },
       },
-      message: "This function implements multiple lifecycle phases inline with no named seam between them.",
+      message: "This function implements multiple lifecycle phases inline in genuinely-inline regions with no named seam between them.",
     },
 
     "jev/no-unused-exported-helper": {

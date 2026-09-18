@@ -19,6 +19,8 @@ export type PhaseRegion = {
   line: number;
   endLine: number;
   text: string;
+  delegated: boolean;
+  delegates: string[];
 };
 
 export type PhaseCollaborator = {
@@ -40,6 +42,12 @@ export type SpanningScope = {
   phases: LifecyclePhase[];
 };
 
+export type RegionDelegation = {
+  delegatedLines: number[];
+  inlineLines: number[];
+  finishedOrchestrator: boolean;
+};
+
 export type InlineLifecyclePhasesEvidence = {
   function: {
     name: string;
@@ -49,6 +57,7 @@ export type InlineLifecyclePhasesEvidence = {
   };
   phases: LifecyclePhase[];
   regions: PhaseRegion[];
+  delegation: RegionDelegation;
   mixedStatements: Array<{ line: number; phases: LifecyclePhase[]; text: string }>;
   sharedBindings: string[];
   importSources: string[];
@@ -153,6 +162,7 @@ export function buildInlineLifecyclePhasesEvidence(
   }).visit(parsed.program);
 
   const statementPhases: Array<Set<LifecyclePhase>> = statements.map(() => new Set());
+  const statementDelegates: Array<Set<string>> = statements.map(() => new Set());
   const collaborators: PhaseCollaborator[] = [];
 
   const attribute = (node: Range, phase: LifecyclePhase): void => {
@@ -184,6 +194,10 @@ export function buildInlineLifecyclePhasesEvidence(
       const root = node.callee.type === "Identifier"
         ? node.callee.name
         : rootIdentifier(node.callee);
+      if (node.callee.type === "Identifier" && (importedLocals.has(node.callee.name) || sameModuleHelpers.has(node.callee.name))) {
+        const delegateIndex = statementIndexAt(node.start);
+        if (delegateIndex >= 0) statementDelegates[delegateIndex]?.add(node.callee.name);
+      }
       const phase = classifyCall(calleeText, root);
       if (!phase) return;
       attribute(node, phase);
@@ -247,8 +261,13 @@ export function buildInlineLifecyclePhasesEvidence(
       line: lineAt(owner.source, statement.start),
       endLine: lineAt(owner.source, statement.end),
       text: nodeSource(statement, owner.source).slice(0, 120),
+      delegated: (statementDelegates[index]?.size ?? 0) > 0,
+      delegates: [...(statementDelegates[index] ?? [])].slice(0, 4),
     });
   });
+
+  const delegatedLines = regions.filter((region) => region.delegated).map((region) => region.line);
+  const inlineLines = regions.filter((region) => !region.delegated).map((region) => region.line);
 
   const distinct = PHASE_PRIORITY.filter((phase) => regions.some((region) => region.phase === phase));
   if (distinct.length < 2) return undefined;
@@ -322,6 +341,11 @@ export function buildInlineLifecyclePhasesEvidence(
     },
     phases: distinct,
     regions: regions.slice(0, 16),
+    delegation: {
+      delegatedLines: delegatedLines.slice(0, 16),
+      inlineLines: inlineLines.slice(0, 16),
+      finishedOrchestrator: regions.length > 0 && inlineLines.length === 0,
+    },
     mixedStatements: mixedStatements.slice(0, 8),
     sharedBindings: [...shared].slice(0, 12),
     importSources: [...new Set(imports.map(({ source }) => source))].slice(0, 12),
