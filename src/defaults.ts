@@ -8226,6 +8226,34 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "These tests share mutable setup state across cases instead of isolating state per test.",
+    },
+
+    "jev/no-import-time-side-effect": {
+      scope: "module",
+      question: {
+        instructions: {
+          question: "Does this changed module perform I/O, spawn timers or workers, mutate shared state, or start async work at import time rather than inside an explicit init or start function?",
+          inspect: "Compare each recorded top-level side effect with its callee and kind, the module source, any explicit init or start exports, and the importing modules in the supplied evidence.",
+          focus: "Judge whether merely importing the module causes effects a reasonable importer would not expect from loading code, not whether the module uses I/O, timers, or async work at all.",
+          decision_boundary: [
+            "A top-level call that reaches the network, the filesystem, timers, workers, or process lifecycle, or a top-level await, is strong evidence of import-time work.",
+            "Pure declarations, frozen configuration, and type-only statements never execute at import; they answer negatively even in a module that also exports effects.",
+            "An explicit exported init or start function that owns the effects answers negatively when the top level only defines it without calling it.",
+            "Unclassified top-level calls alone are weaker evidence; weigh the callee name and module context before treating an unknown call as an effect.",
+            "If the evidence shows no top-level execution beyond declarations, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The module executes I/O, timers, workers, shared-state mutation, or async work while being imported, outside any explicit init or start entry",
+            remedy: "Move the work behind an exported init or start function that importers call explicitly",
+          },
+          false: {
+            what: "The top level only declares values and functions, freezes configuration, defers work to an explicit entry, or the recorded calls are not shown to execute effects at import",
+          },
+        },
+      },
+      message: "This module performs side effects at import time instead of inside an explicit init function.",
 
     },
   },

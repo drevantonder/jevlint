@@ -319,6 +319,7 @@ describe("loadConfig", () => {
       "jev/no-indiscriminable-error",
       "jev/no-any-widened-interface",
       "jev/no-shared-test-mutable-setup",
+      "jev/no-import-time-side-effect",
       // END GENERATED: rule-keys
     ]);
   });

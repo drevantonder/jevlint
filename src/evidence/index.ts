@@ -125,6 +125,7 @@ import { buildImplementationMirroredExpectationEvidence } from "./implementation
 import { buildImplementationTypeInSignatureEvidence } from "./implementation-type-in-signature.js";
 import { buildImplicitAtomicityEvidence } from "./implicit-atomicity.js";
 import { buildImportCycleTangleEvidence } from "./import-cycle-tangle.js";
+import { buildImportTimeSideEffectEvidence } from "./import-time-side-effect.js";
 import { buildImportUseSkewEvidence } from "./import-use-skew.js";
 import { buildImpossibleErrorBranchEvidence } from "./impossible-error-branch.js";
 import { buildInappropriateIntimacyEvidence } from "./inappropriate-intimacy.js";
@@ -441,6 +442,7 @@ type EvidenceRegistry = {
   "jev/no-implementation-type-in-signature": EvidenceBuilder;
   "jev/no-implicit-atomicity": EvidenceBuilder;
   "jev/no-import-cycle-tangle": EvidenceBuilder;
+  "jev/no-import-time-side-effect": EvidenceBuilder;
   "jev/no-import-use-skew": EvidenceBuilder;
   "jev/no-impossible-error-branch": EvidenceBuilder;
   "jev/no-inappropriate-intimacy": EvidenceBuilder;
@@ -870,6 +872,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildImplicitAtomicityEvidence(candidate, projectFiles),
   "jev/no-import-cycle-tangle": (candidate, projectFiles, changes) =>
     buildImportCycleTangleEvidence(candidate, changes, projectFiles),
+  "jev/no-import-time-side-effect": (candidate, projectFiles) =>
+    buildImportTimeSideEffectEvidence(candidate, projectFiles),
   "jev/no-import-use-skew": (candidate, projectFiles, changes) =>
     buildImportUseSkewEvidence(candidate, projectFiles, changes),
   "jev/no-impossible-error-branch": (candidate, projectFiles) =>
