@@ -8339,6 +8339,35 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This name describes the mechanism rather than the caller's goal.",
+    },
+
+    "jev/no-retained-caller-alias": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function store a caller-provided array or object reference into longer-lived state without copying, so later mutation on either side can break the other's invariants?",
+          inspect: "Compare the function signature with each retained store, its storage target, how the stored value reaches the parameter, the recorded safe copies, and the function source in the supplied evidence.",
+          focus: "Judge whether the function keeps an alias the caller can still reach and mutate, not whether it merely reads the input or changes it in place.",
+          decision_boundary: [
+            "A bare store such as this.items = items, shared = options, or cache.set(key, items) with no copy is strong evidence of a retained caller alias.",
+            "A visible copy — spread, .slice(), Array.from, structuredClone, a fresh Map or Set, Object.assign into a fresh target, or a JSON round-trip — answers the question negatively.",
+            "A number, string, or boolean store copies by value and answers the question negatively.",
+            "Returning internal state by reference belongs to mutable-surface-expansion, not this rule; this rule scores the store half only.",
+            "Changing the input in place belongs to hidden-input-mutation, not this rule; this rule scores keeping an alias, whether or not the input is also changed.",
+            "If the evidence does not establish that the caller can still reach and mutate the stored value, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The function stores a caller-reachable array or object reference into this state, an outer binding, or a cache without copying, so either side's later mutation is visible to the other",
+            remedy: "Copy the input at the boundary or document the shared ownership so both sides coordinate mutation",
+          },
+          false: {
+            what: "The function copies before storing, stores only primitives or fresh values, keeps the reference in local state, or lacks enough evidence to establish a shared alias",
+          },
+        },
+      },
+      message: "This function retains a caller-provided reference into longer-lived state without copying.",
 
     },
   },

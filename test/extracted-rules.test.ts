@@ -213,6 +213,7 @@ const extractedRules = [
   ["jev/no-repeated-handler-preamble", "function"],
   ["jev/no-repeated-predicate", "function"],
   ["jev/no-repeated-test-preamble", "function"],
+  ["jev/no-retained-caller-alias", "function"],
   ["jev/no-retained-superseded-implementation", "function"],
   ["jev/no-retry-storm-shape", "function"],
   ["jev/no-same-stem-divergent-role", "module"],
