@@ -204,6 +204,7 @@ import { buildRefusedInheritanceEvidence } from "./refused-inheritance.js";
 import { buildRepeatedHandlerPreambleEvidence } from "./repeated-handler-preamble.js";
 import { buildRepeatedPredicateEvidence } from "./repeated-predicate.js";
 import { buildRepeatedTestPreambleEvidence } from "./repeated-test-preamble.js";
+import { buildRetainedCallerAliasEvidence } from "./retained-caller-alias.js";
 import { buildRetainedSupersededImplementationEvidence } from "./retained-superseded-implementation.js";
 import { buildRetryStormEvidence } from "./retry-storm-shape.js";
 import { buildSameStemDivergentRoleEvidence } from "./same-stem-divergent-role.js";
@@ -513,6 +514,7 @@ type EvidenceRegistry = {
   "jev/no-repeated-handler-preamble": EvidenceBuilder;
   "jev/no-repeated-predicate": EvidenceBuilder;
   "jev/no-repeated-test-preamble": EvidenceBuilder;
+  "jev/no-retained-caller-alias": EvidenceBuilder;
   "jev/no-retained-superseded-implementation": EvidenceBuilder;
   "jev/no-retry-storm-shape": EvidenceBuilder;
   "jev/no-same-stem-divergent-role": EvidenceBuilder;
@@ -1014,6 +1016,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildRepeatedPredicateEvidence(candidate, projectFiles),
   "jev/no-repeated-test-preamble": (candidate, projectFiles) =>
     buildRepeatedTestPreambleEvidence(candidate, projectFiles),
+  "jev/no-retained-caller-alias": (candidate, projectFiles) =>
+    buildRetainedCallerAliasEvidence(candidate, projectFiles),
   "jev/no-retained-superseded-implementation": (candidate, projectFiles) =>
     buildRetainedSupersededImplementationEvidence(candidate, projectFiles),
   "jev/no-retry-storm-shape": (candidate, projectFiles) =>
