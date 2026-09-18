@@ -3396,10 +3396,12 @@ export const defaultConfig: JevLintConfig = {
       question: {
         instructions: {
           question: "Does this fallback path depend on the same failing capability it replaces, so the failure cascades instead of degrading?",
-          inspect: "Compare each primary call with the fallback calls in the same handler, their shared import roots, any static or cached return beside the fallback, and the repository callers in the supplied evidence.",
-          focus: "Judge recovery topology: whether the fallback re-enters the same outage, not whether the error is described well.",
+          inspect: "Compare each primary call with the fallback calls in the same handler, their shared import roots, any static or cached return beside the fallback, the retry scope relation and floor signals recorded for each shared-capability chain, and the repository callers in the supplied evidence.",
+          focus: "Judge whether the fallback re-enters the same outage at the same scope with no floor (cascade) or steps down in scope toward a floor (recovery), not whether a fallback exists.",
           decision_boundary: [
             "A catch block querying the same client, host, or pool the primary path just failed on is strong evidence of a cascading fallback.",
+            "A same-capability retry that repeats the primary scope unchanged with no floor reads as cascade and answers the question affirmatively.",
+            "A same-capability retry that shrinks scope on every step toward a floor — halving, paging, single-item, or reduced-batch retries bottoming out at a minimum size, a singleton base case, or a give-up — reads as recovery and answers the question negatively.",
             "A fallback serving a cached, static, or reduced-scope result with no live dependency on the failed capability answers the question negatively.",
             "A fallback calling a genuinely independent replica or provider weakens the claim even when the call shape looks similar.",
             "If the primary and fallback capabilities cannot be shown to share a root, answer no.",
@@ -3411,7 +3413,7 @@ export const defaultConfig: JevLintConfig = {
             remedy: "Degrade to a cached or static result, or fail over to an independent capability with its own failure domain",
           },
           false: {
-            what: "The fallback degrades without the failed capability or fails over to an independent one",
+            what: "The fallback degrades without the failed capability, fails over to an independent one, or retries the same capability at strictly shrinking scope toward a floor",
           },
         },
       },
