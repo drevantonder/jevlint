@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultConfig } from "../src/config.js";
+import { defaultConfig, optInRuleDefaults } from "../src/config.js";
 
 const extractedRules = [
   // BEGIN GENERATED: extracted-rules (ruleId, scope from src/defaults.ts; do not edit — run pnpm generate:registry)
@@ -327,11 +327,18 @@ const extractedRules = [
 
 describe("extracted review rules", () => {
   it.each(extractedRules)("ships %s as a %s judgment", (ruleId, scope) => {
-    expect(defaultConfig.rules[ruleId]).toMatchObject({
+    // Bundled rules live in defaultConfig.rules, or — when opt-in — in
+    // optInRuleDefaults. Both maps ship the same RuleConfig shape. The
+    // keyof cast keeps the lookup generic as more rules go opt-in.
+    // SAFETY: a miss yields undefined at runtime, which the toMatchObject
+    // assertion below rejects; the cast only selects the map's key domain.
+    const rule = defaultConfig.rules[ruleId]
+      ?? optInRuleDefaults[ruleId as keyof typeof optInRuleDefaults];
+    expect(rule).toMatchObject({
       scope,
       message: expect.any(String),
     });
-    expect(defaultConfig.rules[ruleId]).not.toHaveProperty("threshold");
-    expect(defaultConfig.rules[ruleId]).not.toHaveProperty("severity");
+    expect(rule).not.toHaveProperty("threshold");
+    expect(rule).not.toHaveProperty("severity");
   });
 });

@@ -1,4 +1,4 @@
-import type { JevLintConfig } from "./types.js";
+import type { JevLintConfig, RuleConfig } from "./types.js";
 
 export const defaultConfig: JevLintConfig = {
   rules: {
@@ -3878,33 +3878,6 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This interactive element exposes no accessible name to assistive technology.",
-    },
-    "jev/no-unlocalized-user-string": {
-      scope: "function",
-      category: "correctness",
-      question: {
-        instructions: {
-          question: "Is this user-visible string baked into code with no internationalization path, so every new locale needs a code change?",
-          inspect: "Compare each surfaced string and hand-rolled plural with the i18n signals in the function, the project i18n frameworks, and the repository callers in the supplied evidence.",
-          focus: "Judge locale readiness of user-visible text, not whether a name reads well in one language.",
-          decision_boundary: [
-            "Hand-rolled plural logic or JSX copy in a checkout flow while the project already ships an i18n framework used by siblings is strong evidence of a locked-out locale.",
-            "A developer-only assertion message in a project with no i18n surface answers the question negatively.",
-            "A string already routed through t, formatMessage, or Intl weakens the claim even when sibling strings stay hard-coded.",
-            "If no user-visible string reaches a surface, answer no.",
-          ],
-        },
-        criteria: {
-          true: {
-            what: "User-visible text is baked into code with no path to translation",
-            remedy: "Route the string through the project's i18n framework with locale-aware plural and select formatting",
-          },
-          false: {
-            what: "Surfaced text already passes through i18n, the strings are developer-only, or the project has no user-facing locale surface",
-          },
-        },
-      },
-      message: "This user-visible string is baked into code with no internationalization path.",
     },
     "jev/no-console-residue": {
       scope: "function",
@@ -8894,3 +8867,50 @@ export const defaultConfig: JevLintConfig = {
     },
   },
 };
+
+/**
+ * Opt-in rule defaults: bundled rule definitions that are OFF unless a
+ * project explicitly enables them in its `rules` record. Selection reuses
+ * the same mechanism as built-ins: a full `RuleConfig` value enables the
+ * rule (copy the default below, or reshape scope/question/message), while
+ * `"off"` — or simply omitting the key — leaves it disabled. The
+ * evidence builder stays attached to the key either way.
+ *
+ * Pattern for the next rule that needs it:
+ * 1. Move its entry from `defaultConfig.rules` to here (keep the same
+ *    `"jev/..."` key, scope, question, and message shape).
+ * 2. Gate its evidence builder on the opt-in precondition so an enabled
+ *    rule still abstains structurally where the precondition is absent.
+ * 3. Run `pnpm generate:registry` (the registry reads both maps).
+ * 4. Enable it in a project with:
+ *    `rules: { "jev/<name>": optInRuleDefaults["jev/<name>"] }`.
+ */
+export const optInRuleDefaults = {
+  "jev/no-unlocalized-user-string": {
+    scope: "function",
+    category: "correctness",
+    question: {
+      instructions: {
+        question: "Does this user-visible string bypass the project's established internationalization path, forcing a code change for each new locale?",
+        inspect: "Compare each surfaced string and hand-rolled plural with the i18n intent signals, the in-function routing, and the repository callers in the supplied evidence. The repository already shows i18n intent, so judge consistency with that path.",
+        focus: "Judge whether this string follows the i18n path the project already chose, not whether English-only shipping is acceptable in general.",
+        decision_boundary: [
+          "Hand-rolled plural logic or JSX copy beside project i18n usage is strong evidence of a bypassed path.",
+          "A developer-only assertion or log message that never reaches a user surface answers the question negatively.",
+          "A string already routed through t, formatMessage, or Intl weakens the claim even when sibling strings stay hard-coded.",
+          "If no user-visible string reaches a surface, answer no.",
+        ],
+      },
+      criteria: {
+        true: {
+          what: "User-visible text bypasses the project's established i18n path and needs a code change per locale",
+          remedy: "Route the string through the project's i18n framework with locale-aware plural and select formatting",
+        },
+        false: {
+          what: "Surfaced text already passes through the project's i18n path, or the strings are developer-only",
+        },
+      },
+    },
+    message: "This user-visible string bypasses the project's established internationalization path.",
+  },
+} satisfies Record<string, RuleConfig>;

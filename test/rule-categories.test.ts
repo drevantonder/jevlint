@@ -8,7 +8,7 @@ import {
   categoryRank,
   isRuleCategory,
 } from "../src/categories.js";
-import { defaultConfig, loadConfig } from "../src/config.js";
+import { defaultConfig, loadConfig, optInRuleDefaults } from "../src/config.js";
 import {
   createReviewReport,
   formatGithub,
@@ -82,13 +82,13 @@ describe("rule categories", () => {
   });
 
   it("carries a known category on every bundled rule", () => {
-    const entries = Object.entries(defaultConfig.rules);
+    const entries = [...Object.entries(defaultConfig.rules), ...Object.entries(optInRuleDefaults)];
     expect(entries.length).toBeGreaterThan(300);
     for (const [ruleId, rule] of entries) {
       expect(isRuleCategory(rule.category), ruleId).toBe(true);
     }
     const counts = new Map<string, number>();
-    for (const rule of Object.values(defaultConfig.rules)) {
+    for (const rule of [...Object.values(defaultConfig.rules), ...Object.values(optInRuleDefaults)]) {
       counts.set(rule.category, (counts.get(rule.category) ?? 0) + 1);
     }
     expect(Object.fromEntries(counts)).toEqual({

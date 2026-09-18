@@ -9,12 +9,16 @@
 //      it returns JsonValue | undefined synchronously.
 //   3. The rule id must exist in src/defaults.ts, which remains the
 //      hand-authored source of truth for rule set, order, scope, and question
-//      text. Defaults entries without an evidence file are extracted-only
-//      rules and dispatch as handled:false, exactly as before.
+//      text. Entries in `defaultConfig.rules` are enabled by default;
+//      entries in `optInRuleDefaults` are opt-in (off unless a project
+//      enables them with a full RuleConfig). Defaults entries without an
+//      evidence file are extracted-only rules and dispatch as handled:false,
+//      exactly as before.
 //
 // Adding a rule (phase 1):
 //   1. Add src/evidence/<kebab>.ts exporting one build*Evidence function.
-//   2. Append the rule entry (scope, question, message) to src/defaults.ts.
+//   2. Append the rule entry (scope, question, message) to src/defaults.ts —
+//      to `defaultConfig.rules`, or to `optInRuleDefaults` for an opt-in rule.
 //   3. Run `pnpm generate:registry`.
 //   4. Run `pnpm check` (includes the --check freshness gate, lint, tests).
 //   5. Commit the rule files plus the regenerated glue.
@@ -64,26 +68,36 @@ function fail(message) {
   process.exit(1);
 }
 
-/** Parse src/defaults.ts into an ordered [{ ruleId, scope }]. */
+/** Parse src/defaults.ts into { defaults, optIn } rule lists. defaultConfig entries are enabled by default; optInRuleDefaults entries are opt-in. */
 function parseDefaults() {
   const text = readFileSync(defaultsPath, "utf8");
   const lines = text.split("\n");
-  const rules = [];
+  const defaults = [];
+  const optIn = [];
+  let inOptIn = false;
   for (let i = 0; i < lines.length; i++) {
-    const key = lines[i].match(/^    "(jev\/[^"]+)": \{$/);
-    if (key) {
+    if (lines[i].startsWith("export const optInRuleDefaults")) inOptIn = true;
+    const defaultKey = !inOptIn && lines[i].match(/^    "(jev\/[^"]+)": \{$/);
+    if (defaultKey) {
       const scope = (lines[i + 1] ?? "").match(/^      scope: "([^"]+)",$/);
-      if (!scope) fail(`src/defaults.ts: no scope line after rule ${key[1]}`);
-      rules.push({ ruleId: key[1], scope: scope[1] });
+      if (!scope) fail(`src/defaults.ts: no scope line after rule ${defaultKey[1]}`);
+      defaults.push({ ruleId: defaultKey[1], scope: scope[1] });
+      continue;
+    }
+    const optInKey = inOptIn && lines[i].match(/^  "(jev\/[^"]+)": \{$/);
+    if (optInKey) {
+      const scope = (lines[i + 1] ?? "").match(/^    scope: "([^"]+)",$/);
+      if (!scope) fail(`src/defaults.ts: no scope line after opt-in rule ${optInKey[1]}`);
+      optIn.push({ ruleId: optInKey[1], scope: scope[1] });
     }
   }
-  if (rules.length === 0) fail("src/defaults.ts: no rule entries found");
+  if (defaults.length === 0) fail("src/defaults.ts: no rule entries found");
   const seen = new Set();
-  for (const rule of rules) {
+  for (const rule of [...defaults, ...optIn]) {
     if (seen.has(rule.ruleId)) fail(`src/defaults.ts: duplicate rule ${rule.ruleId}`);
     seen.add(rule.ruleId);
   }
-  return rules;
+  return { defaults, optIn };
 }
 
 /** Capture the balanced (...) signature following `export [async] function name(`. */
@@ -277,14 +291,17 @@ const CONFIG_END = "// END GENERATED: rule-keys";
 const EXTRACTED_BEGIN = "// BEGIN GENERATED: extracted-rules (ruleId, scope from src/defaults.ts; do not edit — run pnpm generate:registry)";
 const EXTRACTED_END = "// END GENERATED: extracted-rules";
 
-const defaults = parseDefaults();
-const defaultIds = new Set(defaults.map((r) => r.ruleId));
+// defaults: enabled-by-default rules (config.test.ts key order). allRules adds
+// opt-in rules (extracted-rules block, evidence-dispatch validation).
+const { defaults, optIn } = parseDefaults();
+const allRules = [...defaults, ...optIn];
+const defaultIds = new Set(allRules.map((r) => r.ruleId));
 const entries = scanRegistry(defaultIds);
 
 const planned = [
   { path: indexPath, content: renderIndex(entries) },
   { path: configTestPath, content: replaceBlock(configTestPath, CONFIG_BEGIN, CONFIG_END, renderConfigBlock(defaults)) },
-  { path: extractedTestPath, content: replaceBlock(extractedTestPath, EXTRACTED_BEGIN, EXTRACTED_END, renderExtractedBlock(defaults)) },
+  { path: extractedTestPath, content: replaceBlock(extractedTestPath, EXTRACTED_BEGIN, EXTRACTED_END, renderExtractedBlock(allRules)) },
 ];
 
 const checkOnly = process.argv.includes("--check");
@@ -304,10 +321,10 @@ for (const file of planned) {
 if (checkOnly) {
   if (drifted) process.exit(1);
   console.log(
-    `generate:registry: fresh (${entries.length} dispatch entries, ${defaults.length} rule keys, ${defaults.length - entries.length} extracted-only rules)`,
+    `generate:registry: fresh (${entries.length} dispatch entries, ${defaults.length} default rule keys, ${optIn.length} opt-in, ${allRules.length - entries.length} extracted-only rules)`,
   );
 } else {
   console.log(
-    `generate:registry: wrote ${entries.length} dispatch entries, ${defaults.length} rule keys (${defaults.length - entries.length} extracted-only without evidence builders)`,
+    `generate:registry: wrote ${entries.length} dispatch entries, ${defaults.length} default rule keys, ${optIn.length} opt-in (${allRules.length - entries.length} extracted-only without evidence builders)`,
   );
 }

@@ -4,7 +4,7 @@ import { createJiti } from "jiti";
 import { z } from "zod";
 import { RULE_CATEGORIES, isRuleCategory } from "./categories.js";
 import type { RuleCategory } from "./categories.js";
-import { defaultConfig } from "./defaults.js";
+import { defaultConfig, optInRuleDefaults } from "./defaults.js";
 import type {
   CandidateKind,
   CustomEvidenceBuilder,
@@ -73,7 +73,7 @@ const userConfigSchema = z.object({
   rules: z.record(z.string(), z.union([z.literal("off"), ruleConfigSchema])).optional(),
 });
 
-export { defaultConfig } from "./defaults.js";
+export { defaultConfig, optInRuleDefaults } from "./defaults.js";
 
 export function defineConfig(config: UserConfig): UserConfig {
   return config;
@@ -303,7 +303,10 @@ function mergeConfig(
     rules.set(custom.key, custom.rule);
     customEvidence[custom.key] = custom.builder;
   }
-  const knownKeys = new Set(rules.keys());
+  // Opt-in rules are known keys with bundled defaults, but OFF unless the
+  // user explicitly enables one with a full RuleConfig value. "off" (or
+  // omission) leaves them disabled; reshaping enables with custom text.
+  const knownKeys = new Set([...rules.keys(), ...Object.keys(optInRuleDefaults)]);
   for (const [ruleId, setting] of Object.entries(userRules ?? {})) {
     if (!knownKeys.has(ruleId)) {
       throw new Error(`jevlint: unknown rule "${ruleId}". Did you mean "${closestKey([...knownKeys], ruleId)}"?`);
@@ -312,17 +315,13 @@ function mergeConfig(
       rules.delete(ruleId);
       delete customEvidence[ruleId];
     } else {
-      const base = rules.get(ruleId);
+      // A full RuleConfig on an opt-in key enables it; on any other known
+      // key it reshapes scope/question/message as before. Either way the
+      // bundled category is kept when the override omits one.
+      const base = rules.get(ruleId) ?? optInRuleDefaults[ruleId as keyof typeof optInRuleDefaults];
       // SAFETY: knownKeys guards the lookup above, so base is always defined here.
       const category = setting.category ?? base?.category ?? "maintainability";
       rules.set(ruleId, { ...setting, category });
-    }
-  }
-  for (const [ruleId, rule] of rules) {
-    if (!isRuleCategory(rule.category)) {
-      throw new Error(
-        `jevlint: unknown category ${JSON.stringify(rule.category)} for rule "${ruleId}". Expected one of security, correctness, reliability, performance, maintainability, style.`,
-      );
     }
   }
   const config: JevLintConfig = { rules: Object.fromEntries(rules) };

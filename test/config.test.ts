@@ -151,7 +151,6 @@ describe("loadConfig", () => {
       "jev/no-duplicated-fixture-drift",
       "jev/no-stale-feature-flag",
       "jev/no-unlabeled-interactive-element",
-      "jev/no-unlocalized-user-string",
       "jev/no-console-residue",
       "jev/no-deep-happy-path-nesting",
       "jev/no-drilled-prop",
