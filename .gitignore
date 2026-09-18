@@ -9,3 +9,4 @@ credentials
 *.log
 .scratch/perf-bench/results/
 .scratch/bench-*.json
+.scratch/
