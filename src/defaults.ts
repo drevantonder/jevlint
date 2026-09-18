@@ -5705,6 +5705,7 @@ export const defaultConfig: JevLintConfig = {
             "Near-identical multi-field shapes in different modules with overlapping consumers are strong evidence of twins that should converge.",
             "Coincidental two-field shapes such as id and name answer the question negatively.",
             "Twins that evolve independently toward different required fields weaken the claim even when they still overlap.",
+            "A twin pair split by a validation boundary — one side an all-unknown/any wire shape, the other concretely typed, with a narrowing function or schema parse between them — answers the question negatively: merging would pre-trust untrusted data.",
             "Property overlap alone is not proof. If the shapes describe different domain values, answer no.",
           ],
         },
@@ -5714,7 +5715,7 @@ export const defaultConfig: JevLintConfig = {
             remedy: "Share one canonical type between the modules instead of maintaining two copies by hand",
           },
           false: {
-            what: "The overlap is coincidental, the shapes describe different domain values, or each shape evolves under its own owner",
+            what: "The overlap is coincidental, the shapes describe different domain values, each shape evolves under its own owner, or the pair is a validation boundary with a narrowing step between an unknown wire shape and a concrete domain shape",
           },
         },
       },
