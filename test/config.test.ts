@@ -320,6 +320,7 @@ describe("loadConfig", () => {
       "jev/no-any-widened-interface",
       "jev/no-shared-test-mutable-setup",
       "jev/no-import-time-side-effect",
+      "jev/no-log-and-propagate",
       // END GENERATED: rule-keys
     ]);
   });

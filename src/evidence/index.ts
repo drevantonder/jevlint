@@ -144,6 +144,7 @@ import { buildLiveCredentialEvidence } from "./live-credential.js";
 import { buildLoadBearingAsyncEvidence } from "./load-bearing-async.js";
 import { buildLocaleBlindOrderingEvidence } from "./locale-blind-ordering.js";
 import { buildLocaleDateSerializationEvidence } from "./locale-date-serialization.js";
+import { buildLogAndPropagateEvidence } from "./log-and-propagate.js";
 import { buildLogicInTestEvidence } from "./logic-in-test.js";
 import { buildLopsidedErrorHandlingEvidence } from "./lopsided-error-handling.js";
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
@@ -461,6 +462,7 @@ type EvidenceRegistry = {
   "jev/no-load-bearing-async": EvidenceBuilder;
   "jev/no-locale-blind-ordering": EvidenceBuilder;
   "jev/no-locale-date-serialization": EvidenceBuilder;
+  "jev/no-log-and-propagate": EvidenceBuilder;
   "jev/no-logic-in-test": EvidenceBuilder;
   "jev/no-lopsided-error-handling": EvidenceBuilder;
   "jev/no-lossy-error-translation": EvidenceBuilder;
@@ -910,6 +912,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildLocaleBlindOrderingEvidence(candidate, projectFiles),
   "jev/no-locale-date-serialization": (candidate, projectFiles) =>
     buildLocaleDateSerializationEvidence(candidate, projectFiles),
+  "jev/no-log-and-propagate": (candidate, projectFiles) =>
+    buildLogAndPropagateEvidence(candidate, projectFiles),
   "jev/no-logic-in-test": (candidate, projectFiles) =>
     buildLogicInTestEvidence(candidate, projectFiles),
   "jev/no-lopsided-error-handling": (candidate, projectFiles) =>

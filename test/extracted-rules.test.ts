@@ -145,6 +145,7 @@ const extractedRules = [
   ["jev/no-load-bearing-async", "function"],
   ["jev/no-locale-blind-ordering", "function"],
   ["jev/no-locale-date-serialization", "function"],
+  ["jev/no-log-and-propagate", "function"],
   ["jev/no-logic-in-test", "function"],
   ["jev/no-lopsided-error-handling", "function"],
   ["jev/no-lossy-error-translation", "function"],
