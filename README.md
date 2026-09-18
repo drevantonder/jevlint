@@ -31,9 +31,7 @@ The name-clarity rules pair identifier text with initializers, types, sibling de
 
 ## Setup
 
-Jevlint requires Node.js 22 or newer. It reads one credential, the `TYPESAFE_API_KEY` environment variable.
-
-`jevlint setup` asks for the key once and saves it to your shell startup files (`~/.bashrc` and `~/.zshrc`), so the variable is set in every new shell. Restart the shell afterwards (or run the printed `source` line). Run setup again to replace the saved key, and `jevlint setup --forget` removes it. In CI, set `TYPESAFE_API_KEY` from the secret store. The key never lives in the repository.
+Jevlint requires Node.js 22 or newer. It reads one credential, the `TYPESAFE_API_KEY` environment variable. Set it before any live run; nothing is stored anywhere. When it is missing or empty, jevlint prints one error naming the variable and exits 2. In CI, set `TYPESAFE_API_KEY` from the secret store. The key never lives in the repository.
 
 ```sh
 pnpm install

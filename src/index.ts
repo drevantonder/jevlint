@@ -3,29 +3,12 @@ export {
   CredentialRejectedError,
   defaultAuthIO,
   ENV_VAR_NAME,
-  installShellKey,
   isAuthFailure,
   MISSING_CREDENTIAL_MESSAGE,
-  promptForApiKey,
-  removeShellKey,
   resolveCredential,
   resolveCredentialWithIO,
-  SETUP_CANCELLED_MESSAGE,
-  SETUP_NON_TTY_MESSAGE,
-  SetupCancelledError,
-  SHELL_MARKER,
-  SHELL_RC_FILES,
-  shellExportLine,
-  STORED_REMOVED_MESSAGE,
 } from "./auth.js";
-export type {
-  AuthIO,
-  CredentialSource,
-  PromptStdin,
-  ResolvedCredential,
-  ShellWriteResult,
-  StderrWriter,
-} from "./auth.js";
+export type { AuthIO, CredentialSource, ResolvedCredential } from "./auth.js";
 export {
   analyzeAuditWithFailures,
   analyzeChanges,
