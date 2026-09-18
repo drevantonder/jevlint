@@ -4822,27 +4822,27 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this function steer behavior with literals that no name in scope explains?",
-          inspect: "Compare each steering literal with its comparison, equality, or arithmetic position, the other-side binding name, and the named constants in the supplied evidence.",
-          focus: "Judge whether a reader can tell what each behavior-steering value means without guessing, not whether any literal appears.",
+          question: "Does this function repeat a behavior-steering value across sites that must stay in sync, with no name holding them together?",
+          inspect: "Weigh each steering literal with its comparison, equality, or arithmetic position and the other-side binding name, the coupling facts naming the co-sites that must agree, and the named constants in the supplied evidence.",
+          focus: "Judge the drift hazard of recurrence-with-agreement, not the occurrence of any single literal. Emptiness checks, typeof guards, and closed-set flag equality never reach you; they are structural idioms, not evidence.",
           decision_boundary: [
-            "Bare numbers or strings in threshold comparisons or scaling arithmetic with no named constant are strong evidence of unexplained steering.",
+            "The same value recurring across sites that must agree — a constant with its derived N / length-N / slice(0,N) forms — and no named constant is strong evidence of drift hazard.",
+            "A one-off bare steering literal with no named constant is weaker evidence; judge whether a reader can tell what the value means without guessing.",
             "Loop index arithmetic and values bound to named constants answer the question negatively.",
-            "A literal compared against a well-named binding weakens the claim when the binding carries the meaning.",
             "If the evidence shows no behavior-steering literal, answer no.",
           ],
         },
         criteria: {
           true: {
-            what: "Thresholds, scales, or discriminants steer behavior as bare literals no name explains",
-            remedy: "Bind each steering value to a named constant that states its meaning and unit",
+            what: "A behavior-steering value recurs across coupled sites that must agree, or steers solo, as bare literals no name explains",
+            remedy: "Bind each shared steering value to one named constant used at every co-site",
           },
           false: {
-            what: "The literals are named, incidental arithmetic, or absent from steering positions",
+            what: "The literals are named, incidental arithmetic, idiom abstentions, or absent from steering positions",
           },
         },
       },
-      message: "This function steers behavior with literals that no name in scope explains.",
+      message: "This function steers behavior with literals no name in scope explains; recurring values couple sites that must stay in sync.",
     },
     "jev/no-shadowed-meaning": {
       scope: "function",

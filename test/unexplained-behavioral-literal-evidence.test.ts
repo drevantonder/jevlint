@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { analyzeFile } from "../src/analyze.js";
 import { extractCandidates } from "../src/candidates.js";
 import { defaultConfig } from "../src/config.js";
 import { buildRuleEvidence } from "../src/evidence/index.js";
 import { buildUnexplainedBehavioralLiteralEvidence } from "../src/evidence/unexplained-behavioral-literal.js";
-import type { ProjectFile } from "../src/types.js";
+import type { EvaluationRequest, Evaluator, JevLintConfig, ProjectFile } from "../src/types.js";
 
 const RULE = "jev/no-unexplained-behavioral-literal";
 
@@ -29,6 +30,59 @@ const plain = `export function ready() {
   return 0;
 }
 `;
+
+const emptyEquality = `export function hasItems(count: number) {
+  return count !== 0;
+}
+`;
+
+const emptyLength = `export function isEmpty(items: string[]) {
+  if (items.length === 0) return true;
+  return false;
+}
+`;
+
+const lengthNonzero = `export function hasItems(items: string[]) {
+  return items.length > 0;
+}
+`;
+
+const typeofGuard = `export function describe(input: unknown) {
+  if (typeof input === "string") return "text";
+  return "other";
+}
+`;
+
+const closedSetFlags = `export function label(status: string) {
+  if (status === "active") return 1;
+  if (status === "archived") return 2;
+  return 0;
+}
+`;
+
+const soloFlag = `export function isActive(status: string) {
+  return status === "active";
+}
+`;
+
+const coupledTriple = `export function truncate(items: string[]) {
+  if (items.length > 10) {
+    const rest = items.length - 10;
+    return { head: items.slice(0, 10), rest };
+  }
+  return { head: items, rest: 0 };
+}
+`;
+
+class CouplingAssertingEvaluator implements Evaluator {
+  requests: EvaluationRequest[] = [];
+
+  async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
+    this.requests.push(request);
+    return Object.fromEntries(Object.keys(request.questions).map((id) => [id, 0.85]));
+  }
+}
+
 
 function project(source: string, filePath = "src/retry.ts"): ProjectFile[] {
   return [{ filePath, source }];
@@ -97,6 +151,111 @@ describe("unexplained behavioral literal evidence", () => {
     )).toBeUndefined();
   });
 
+  it("carries no coupling fact for a solo magic number", () => {
+    const filePath = "src/retry.ts";
+    const evidence = buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(steering, filePath, "attempts"),
+      project(steering, filePath),
+    );
+
+    expect(evidence?.couplings).toEqual([]);
+  });
+
+  it("abstains on zero-equality emptiness checks", () => {
+    const filePath = "src/items.ts";
+    expect(buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(emptyEquality, filePath, "hasItems"),
+      project(emptyEquality, filePath),
+    )).toBeUndefined();
+  });
+
+  it("abstains on .length emptiness checks", () => {
+    const emptyPath = "src/empty.ts";
+    expect(buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(emptyLength, emptyPath, "isEmpty"),
+      project(emptyLength, emptyPath),
+    )).toBeUndefined();
+    const nonzeroPath = "src/nonzero.ts";
+    expect(buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(lengthNonzero, nonzeroPath, "hasItems"),
+      project(lengthNonzero, nonzeroPath),
+    )).toBeUndefined();
+  });
+
+  it("abstains on typeof guards", () => {
+    const filePath = "src/describe.ts";
+    expect(buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(typeofGuard, filePath, "describe"),
+      project(typeofGuard, filePath),
+    )).toBeUndefined();
+  });
+
+  it("abstains on closed-set flag equality", () => {
+    const filePath = "src/label.ts";
+    expect(buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(closedSetFlags, filePath, "label"),
+      project(closedSetFlags, filePath),
+    )).toBeUndefined();
+  });
+
+  it("keeps a solo flag equality eligible", () => {
+    const filePath = "src/active.ts";
+    const evidence = buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(soloFlag, filePath, "isActive"),
+      project(soloFlag, filePath),
+    );
+
+    expect(evidence?.literals).toMatchObject([
+      { value: '"active"', position: "equality", binding: "status" },
+    ]);
+    expect(evidence?.couplings).toEqual([]);
+  });
+
+  it("names co-sites for the coupled triple", () => {
+    const filePath = "src/truncate.ts";
+    const evidence = buildUnexplainedBehavioralLiteralEvidence(
+      candidateFor(coupledTriple, filePath, "truncate"),
+      project(coupledTriple, filePath),
+    );
+
+    expect(evidence?.literals.map(({ value }) => value).sort()).toEqual(["10", "10"]);
+    expect(evidence?.couplings).toHaveLength(1);
+    const [coupling] = evidence?.couplings ?? [];
+    expect(coupling?.value).toBe("10");
+    expect(coupling?.sites).toHaveLength(3);
+    const texts = (coupling?.sites ?? []).map(({ expression }) => expression).sort();
+    expect(texts).toEqual([
+      "items.length - 10",
+      "items.length > 10",
+      "items.slice(0, 10)",
+    ]);
+  });
+
+  it("hands the coupling fact to the evaluator instead of a live call", async () => {
+    const filePath = "src/truncate.ts";
+    const rule = defaultConfig.rules[RULE];
+    expect(rule).toBeDefined();
+    if (!rule) return;
+    const config: JevLintConfig = { rules: { [RULE]: rule } };
+    const evaluator = new CouplingAssertingEvaluator();
+    const judgments = await analyzeFile({
+      filePath,
+      source: coupledTriple,
+      changedLines: [{ start: 1, end: coupledTriple.split("\n").length }],
+      config,
+      projectFiles: project(coupledTriple, filePath),
+    }, evaluator);
+
+    expect(judgments.map(({ ruleId }) => ruleId)).toContain(RULE);
+    expect(evaluator.requests).toHaveLength(1);
+    expect(evaluator.requests[0]?.state.candidates[0]?.evidence?.[RULE]).toMatchObject({
+      literals: expect.any(Array),
+      couplings: [{
+        value: "10",
+        sites: [expect.any(Object), expect.any(Object), expect.any(Object)],
+      }],
+    });
+  });
   it("abstains for test files", () => {
     const filePath = "src/retry.test.ts";
     expect(buildUnexplainedBehavioralLiteralEvidence(
