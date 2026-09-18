@@ -8033,5 +8033,33 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-log-and-propagate": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this changed catch block both record the error and propagate it, handling one failure twice?",
+          inspect: "Use each extracted catch body with its log calls and propagation statements, whether each side references the caught error, the enclosing handlers that already record upstream, and whether callers record the same failure again in the supplied evidence.",
+          focus: "Judge whether one failure is handled twice — recorded for an operator and propagated for the caller — not whether the handler logs or propagates on its own.",
+          decision_boundary: [
+            "A catch that records the caught error through a logging call and then propagates that same error by rethrowing, returning, or rejecting it is strong evidence of handling one failure twice.",
+            "Recording alone without propagation absorbs the failure, and propagation alone without recording escalates cleanly; neither alone answers the question affirmatively.",
+            "A log call that never references the caught error narrates control flow rather than recording the failure.",
+            "Site-specific context no other layer has — operation inputs, identifiers, or state the upstream record cannot see — weighs against double handling even when the shape matches.",
+            "A caller or enclosing handler that records the same failure again confirms the duplication; a silent handling chain leaves the inner record as the only trace.",
+            "If the evidence does not show the same caught error on both the recording and propagating sides, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The catch block records the caught error and propagates that same error, so one failure is handled twice",
+            remedy: "Record the failure once with its context at the layer that owns it and let the other layers propagate it silently",
+          },
+          false: {
+            what: "The handler only records or only propagates, the log adds context no other layer has, or the evidence cannot establish the same error on both sides",
+          },
+        },
+      },
+      message: "This catch block records the error and propagates it, handling one failure twice.",
+    },
   },
 };
