@@ -1581,13 +1581,14 @@ export const defaultConfig: JevLintConfig = {
       question: {
         instructions: {
           question: "Do callers depend on this function's promised return, so the async marker carries API meaning its body alone does not show?",
-          inspect: "Compare the await-less async function with every awaiting call site, then-chain, promise combinator, and plain call in the supplied evidence.",
+          inspect: "Compare every return branch, including any named awaiting branch, with every awaiting call site, then-chain, promise combinator, and plain call in the supplied evidence.",
           focus: "Judge whether removing the async marker would break consumers that await the result or chain off the promise.",
           decision_boundary: [
             "An exported helper awaited at every call site across several modules with catch chains attached is strong evidence the marker is load-bearing.",
             "A private function whose callers all ignore the return value leaves the marker redundant.",
             "Feeding the result into Promise.all or Promise.allSettled is evidence callers treat the return as a promise.",
             "Exported functions may have unobserved external callers; weigh that uncertainty against the shown call sites.",
+            "A return branch that hands a project-local async call's promise outward while sibling branches return sync values earns the marker by unifying both shapes behind one signature; a named awaiting branch is body-side justification for keeping the marker.",
             "If no caller evidence shows dependence on the promise, answer no.",
           ],
         },
