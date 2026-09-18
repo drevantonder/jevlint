@@ -3,6 +3,7 @@ import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { isTestFile } from "./module.js";
+import { isTestFileContent } from "./test-signals.js";
 import {
   findDirectFunction,
   functionName,
@@ -15,7 +16,6 @@ import {
 const MAX_LEAKS = 8;
 
 const BUILD_SCRIPT_PATTERN = /(^|\/)(scripts|tools|build|config|bin)(\/|$)/;
-const TEST_SEGMENT_PATTERN = /(^|\/)(__tests__|tests|test|e2e|spec|__fixtures__|fixtures|mocks|__mocks__)(\/|$)/;
 
 export type DevDependencyLeak = {
   specifier: string;
@@ -117,6 +117,10 @@ export function buildDevDependencyRuntimeLeakEvidence(
   projectFiles: ProjectFile[],
 ): DevDependencyRuntimeLeakEvidence | undefined {
   if (candidate.kind !== "function") return undefined;
+  // Filename-only: the suspected dev-dependency import itself must not
+  // exonerate the owner, or a shipped file importing a runner would always
+  // classify as a test and the leak could never fire. Test targets still
+  // classify through the full content signals below.
   if (isTestFile(candidate.filePath)) return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
@@ -165,7 +169,7 @@ export function buildDevDependencyRuntimeLeakEvidence(
     if (!imported.source.startsWith(".")) continue;
     const target = resolveModule(owner.filePath, imported.source, projectFiles);
     if (!target) continue;
-    if (!isTestFile(target.filePath) && !TEST_SEGMENT_PATTERN.test(target.filePath)) continue;
+    if (!isTestFileContent(target.filePath, target.source)) continue;
     leaks.push({
       specifier: imported.source,
       package: null,

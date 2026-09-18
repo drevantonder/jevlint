@@ -85,7 +85,7 @@ export function buildSharedKernelNewConsumerEvidence(
     if (edge.resolved === null) continue;
     if (previous.has(edge.to)) continue;
     if (edge.resolved === candidate.filePath) continue;
-    if (isTestFile(edge.resolved)) continue;
+    if (isTestFile(edge.resolved, projectFiles)) continue;
     if (topDirOf(edge.resolved) === ownerTopDir) continue;
     if (!hasSharedSegment(edge.resolved)) continue;
 

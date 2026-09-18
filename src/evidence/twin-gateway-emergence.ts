@@ -112,7 +112,7 @@ export function buildTwinGatewayEmergenceEvidence(
     const gatewayPaths = new Set<string>();
     for (const file of projectFiles) {
       if (file.filePath === candidate.filePath) continue;
-      if (isTestFile(file.filePath)) continue;
+      if (isTestFile(file.filePath, projectFiles)) continue;
       if (topDirOf(file.filePath) === ownerTopDir) continue;
       const program = parseProgram(file.filePath, file.source);
       if (!program) continue;

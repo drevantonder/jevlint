@@ -1,5 +1,6 @@
 import { posix } from "node:path";
 import { parseCached } from "./parse-cache.js";
+import { isTestFilename, isTestProjectFile } from "./test-signals.js";
 import type { Program } from "oxc-parser";
 import type { ProjectFile, SourceFile } from "../types.js";
 import { resolveModule } from "./repository.js";
@@ -63,7 +64,7 @@ export type ModuleEvidence = {
   importEdgesIn: ImportEdge[];
   repoNorms: {
     testPlacement: {
-      value: "colocated" | "dir" | "mixed" | "unknown";
+      value: "colocated" | "mixed" | "unknown";
       testFiles: number;
       colocated: number;
       agreement: number;
@@ -119,11 +120,9 @@ export function isSourcePath(filePath: string): boolean {
   return false;
 }
 
-const TEST_FILE_PATTERN = /\.(test|spec)\.[cm]?[jt]sx?$/;
-
-export function isTestFile(filePath: string): boolean {
-  if (TEST_FILE_PATTERN.test(filePath)) return true;
-  return /(^|\/)(__tests__|tests|e2e|spec|test)(\/|$)/.test(filePath);
+export function isTestFile(filePath: string, projectFiles?: ProjectFile[]): boolean {
+  if (projectFiles !== undefined) return isTestProjectFile(filePath, projectFiles);
+  return isTestFilename(filePath);
 }
 
 const BARREL_BASENAME_PATTERN = /^index\.[cm]?[jt]sx?$/;
@@ -135,9 +134,9 @@ export function isBarrelFile(filePath: string): boolean {
 const CONFIG_BASENAME_PATTERN =
   /^(.*\.config|.*\.conf|.*rc|\.env.*|Dockerfile|.*\.toml|.*\.ya?ml|.*\.json|.*\.ini)$/i;
 
-export function siblingKind(filePath: string): SiblingFact["kind"] {
+export function siblingKind(filePath: string, projectFiles?: ProjectFile[]): SiblingFact["kind"] {
   if (isBarrelFile(filePath)) return "barrel";
-  if (isTestFile(filePath)) return "test";
+  if (isTestFile(filePath, projectFiles)) return "test";
   if (!isSourcePath(filePath)) return "asset";
   if (CONFIG_BASENAME_PATTERN.test(posix.basename(filePath))) return "config";
   return "source";
@@ -434,7 +433,7 @@ function sourceFiles(projectFiles: ProjectFile[]): ProjectFile[] {
 }
 
 function testPlacementNorm(projectFiles: ProjectFile[]): ModuleEvidence["repoNorms"]["testPlacement"] {
-  const tests = sourceFiles(projectFiles).filter((file) => isTestFile(file.filePath));
+  const tests = sourceFiles(projectFiles).filter((file) => isTestFile(file.filePath, projectFiles));
   if (tests.length === 0) {
     return { value: "unknown", testFiles: 0, colocated: 0, agreement: 0 };
   }
@@ -449,22 +448,17 @@ function testPlacementNorm(projectFiles: ProjectFile[]): ModuleEvidence["repoNor
     set.add(posix.basename(file.filePath));
   }
   let colocated = 0;
-  let inTestDirs = 0;
   for (const test of tests) {
     const stem = testStem(test.filePath);
     const siblings = byDir.get(dirOf(test.filePath)) ?? new Set();
     const hasSubject = stem !== null
       && [...siblings].some((name) => plainStem(name) === stem && name !== posix.basename(test.filePath));
     if (hasSubject) colocated += 1;
-    if (/(^|\/)(__tests__|tests|e2e|spec|test)(\/|$)/.test(test.filePath)) inTestDirs += 1;
   }
   const agreement = colocated / tests.length;
-  const dirAgreement = inTestDirs / tests.length;
-  const value = agreement >= 0.7
-    ? "colocated"
-    : dirAgreement >= 0.7
-    ? "dir"
-    : "mixed";
+  // Directory placement used to be a separate norm value keyed on test-dir
+  // names. With directory gates removed, placement is colocated or mixed.
+  const value = agreement >= 0.7 ? "colocated" : "mixed";
   return { value, testFiles: tests.length, colocated, agreement };
 }
 
@@ -639,7 +633,7 @@ export function buildModuleEvidence(
   const siblingsTruncated = dirFiles.length > MODULE_SIBLING_CAP;
   const siblings: SiblingFact[] = dirFiles
     .slice(0, MODULE_SIBLING_CAP)
-    .map((file) => ({ path: file.filePath, kind: siblingKind(file.filePath) }))
+    .map((file) => ({ path: file.filePath, kind: siblingKind(file.filePath, projectFiles) }))
     .sort((left, right) => left.path.localeCompare(right.path));
 
   const siblingSuffixProfile: Record<string, number> = {};

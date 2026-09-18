@@ -1,5 +1,6 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
+import { isTestFileContent } from "./test-signals.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -11,8 +12,7 @@ import {
   resolveModule,
 } from "./repository.js";
 
-const VOLATILE_PATH_PATTERN = /(^|\/)(__tests__|__fixtures__|test|tests|testing|fixtures?|mocks?|stories|internal|private)(s?)\//i;
-const VOLATILE_BASENAME_PATTERN = /[.](test|spec|fixture|mock|stories)[.][cm]?[jt]sx?$/i;
+const VOLATILE_BASENAME_PATTERN = /[.](fixture|mock|stories)[.][cm]?[jt]sx?$/i;
 
 export type TargetVolatility = {
   importerCount: number;
@@ -95,7 +95,7 @@ export function buildStabilityInversionEvidence(
       targetImporters: targetImporters.map((item) => item.filePath).sort().slice(0, 8),
       volatility: {
         importerCount: targetImporters.length,
-        testOrFixturePath: VOLATILE_PATH_PATTERN.test(target.filePath)
+        testOrFixturePath: isTestFileContent(target.filePath, target.source)
           || VOLATILE_BASENAME_PATTERN.test(target.filePath),
         internalPath: lowerPath.includes("internal") || lowerPath.includes("private"),
         internalAnnotation: target.source.includes("@internal"),

@@ -1,5 +1,6 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
+import { isTestFileContent } from "./test-signals.js";
 import type { Node, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -110,7 +111,8 @@ function siblingSourceFiles(ownerPath: string, projectFiles: ProjectFile[]): Pro
   return projectFiles.filter((file) =>
     file.filePath !== ownerPath
     && /\.(?:[cm]?[jt]sx?)$/.test(file.filePath)
-    && !/test|spec|__tests__|\.test\.|\.spec\.|\.d\.ts$/i.test(file.filePath)
+    && !/\.d\.ts$/i.test(file.filePath)
+    && !isTestFileContent(file.filePath, file.source)
   );
 }
 

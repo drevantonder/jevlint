@@ -1,5 +1,6 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
+import { isTestFileContent } from "./test-signals.js";
 import type { Expression, Node, PrivateIdentifier } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -135,8 +136,8 @@ function boundaryKindOf(test: Expression): { kind: BoundaryBranchKind; predicate
 
 function testReferences(name: string, projectFiles: ProjectFile[]): string[] {
   return projectFiles
-    .filter((file) => /test|spec|__tests__|\.test\.|\.spec\./i.test(file.filePath))
     .filter((file) => file.source.includes(name))
+    .filter((file) => isTestFileContent(file.filePath, file.source))
     .map((file) => file.filePath)
     .slice(0, 10);
 }

@@ -1,5 +1,6 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
+import { isTestFileContent } from "./test-signals.js";
 import type { Expression, IfStatement, Program, ReturnStatement } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, containsNode, nestedFunctionRanges } from "./function-scope.js";
@@ -80,9 +81,8 @@ function returnSignature(node: ReturnStatement): string {
   return argument.type;
 }
 
-function isTestPath(filePath: string): boolean {
-  const lower = filePath.toLowerCase();
-  return lower.includes("test") || lower.includes("spec") || lower.includes("__tests__");
+function isTestPath(file: ProjectFile): boolean {
+  return isTestFileContent(file.filePath, file.source);
 }
 
 export function buildUnpinnedCompatQuirkEvidence(
@@ -169,7 +169,7 @@ export function buildUnpinnedCompatQuirkEvidence(
 
   const beforeFunction = owner.source.slice(Math.max(0, fn.start - 500), fn.start);
   const testReferences = projectFiles
-    .filter((file) => file.filePath !== owner.filePath && isTestPath(file.filePath) && file.source.includes(name))
+    .filter((file) => file.filePath !== owner.filePath && file.source.includes(name) && isTestPath(file))
     .map((file) => file.filePath)
     .slice(0, MAX_CALLERS);
 

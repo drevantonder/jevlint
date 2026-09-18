@@ -3,7 +3,7 @@ import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { functionName, isFunctionExported } from "./repository.js";
 import type { FunctionNode } from "./repository.js";
-import { isTestFilePath } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type ConfessionSignal = {
   signal: string;
@@ -111,7 +111,7 @@ function testPinning(
   const pinned: { filePath: string; excerpt: string }[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    if (!isTestFilePath(file.filePath)) continue;
+    if (!isTestFileContent(file.filePath, file.source)) continue;
     for (const line of file.source.split("\n")) {
       if (!reference.test(line)) continue;
       pinned.push({ filePath: file.filePath, excerpt: line.trim().slice(0, 300) });

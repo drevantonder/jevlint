@@ -34,7 +34,7 @@ function subjectCandidates(stem: string, testPath: string, projectFiles: Project
   for (const file of projectFiles) {
     if (file.filePath === testPath) continue;
     if (!isSourcePath(file.filePath)) continue;
-    if (isTestFile(file.filePath)) continue;
+    if (isTestFile(file.filePath, projectFiles)) continue;
     if (plainStem(file.filePath) !== stem) continue;
     found.push(file.filePath);
     if (found.length >= 5) break;
@@ -62,7 +62,7 @@ export function buildFarAwayTestEvidence(
   changes: SourceFile[] = [],
 ): FarAwayTestEvidence | undefined {
   if (candidate.kind !== "module") return undefined;
-  if (!isTestFile(candidate.filePath)) return undefined;
+  if (!isTestFile(candidate.filePath, projectFiles)) return undefined;
   if (isFrameworkScaffolded(candidate.filePath)) return undefined;
   const module = buildModuleEvidence(candidate.filePath, changes, projectFiles);
   if (!module) return undefined;
@@ -75,7 +75,7 @@ export function buildFarAwayTestEvidence(
     file.filePath !== candidate.filePath
     && dirOf(file.filePath) === dir
     && plainStem(file.filePath) === stem
-    && !isTestFile(file.filePath)
+    && !isTestFile(file.filePath, projectFiles)
   );
   if (siblings) return undefined;
 

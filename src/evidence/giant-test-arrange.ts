@@ -6,7 +6,8 @@ import {
   isInsideNestedFunction,
   nestedFunctionRanges,
 } from "./repository.js";
-import { isTestFilePath, parseTestFunction } from "./test-scope.js";
+import { parseTestFunction } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type FactoryHelperEvidence = {
   filePath: string;
@@ -39,7 +40,7 @@ function collectFactoryHelpers(
 ): FactoryHelperEvidence[] {
   const helpers: FactoryHelperEvidence[] = [];
   for (const file of projectFiles) {
-    if (!isTestFilePath(file.filePath)) continue;
+    if (!isTestFileContent(file.filePath, file.source)) continue;
     const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const add = (name: string): void => {

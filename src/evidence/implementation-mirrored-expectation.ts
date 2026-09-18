@@ -8,7 +8,8 @@ import {
   nestedFunctionRanges,
   resolveModule,
 } from "./repository.js";
-import { isTestFilePath, parseTestFunction } from "./test-scope.js";
+import { parseTestFunction } from "./test-scope.js";
+import { isTestFileContent } from "./test-signals.js";
 
 export type MirroredExpectation = {
   literal: string;
@@ -114,7 +115,7 @@ export function buildImplementationMirroredExpectationEvidence(
     if (!entry.source.startsWith(".")) continue;
     const resolved = resolveModule(owner.filePath, entry.source, projectFiles);
     if (!resolved || resolved.filePath === owner.filePath) continue;
-    if (isTestFilePath(resolved.filePath)) continue;
+    if (isTestFileContent(resolved.filePath, resolved.source)) continue;
     if (!subjects.has(resolved.filePath)) subjects.set(resolved.filePath, entry.source);
   }
   if (subjects.size === 0) return undefined;
@@ -139,7 +140,7 @@ export function buildImplementationMirroredExpectationEvidence(
   const anchorFiles = projectFiles.filter((file) =>
     file.filePath !== owner.filePath
     && !subjectSources.has(file.filePath)
-    && !isTestFilePath(file.filePath)
+     && !isTestFileContent(file.filePath, file.source)
   );
 
   const subject = {

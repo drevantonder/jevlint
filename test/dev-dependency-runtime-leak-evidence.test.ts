@@ -72,21 +72,23 @@ describe("dev dependency runtime leak evidence", () => {
   });
 
   it("captures a shipped file reaching a test-marked module", () => {
-    const owner = `import { seed } from "./fixtures/seed.js";
+    const owner = `import { seed } from "./fixtures/seed.test.js";
 export function start(): string {
   return seed();
 }
 `;
+    // Filename-marked: the seed module carries the .test. segment, the
+    // directory gate it used to rely on (fixtures/) is gone.
     const { candidate, projectFiles } = project("src/server.ts", owner, [
-      { filePath: "src/fixtures/seed.ts", source: "export function seed(): string {\n  return \"x\";\n}\n" },
+      { filePath: "src/fixtures/seed.test.ts", source: "export function seed(): string {\n  return \"x\";\n}\n" },
     ]);
 
     const evidence = buildDevDependencyRuntimeLeakEvidence(candidate, projectFiles);
 
     expect(evidence?.leaks[0]).toMatchObject({
-      specifier: "./fixtures/seed.js",
+      specifier: "./fixtures/seed.test.js",
       via: "test-module",
-      targetModule: "src/fixtures/seed.ts",
+      targetModule: "src/fixtures/seed.test.ts",
     });
   });
 

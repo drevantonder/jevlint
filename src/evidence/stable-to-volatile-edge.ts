@@ -96,7 +96,7 @@ export function buildStableToVolatileEdgeEvidence(
       targetImporters: incoming.length,
       targetImporterAreas: importerAreas.size,
       zeroImporters: incoming.length === 0,
-      testMarked: isTestFile(edge.resolved),
+      testMarked: isTestFile(edge.resolved, projectFiles),
       fixtureMarked: FIXTURE_SEGMENT_PATTERN.test(edge.resolved),
       internalMarked: INTERNAL_PATH_PATTERN.test(edge.resolved)
         || (target ? /@internal\b/.test(target.source) : false),

@@ -50,6 +50,7 @@ const NON_RULE_FILES = new Set([
   "function-scope.ts",
   "state-model.ts",
   "test-scope.ts",
+  "test-signals.ts",
   "module.ts",
   "parse-cache.ts",
   "pairwise-scope.ts",
