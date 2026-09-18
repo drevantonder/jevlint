@@ -196,7 +196,7 @@ Repository evidence resolves relative JavaScript and TypeScript imports. TypeScr
 
 ## Configuration
 
-Jevlint looks for `jevlint.config.ts` and common JavaScript module variants in the current directory. User rules extend the bundled rules. Set a bundled rule to `"off"` to disable it.
+Jevlint looks for `jevlint.config.ts` and common JavaScript module variants in the current directory. Set a bundled rule to `"off"` to disable it. A `rules` key that matches no bundled or plugin rule is an error, so misspelled keys fail loudly instead of scoring nothing.
 
 ```ts
 import { defineConfig } from "jevlint";
@@ -204,20 +204,48 @@ import { defineConfig } from "jevlint";
 export default defineConfig({
   rules: {
     "jev/no-narrating-comment": "off",
-    "personal/misleading-function-name": {
-      scope: "function",
+  },
+});
+```
+
+## Custom rules
+
+Projects add rules by registering a local plugin file in the config. The entry `name` is the namespace prefix for every rule the file provides, and `specifier` is a project-local relative path resolved against the config file. Custom rules are enabled by default and use the same `rules` record as bundled rules: `"off"` disables one, and a full entry reshapes its scope, question, or message while keeping its evidence builder.
+
+```ts
+// jevlint.config.ts
+import { defineConfig } from "jevlint";
+
+export default defineConfig({
+  plugins: [{ name: "acme", specifier: "./jevlint-rules/todo-tickets.ts" }],
+  rules: {
+    "acme/no-todo-without-ticket": "off",
+  },
+});
+```
+
+```ts
+// jevlint-rules/todo-tickets.ts
+import { definePlugin } from "jevlint";
+
+export default definePlugin({
+  name: "acme",
+  rules: {
+    "no-todo-without-ticket": {
+      name: "no-todo-without-ticket",
+      scope: "comment",
       question: {
-        instructions: "Does this function's name misrepresent what its body does?",
-        criteria: {
-          true: "The name promises materially different behavior",
-          false: "The name accurately summarizes the function's responsibility",
-        },
+        instructions: "Does this TODO comment name a trackable ticket?",
       },
-      message: "Function name does not match its behavior.",
+      message: "TODO comment names no trackable ticket.",
+      buildEvidence: (candidate) =>
+        /TODO/.test(candidate.source) ? { source: candidate.source } : undefined,
     },
   },
 });
 ```
+
+A rule descriptor is a scope (one of the five candidate kinds), a question and message in the same shape as bundled rules, and a synchronous `buildEvidence` function that returns evidence or `undefined` when the rule does not apply. Custom judgments appear in the review report, omission ledger, and audit coverage exactly like bundled ones. Plugin load problems exit 2 before any evaluation runs. The full contract lives in `docs/custom-rules-spec.md`.
 
 Each rule uses a Jev Noul question, and every completed evaluation is reported as a probability at the Oxc candidate's source span. Bundled accidental-complexity rules first apply structural gates, so Jev is called only when Oxc finds the relevant mechanism. Repository evidence is bounded and rule-specific rather than a generic whole-project prompt. Jevlint pins the versioned `jev-1.13.0` model so cached judgments cannot silently outlive a moving model alias.
 

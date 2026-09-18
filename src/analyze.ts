@@ -1,5 +1,7 @@
 import type { JsonValue, NoulQuestion } from "@typesafe-ai/sdk";
+import { z } from "zod";
 import { CredentialRejectedError } from "./auth.js";
+import type { CustomEvidenceBuilder } from "./types.js";
 import {
   countImporterInDegree,
   extractCandidates,
@@ -72,6 +74,7 @@ interface PreparedQuestion {
 interface PreparedAnalysis {
   questions: PreparedQuestion[];
   abstentions: StructuralAbstentionCount[];
+  failures: EvaluationFailure[];
 }
 
 interface PendingQuestion {
@@ -144,6 +147,64 @@ function compactEvidence(evidence: JsonValue): CompactedEvidence {
   return result;
 }
 
+const jsonDataSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(jsonDataSchema),
+    z.record(z.string(), jsonDataSchema),
+  ]),
+);
+
+function isThenable(candidate: JsonValue): boolean {
+  if (candidate === null || !(candidate instanceof Object)) return false;
+  // SAFETY: builders are project code declaring JsonValue | undefined; probing
+  // .then catches a smuggled promise the static type cannot express.
+  const then = (candidate as { then?: JsonValue }).then;
+  return then instanceof Function;
+}
+
+type CustomEvidenceOutcome =
+  | { handled: false }
+  | { handled: true; evidence: JsonValue | undefined }
+  | { failed: true; message: string };
+
+function customEvidenceOutcome(
+  builders: Record<string, CustomEvidenceBuilder> | undefined,
+  ruleId: string,
+  candidate: Candidate,
+  projectFiles: ProjectFile[],
+  changes: SourceFile[],
+): CustomEvidenceOutcome {
+  const builder = builders?.[ruleId];
+  if (builder === undefined) return { handled: false };
+  let raw: JsonValue | undefined;
+  try {
+    raw = builder(candidate, projectFiles, changes);
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message : String(cause);
+    return {
+      failed: true,
+      message: `Evidence builder for rule "${ruleId}" failed: ${detail}`.slice(0, FAILURE_MESSAGE_LIMIT),
+    };
+  }
+  if (raw !== undefined && isThenable(raw)) {
+    return {
+      failed: true,
+      message: `Evidence builder for rule "${ruleId}" returned a promise; builders must be synchronous.`,
+    };
+  }
+  if (raw !== undefined && !jsonDataSchema.safeParse(raw).success) {
+    return {
+      failed: true,
+      message: `Evidence builder for rule "${ruleId}" returned non-JSON evidence; return an object or undefined.`,
+    };
+  }
+  return { handled: true, evidence: raw };
+}
+
 function abstentionKey(ruleId: string, candidateKind: CandidateKind): string {
   return `${ruleId}\u0000${candidateKind}`;
 }
@@ -167,6 +228,8 @@ export function sortAbstentions(
 function prepareQuestions(input: AnalyzeCandidatesInput): PreparedAnalysis {
   const questions: PreparedQuestion[] = [];
   const abstentions: StructuralAbstentionCount[] = [];
+  const failures: EvaluationFailure[] = [];
+  const customEvidence = input.config.customEvidence;
   for (const candidate of input.candidates) {
     const stateCandidate = evaluationCandidate(input.source, candidate);
     for (const [ruleId, rule] of Object.entries(input.config.rules)) {
@@ -185,6 +248,31 @@ function prepareQuestions(input: AnalyzeCandidatesInput): PreparedAnalysis {
           continue;
         }
         compacted = compactEvidence(evidenceResult.evidence);
+      } else {
+        const customResult = customEvidenceOutcome(
+          customEvidence,
+          ruleId,
+          candidate,
+          input.projectFiles,
+          input.changes,
+        );
+        if ("failed" in customResult) {
+          failures.push({
+            filePath: candidate.filePath,
+            candidateIds: [candidate.id],
+            ruleIds: [ruleId],
+            questionCount: 1,
+            message: customResult.message,
+          });
+          continue;
+        }
+        if (customResult.handled) {
+          if (customResult.evidence === undefined) {
+            abstentions.push({ ruleId, candidateKind: candidate.kind, count: 1 });
+            continue;
+          }
+          compacted = compactEvidence(customResult.evidence);
+        }
       }
       const question: PreparedQuestion = {
         candidate,
@@ -197,7 +285,7 @@ function prepareQuestions(input: AnalyzeCandidatesInput): PreparedAnalysis {
       questions.push(question);
     }
   }
-  return { questions, abstentions: sortAbstentions(abstentions) };
+  return { questions, abstentions: sortAbstentions(abstentions), failures };
 }
 
 function buildRequest(filePath: string, prepared: PreparedQuestion[]): BuiltRequest {
@@ -391,7 +479,7 @@ async function analyzeCandidates(
   const result: AnalysisResult = {
     judgments: [],
     abstentions: prepared.abstentions,
-    failures: [],
+    failures: prepared.failures,
     statistics: { requests: 0, questions: 0 },
   };
   for (const batch of batches(input.filePath, prepared.questions)) {
@@ -602,6 +690,8 @@ export async function analyzeAuditWithFailures(
 
   const prepared: { item: PreparedQuestion; source: string }[] = [];
   const abstentions: StructuralAbstentionCount[] = [];
+  const customFailures: EvaluationFailure[] = [];
+  const customEvidence = input.config.customEvidence;
   const abstentionsByFile = new Map<string, StructuralAbstentionCount[]>();
   const preparedByFile = new Map<string, number>();
   const visitedByRule = new Map<string, number>();
@@ -623,6 +713,27 @@ export async function analyzeAuditWithFailures(
         input.projectFiles,
         [],
       );
+      const customResult: CustomEvidenceOutcome = evidenceResult.handled
+        ? { handled: false }
+        : customEvidenceOutcome(customEvidence, ruleId, entry.candidate, input.projectFiles, []);
+      if ("failed" in customResult) {
+        customFailures.push({
+          filePath: entry.candidate.filePath,
+          candidateIds: [entry.candidate.id],
+          ruleIds: [ruleId],
+          questionCount: 1,
+          message: customResult.message,
+        });
+        continue;
+      }
+      if (customResult.handled && customResult.evidence === undefined) {
+        abstentions.push({ ruleId, candidateKind: entry.candidate.kind, count: 1 });
+        const fileAbstentions = abstentionsByFile.get(entry.candidate.filePath) ?? [];
+        fileAbstentions.push({ ruleId, candidateKind: entry.candidate.kind, count: 1 });
+        abstentionsByFile.set(entry.candidate.filePath, fileAbstentions);
+        continue;
+      }
+      const customEvidenceValue = customResult.handled ? customResult.evidence : undefined;
       if (evidenceResult.handled) {
         if (evidenceResult.evidence === undefined) {
           abstentions.push({ ruleId, candidateKind: entry.candidate.kind, count: 1 });
@@ -632,6 +743,24 @@ export async function analyzeAuditWithFailures(
           continue;
         }
         const compacted = compactEvidence(evidenceResult.evidence);
+        const question: PreparedQuestion = {
+          candidate: entry.candidate,
+          evaluationCandidate: evaluationCandidate(entry.source, entry.candidate),
+          ruleId,
+          rule,
+          evidence: compacted.evidence,
+        };
+        if (compacted.moduleSource !== undefined) question.moduleSource = compacted.moduleSource;
+        prepared.push({ item: question, source: entry.source });
+        candidatesWithQuestions.add(entry.candidate.id);
+        filesWithQuestions.add(entry.candidate.filePath);
+        preparedByFile.set(
+          entry.candidate.filePath,
+          (preparedByFile.get(entry.candidate.filePath) ?? 0) + 1,
+        );
+        if (hasTruncatedFlag(compacted.evidence)) truncatedEvidence += 1;
+      } else if (customEvidenceValue !== undefined) {
+        const compacted = compactEvidence(customEvidenceValue);
         const question: PreparedQuestion = {
           candidate: entry.candidate,
           evaluationCandidate: evaluationCandidate(entry.source, entry.candidate),
@@ -696,7 +825,7 @@ export async function analyzeAuditWithFailures(
   const result: AnalysisResult = {
     judgments: [],
     abstentions: sortAbstentions(abstentions),
-    failures: [],
+    failures: customFailures,
     statistics: { requests: 0, questions: 0 },
   };
   if (!input.dryRun) {
