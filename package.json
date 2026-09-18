@@ -2,6 +2,23 @@
   "name": "jevlint",
   "version": "0.1.0",
   "description": "Probabilistic code review powered by Jev and Oxc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drevantonder/jevlint.git"
+  },
+  "homepage": "https://github.com/drevantonder/jevlint#readme",
+  "bugs": {
+    "url": "https://github.com/drevantonder/jevlint/issues"
+  },
+  "keywords": [
+    "code-review",
+    "static-analysis",
+    "cli",
+    "typescript",
+    "jev",
+    "typesafe"
+  ],
   "type": "module",
   "bin": {
     "jevlint": "./dist/cli.js"
@@ -14,13 +31,20 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "check": "tsc --noEmit && node tools/generate-registry.mjs --check && vitest run",
     "generate:registry": "node tools/generate-registry.mjs",
     "jevlint": "node dist/cli.js",
