@@ -33,7 +33,7 @@ The name-clarity rules pair identifier text with initializers, types, sibling de
 
 Jevlint requires Node.js 22 or newer. The first live run asks for your Typesafe (Jev) API key and stores it, then continues the run. `jevlint setup` stores a key on demand (run it again to replace the stored key), and `jevlint setup --forget` removes it. The key is kept in the OS keychain when available, otherwise in a private config file.
 
-For runs without prompting, set `JEVLINT_TYPESAFE_API_KEY` or pass `--token` (used for that run only, never stored); `--no-prompt` fails fast instead of asking. In CI, expose `JEVLINT_TYPESAFE_API_KEY` from your secret store and pass `--no-prompt`.
+For runs without prompting, set `JEVLINT_TYPESAFE_API_KEY` or the shared `TYPESAFE_API_KEY` used across Typesafe tools (the per-tool variable wins when both are set), or pass `--token` (used for that run only, never stored); `--no-prompt` fails fast instead of asking. In CI, expose `JEVLINT_TYPESAFE_API_KEY` from your secret store and pass `--no-prompt`.
 
 For development, Varlock loads `JEVLINT_TYPESAFE_API_KEY` from the `typesafe-api-key` item in the `van-tonder-nosudo` 1Password vault. The key never lives in the repository.
 

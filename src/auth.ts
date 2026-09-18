@@ -9,6 +9,7 @@ import { z } from "zod";
 const execFile = promisify(execFileCallback);
 
 export const ENV_VAR_NAME = "JEVLINT_TYPESAFE_API_KEY";
+export const SHARED_ENV_VAR_NAME = "TYPESAFE_API_KEY";
 export const KEYCHAIN_SERVICE = "jevlint";
 export const KEYCHAIN_ACCOUNT = "typesafe-api-key";
 export const CREDENTIALS_FILE_VERSION = 1;
@@ -19,7 +20,7 @@ const VARLOCK_TIMEOUT_MS = 15_000;
 // process, killed on timeout); the parent never loads keytar in-process.
 const KEYCHAIN_HELPER_TIMEOUT_MS = 15_000;
 
-export type CredentialSource = "flag" | "env" | "keychain" | "config-file" | "varlock";
+export type CredentialSource = "flag" | "env-jevlint" | "env-shared" | "keychain" | "config-file" | "varlock";
 
 export interface ResolvedCredential {
   token: string;
@@ -284,7 +285,10 @@ export async function resolveCredentialWithIO(
   if (flag !== undefined) return { token: flag, source: "flag" };
 
   const env = cleanToken(io.env[ENV_VAR_NAME]);
-  if (env !== undefined) return { token: env, source: "env" };
+  if (env !== undefined) return { token: env, source: "env-jevlint" };
+
+  const sharedEnv = cleanToken(io.env[SHARED_ENV_VAR_NAME]);
+  if (sharedEnv !== undefined) return { token: sharedEnv, source: "env-shared" };
 
   const keychain = await readKeychain(io);
   if (keychain !== undefined) return { token: keychain, source: "keychain" };

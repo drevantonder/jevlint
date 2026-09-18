@@ -156,7 +156,7 @@ async function invoke(
 
 class ThrowingAuthEvaluator implements Evaluator {
   async evaluate(): Promise<Record<string, number>> {
-    throw new CredentialRejectedError("env");
+    throw new CredentialRejectedError("env-jevlint");
   }
 }
 
@@ -181,18 +181,32 @@ describe("credential precedence", () => {
     expect(resolved).toEqual({ token: "flag-value", source: "flag" });
   });
 
-  it("prefers env over keychain, file, and varlock", async () => {
+  it("prefers the per-tool env var over the shared global, keychain, file, and varlock", async () => {
     const home = await tempHome("jevlint-auth-env-");
     const keytar = new MemoryKeytar();
     keytar.values.set("jevlint/typesafe-api-key", "keychain-value");
     const io = await fakeIO(home, {
-      env: { JEVLINT_TYPESAFE_API_KEY: "env-value" },
+      env: { JEVLINT_TYPESAFE_API_KEY: "env-value", TYPESAFE_API_KEY: "shared-value" },
       keytar,
       varlockValue: "varlock-value",
     });
     await seedConfigFile(io, "file-value");
     const resolved = await resolveCredentialWithIO({}, io);
-    expect(resolved).toEqual({ token: "env-value", source: "env" });
+    expect(resolved).toEqual({ token: "env-value", source: "env-jevlint" });
+  });
+
+  it("resolves the shared global env var ahead of keychain, file, and varlock", async () => {
+    const home = await tempHome("jevlint-auth-shared-");
+    const keytar = new MemoryKeytar();
+    keytar.values.set("jevlint/typesafe-api-key", "keychain-value");
+    const io = await fakeIO(home, {
+      env: { TYPESAFE_API_KEY: "shared-value" },
+      keytar,
+      varlockValue: "varlock-value",
+    });
+    await seedConfigFile(io, "file-value");
+    const resolved = await resolveCredentialWithIO({}, io);
+    expect(resolved).toEqual({ token: "shared-value", source: "env-shared" });
   });
 
   it("prefers keychain over file and varlock", async () => {
@@ -471,6 +485,22 @@ describe("live-run credential flow", () => {
     expect(result.stdout).toBe("");
   });
 
+  it("yields the generic missing-credential error when neither env var is set", async () => {
+    const home = await tempHome("jevlint-noenv-");
+    const io = await fakeIO(home, { env: {}, keytar: "absent", varlockValue: undefined });
+    const cwd = await repository("jevlint-noenv-repo-");
+    const result = await invoke(["review", "--format", "json"], {
+      cwd,
+      authIO: io,
+      stdin: pipeStdin([], true),
+    });
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toBe(`${MISSING_CREDENTIAL_MESSAGE}\n`);
+    expect(result.stdout).toBe("");
+    expect(result.stdout).not.toContain(CANARY);
+    expect(result.stderr).not.toContain(CANARY);
+  });
+
   it("honors --no-prompt on a TTY", async () => {
     const home = await tempHome("jevlint-noprompt-");
     const io = await fakeIO(home, { keytar: "absent" });
@@ -498,7 +528,7 @@ describe("live-run credential flow", () => {
       authIO: io,
     });
     expect(result.exitCode).toBe(2);
-    expect(result.stderr).toContain(authRejectionMessage("env"));
+    expect(result.stderr).toContain(authRejectionMessage("env-jevlint"));
     expect(result.stdout).not.toContain(CANARY);
     expect(result.stderr).not.toContain(CANARY);
   });
@@ -621,7 +651,7 @@ describe("credential cache", () => {
     try {
       const first = await resolveCredential({});
       const second = await resolveCredential({});
-      expect(first).toEqual({ token: "memo-canary", source: "env" });
+      expect(first).toEqual({ token: "memo-canary", source: "env-jevlint" });
       expect(second).toBe(first);
     } finally {
       if (prior === undefined) delete process.env.JEVLINT_TYPESAFE_API_KEY;
