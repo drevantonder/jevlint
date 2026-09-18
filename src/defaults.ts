@@ -8033,5 +8033,32 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-tautological-test": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test assert an expected value recomputed the same way the code under test computes it, so the assertion passes by construction and cannot catch an implementation error?",
+          inspect: "Use each assertion's exercised expression and expected-value expression with the classified shape and shared identifiers, plus the count of companion assertions grounded in literal worked examples, in the supplied evidence.",
+          focus: "Judge whether the expected value holds an independent oracle, not whether the test calls the subject or states an expectation at all.",
+          decision_boundary: [
+            "An expected expression that recomputes the exercised computation from the same identifiers, such as asserting add(a, b) against a + b, is strong evidence of a tautology: any implementation returning that recomputation stays green.",
+            "An expected value compared against itself, or a bare snapshot with no companion literal assertion, passes by construction and answers the question affirmatively.",
+            "An expected literal worked example independent of the subject computation, such as asserting add(1, 2) against 3, is evidence against the claim, and each such companion oracle weakens a bare snapshot.",
+            "Interaction assertions on calls, arguments, or order, throw assertions pinning control flow, and assertions with no outcome comparison to judge are outside this question; answer no when none remain.",
+            "If the evidence states no outcome assertion, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The expected value is recomputed from the same computation, compared against itself, or snapshotted with no independent oracle, so the test cannot fail on implementation error",
+            remedy: "Replace the recomputed expectation with a literal worked example derived from the specification, independent of how the code computes it",
+          },
+          false: {
+            what: "The expected values are grounded in independent oracles, or the test states no outcome assertion to judge",
+          },
+        },
+      },
+      message: "This test recomputes its expected value from the same computation it exercises, so the assertion passes by construction.",
+    },
   },
 };
