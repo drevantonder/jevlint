@@ -5589,27 +5589,28 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this exported helper serve exactly one repository caller and belong living with that caller instead of as a public export?",
-          inspect: "Use the single caller, whether it lives in the same file or imports the helper, and whether any public entry point re-exports the helper in the supplied evidence.",
-          focus: "Judge whether the export promises reuse the repository never demonstrates, not whether the helper itself is well written.",
+          question: "Does this exported helper serve exactly one production caller and belong living with that caller instead of as a public export?",
+          inspect: "Use the single production caller, whether it lives in the same file or imports the helper, the named test callers exercising it, and whether any public entry point re-exports the helper in the supplied evidence.",
+          focus: "Judge whether the export promises reuse the repository never demonstrates, not whether the helper itself is well written. Test callers exercise the helper without demonstrating reuse.",
           decision_boundary: [
             "An exported helper with one caller in the same module and no re-export through a public entry point is strong evidence of premature publicity.",
             "Re-export through the package index or a barrel answers the question negatively even with a single current caller.",
             "A caller in another module that imports the helper shows at least cross-module intent, which weakens the claim.",
+            "Named test callers do not add reuse: one production caller plus test callers is still the single-caller seam.",
             "One caller is not enough on its own. If the helper is part of a public entry point, answer no.",
           ],
         },
         criteria: {
           true: {
-            what: "An exported helper with exactly one caller that no public entry point re-exports",
+            what: "An exported helper with exactly one production caller that no public entry point re-exports",
             remedy: "Move the helper beside its caller or unexport it until a second consumer demonstrates reuse",
           },
           false: {
-            what: "The helper is re-exported as public API, serves several callers, or shows genuine cross-module reuse",
+            what: "The helper is re-exported as public API, serves several production callers, or shows genuine cross-module reuse",
           },
         },
       },
-      message: "This exported helper serves exactly one caller and is not public API.",
+      message: "This exported helper serves exactly one production caller and is not public API.",
     },
     "jev/no-string-duplicated-enumeration": {
       scope: "change",
@@ -7114,27 +7115,27 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Is this exported function retained in the codebase although repository evidence indicates nothing uses it?",
-          inspect: "Use the zero-caller reading with the symbol importers, the barrel re-export paths, the same-file references, the dynamic-import and registration leads, and the module initialization calls in the supplied evidence.",
-          focus: "Judge whether retention is abandonment rather than deliberate public API, weighing each liveness signal on its own.",
+          question: "Is this exported function retained in the codebase although no production code uses it?",
+          inspect: "Use the zero-production-caller reading with the named test callers, the symbol importers, the barrel re-export paths, the same-file references, the dynamic-import and registration leads, and the module initialization calls in the supplied evidence.",
+          focus: "Judge whether retention is abandonment or unintegrated API rather than deliberate public surface. An export whose only callers live in test files is itself the finding, dead API or missing integration, never liveness.",
           decision_boundary: [
-            "Zero callers with zero symbol importers, no re-export path, no textual leads, and no module initialization work is strong evidence of an abandoned export.",
-            "A barrel re-export, a symbol importer, a dynamic-import or framework-registration lead, or same-name callback passing answers the question negatively as deliberate retention.",
-            "A solitary textual lead without import linkage keeps the probability middling rather than clearing it.",
-            "jev/no-single-caller-exported-helper scores the exactly-one-caller seam and jev/no-retained-superseded-implementation scores the marked end; this scores the unmarked zero-caller remainder.",
+            "Zero production callers with zero symbol importers, no re-export path, no textual leads, and no module initialization work is strong evidence of an abandoned export.",
+            "An export called only from test files remains evidence of dead API or missing integration: weigh the named test callers as the finding rather than as production use.",
+            "A barrel re-export, a production symbol importer, a dynamic-import or framework-registration lead, or same-name callback passing answers the question negatively as deliberate retention. Test-path importers do not.",
+            "jev/no-single-caller-exported-helper scores the exactly-one-production-caller seam and jev/no-retained-superseded-implementation scores the marked end; this scores the unmarked zero-production-caller remainder.",
           ],
         },
         criteria: {
           true: {
-            what: "An unmarked exported function with no callers, no importers, no re-export path, and no liveness leads",
-            remedy: "Delete the unused export, or keep it behind a documented public entry point if external consumers need it",
+            what: "An unmarked exported function with no production callers, no production importers, no re-export path, and no liveness leads, including one called only from test files",
+            remedy: "Delete the unused export, integrate it into production code, or keep it behind a documented public entry point if external consumers need it",
           },
           false: {
-            what: "The function shows a liveness signal such as a re-export, an importer, a registration lead, or initialization work",
+            what: "The function shows a production liveness signal such as a production caller, a re-export, a production importer, a registration lead, or initialization work",
           },
         },
       },
-      message: "This exported function has no callers and nothing re-exports it.",
+      message: "This exported function has no production callers and nothing re-exports it.",
     },
     "jev/no-commented-out-implementation": {
       scope: "comment",
