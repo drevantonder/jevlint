@@ -3978,27 +3978,29 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this caching, memoization, or batching layer carry no shown hotspot, benchmark, or invalidation policy, so readers maintain machinery that may optimize nothing?",
-          inspect: "Compare each perf-machinery shape with the invalidation policy, the wrapped operation's cost, the perf evidence in the repository, and the callers in the supplied evidence.",
-          focus: "Judge whether the machinery answers a demonstrated cost, not whether caching idioms look expert.",
+          question: "Does this function reuse prior results to avoid recomputation latency without a shown benchmark, hotspot, or invalidation policy, so readers maintain latency machinery that may optimize nothing?",
+          inspect: "Compare each perf-machinery shape with its motive facts (lifetime, staleness mechanism, limit fit), the invalidation policy, the wrapped operation's cost, the perf evidence in the repository, and the callers in the supplied evidence.",
+          focus: "Judge whether the layer reuses results to save latency without measurement, not whether caching, batching, or pooling idioms appear.",
           decision_boundary: [
-            "A bespoke cache with no eviction policy around a cheap synchronous helper and no perf evidence in the repository is strong evidence of unmeasured machinery.",
+            "A persistent cache keyed by lossy input features around a cheap synchronous helper, with no benchmark and no invalidation rule, is strong evidence of unmeasured latency caching.",
+            "A per-run accumulator created inside the function and discarded on return is not a cache; answer no even when it uses a Map.",
+            "A store whose entries cannot go stale by construction answers no; name the mechanism from the evidence (content-hash key, immutable-input key, or append-only writes).",
+            "Batching or pooling shaped by a named provider or API limit answers a correctness constraint rather than latency; answer no when the limit evidence names the limit.",
             "Memoization beside a benchmark, a documented hotspot, or an explicit invalidation rule answers the question negatively.",
-            "A useMemo over a genuinely expensive derived value with measured callers weakens the claim even when no benchmark file names it.",
             "If no caching, memoization, batching, or pooling shape appears, answer no.",
           ],
         },
         criteria: {
           true: {
-            what: "Performance machinery with no demonstrated hotspot, benchmark, or invalidation policy behind it",
+            what: "Prior results reused to avoid latency with no shown benchmark, hotspot, or invalidation policy behind the reuse",
             remedy: "Measure the hotspot first, then keep the layer only with an explicit invalidation and eviction policy",
           },
           false: {
-            what: "The layer answers a demonstrated cost, carries an invalidation policy, or no perf machinery is present",
+            what: "The layer answers a demonstrated cost or a correctness limit, cannot go stale by construction, lives only for one invocation, or no perf machinery is present",
           },
         },
       },
-      message: "This caching, memoization, or batching layer shows no hotspot, benchmark, or invalidation policy behind it.",
+      message: "This latency-motivated reuse shows no hotspot, benchmark, or invalidation policy behind it.",
     },
     "jev/no-unmigrated-schema-change": {
       scope: "change",
