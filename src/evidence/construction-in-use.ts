@@ -1,6 +1,7 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
+import { isCompositionRootEntry } from "./composition-root.js";
 import {
   findDirectFunction,
   findFunctionCallers,
@@ -237,6 +238,18 @@ export function buildConstructionInUseEvidence(
   }
 
   const callers = findFunctionCallers(owner.filePath, name, projectFiles);
+  if (
+    isCompositionRootEntry({
+      name,
+      params: fn.params.map((parameter) => owner.source.slice(parameter.start, parameter.end)),
+      exported: isFunctionExported(parsed.program, fn, name),
+      callers,
+      moduleSource: owner.source,
+      functionSource: owner.source.slice(fn.start, fn.end),
+    })
+  ) {
+    return undefined;
+  }
   const callersAlreadyHolding: ConstructionInUseEvidence["callersAlreadyHolding"] = [];
   for (const construction of constructions) {
     const root = construction.classOrFactory.split(".")[0] ?? construction.classOrFactory;

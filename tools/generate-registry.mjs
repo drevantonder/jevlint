@@ -45,6 +45,7 @@ const extractedTestPath = join(root, "test", "extracted-rules.test.ts");
 // Shared evidence helpers: not rules, never part of the registry.
 const NON_RULE_FILES = new Set([
   "index.ts",
+  "composition-root.ts",
   "repository.ts",
   "manifest-facts.ts",
   "function-scope.ts",

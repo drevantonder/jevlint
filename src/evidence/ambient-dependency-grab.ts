@@ -2,6 +2,7 @@ import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Expression, MemberExpression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
+import { isCompositionRootEntry } from "./composition-root.js";
 import {
   findDirectFunction,
   findFunctionCallers,
@@ -187,6 +188,19 @@ export function buildAmbientDependencyGrabEvidence(
   if (accesses.length === 0) return undefined;
 
   const name = functionName(parsed.program, fn);
+  const callers = name ? findFunctionCallers(candidate.filePath, name, projectFiles) : [];
+  if (
+    isCompositionRootEntry({
+      name: name ?? null,
+      params: parameterSources(fn, owner.source),
+      exported: name ? isFunctionExported(parsed.program, fn, name) : false,
+      callers,
+      moduleSource: owner.source,
+      functionSource: candidate.source,
+    })
+  ) {
+    return undefined;
+  }
   return {
     function: {
       name: name ?? null,
@@ -196,6 +210,6 @@ export function buildAmbientDependencyGrabEvidence(
       parameters: parameterSources(fn, owner.source),
     },
     accesses: accesses.slice(0, 10),
-    callers: name ? findFunctionCallers(candidate.filePath, name, projectFiles) : [],
+    callers,
   };
 }

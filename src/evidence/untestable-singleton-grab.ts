@@ -1,10 +1,12 @@
 import { Visitor } from "oxc-parser";
 import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
+import { isCompositionRootEntry } from "./composition-root.js";
 import {
   findDirectFunction,
   findFunctionCallers,
   functionName,
+  isFunctionExported,
   isInsideNestedFunction,
   nestedFunctionRanges,
 } from "./repository.js";
@@ -145,13 +147,24 @@ export function buildUntestableSingletonGrabEvidence(
   const likelyWiring = /wiring|composition|bootstrap|di\b|container|server|app|index|startup/i.test(
     candidate.filePath,
   ) || (name !== null && /^(wire|bootstrap|compose|init|create[A-Z].*App|start)/.test(name));
-  const callers = name
-    ? findFunctionCallers(owner.filePath, name, projectFiles).map(({ filePath, call, line }) => ({
-      filePath,
-      call: call.slice(0, 300),
-      line,
-    }))
-    : [];
+  const rawCallers = name ? findFunctionCallers(owner.filePath, name, projectFiles) : [];
+  if (
+    isCompositionRootEntry({
+      name,
+      params,
+      exported: name !== null && isFunctionExported(parsed.program, fn, name),
+      callers: rawCallers,
+      moduleSource: owner.source,
+      functionSource: candidate.source,
+    })
+  ) {
+    return undefined;
+  }
+  const callers = rawCallers.map(({ filePath, call, line }) => ({
+    filePath,
+    call: call.slice(0, 300),
+    line,
+  }));
 
   const testDoubleFiles: string[] = [];
   for (const file of projectFiles) {
