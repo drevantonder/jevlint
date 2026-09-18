@@ -6222,6 +6222,33 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "One module uses several verbs for one operation concept.",
     },
+    "jev/no-standard-method-synonym": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this exported operation invent a synonym (fetch, retrieve, load) for a standard-method concept the API surface already expresses with another verb, fragmenting one resource operation across two vocabularies?",
+          inspect: "Compare the exported operations sharing each resource stem repo-wide, their verbs, signatures, and effects in the supplied evidence.",
+          focus: "Judge whether two verbs on one stem denote the same operation or distinct semantics, not whether either name is clear on its own.",
+          decision_boundary: [
+            "Two read-family verbs on one stem, such as getUser plus fetchUser, with interchangeable signatures and effects are strong evidence of a fragmented standard-method vocabulary.",
+            "A lone fetch, retrieve, or load with no same-stem sibling expressing the concept with another verb is house style, not fragmentation. If no stem carries two read-family verbs, answer no.",
+            "Verbs marking real distinctions evidenced by contracts, such as a cache lookup versus a network fetch or one versus many, answer the question negatively.",
+            "Pairs outside the read family, such as create versus update or get versus delete, are distinct standard methods rather than synonyms. This question covers read-concept verbs only.",
+            "Stems carrying three or more verbs also concern jev/no-synonym-vocabulary; judge this question on whether any two verbs on the stem are true synonyms.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "An exported read operation restates a standard-method concept the API surface already expresses with another verb on the same resource stem, with no evidenced contractual distinction",
+            remedy: "Settle on one verb for the resource operation and rename or remove the synonym, keeping distinct verbs only where contracts genuinely differ",
+          },
+          false: {
+            what: "Each verb marks a real contractual distinction, the verbs attach to different stems or different standard methods, or no stem carries two read-family verbs",
+          },
+        },
+      },
+      message: "One resource operation is expressed with two verbs for the same standard-method concept.",
+    },
     "jev/no-knob-multiplicity": {
       scope: "abstraction",
       question: {
