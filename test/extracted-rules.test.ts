@@ -124,6 +124,7 @@ const extractedRules = [
   ["jev/no-implementation-type-in-signature", "function"],
   ["jev/no-implicit-atomicity", "function"],
   ["jev/no-import-cycle-tangle", "change"],
+  ["jev/no-import-time-side-effect", "module"],
   ["jev/no-import-use-skew", "module"],
   ["jev/no-impossible-error-branch", "function"],
   ["jev/no-inappropriate-intimacy", "function"],
