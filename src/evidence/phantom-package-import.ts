@@ -13,7 +13,7 @@ import {
   moduleImports,
 } from "./repository.js";
 
-export type PackageImportKind = "relative" | "builtin" | "declared" | "undeclared";
+export type PackageImportKind = "relative" | "declared" | "undeclared";
 
 export type PackageImport = {
   source: string;
@@ -157,10 +157,10 @@ export function buildPhantomPackageImportEvidence(
       imports.push({ source, kind: "relative", declaredIn: null, lockfileHit: false, aliasMapped: false });
       continue;
     }
-    if (BUILTINS.has(source)) {
-      imports.push({ source, kind: "builtin", declaredIn: null, lockfileHit: false, aliasMapped: false });
-      continue;
-    }
+    // Node builtins never appear in manifests, so the rule's required evidence
+    // (a manifest declaration) cannot exist for them. They are not phantom
+    // candidates and never reach probabilistic evaluation.
+    if (BUILTINS.has(source)) continue;
     const declaration = declared.find((entry) => entry.name === source);
     if (declaration) {
       const { hit } = lockfileHit(source, projectFiles);
@@ -176,6 +176,10 @@ export function buildPhantomPackageImportEvidence(
       aliasMapped: aliasMapped(source, projectFiles),
     });
   }
+
+  // A function importing only builtins (or nothing) offers no candidate the
+  // rule can judge: abstain instead of asking about undeclareable specifiers.
+  if (imports.length === 0) return undefined;
 
   const name = functionName(parsed.program, fn);
   return {
