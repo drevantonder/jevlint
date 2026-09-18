@@ -6093,28 +6093,29 @@ export const defaultConfig: JevLintConfig = {
       scope: "function",
       question: {
         instructions: {
-          question: "Does this function guard some same-kind operations against failure while leaving their siblings bare?",
-          inspect: "Compare the guarded and unguarded operations within each same-kind group, whether one outer handler covers the whole body uniformly, and the callee contracts visible in the supplied evidence.",
-          focus: "Judge whether parallel operations receive parallel failure treatment, or some siblings are left exposed without reason.",
+          question: "Does this function handle failure for some same-kind operations while leaving their siblings without handling?",
+          inspect: "Compare the handled and unhandled operations within each same-kind group: in-handler coverage, returned failure values, and the callee contracts visible in the supplied evidence, including low-risk callees the evidence marks provably safe under its no-throw-reach approximation.",
+          focus: "Judge whether parallel operations receive parallel failure handling, or some siblings are left without handling and without reason.",
           decision_boundary: [
-            "Several same-service operations where most sit inside handlers and one sibling runs bare with no outer coverage is strong evidence of lopsided handling.",
-            "One bare operation whose callee is marked non-throwing beside guarded throwing calls is weak evidence on its own.",
+            "Several same-service operations where most are handled and one sibling runs bare with no handling and no outer coverage is strong evidence of lopsided handling.",
+            "One bare operation that returns a failure value such as fail(...) or err(...) is handling, not exposure.",
+            "One bare operation whose callee the evidence marks low-risk under the no-throw-reach approximation is weak evidence on its own.",
             "A single outer handler covering the whole body uniformly is symmetric handling, not lopsided.",
-            "Operations that are provably infallible in context do not need guards and do not create asymmetry.",
-            "If the evidence does not show same-kind operations with genuinely different failure exposure, answer no.",
+            "Operations that are provably safe in context do not need guards and do not create asymmetry.",
+            "If the evidence does not show same-kind operations with genuinely different failure handling, answer no.",
           ],
         },
         criteria: {
           true: {
-            what: "Same-kind fallible operations in one body receive different failure treatment, leaving some siblings exposed",
-            remedy: "Extend the existing guard to the bare siblings or add an outer handler that covers the group uniformly",
+            what: "Same-kind fallible operations in one body receive different failure handling, leaving some siblings without handling",
+            remedy: "Extend the existing handling to the bare siblings or add an outer handler that covers the group uniformly",
           },
           false: {
-            what: "All same-kind operations share one handler, the bare operations cannot fail, or no comparable group exists",
+            what: "All same-kind operations share one handling route, the bare operations return failure values or cannot fail, or no comparable group exists",
           },
         },
       },
-      message: "This function guards some same-kind operations while leaving their siblings bare.",
+      message: "This function handles failure for some same-kind operations while leaving their siblings without handling.",
     },
     "jev/no-repeated-predicate": {
       scope: "function",
