@@ -316,6 +316,7 @@ describe("loadConfig", () => {
       "jev/no-tautological-test",
       "jev/no-stacked-error-boilerplate",
       "jev/no-bare-json-parse",
+      "jev/no-indiscriminable-error",
       // END GENERATED: rule-keys
     ]);
   });
