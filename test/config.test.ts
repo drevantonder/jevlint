@@ -322,6 +322,7 @@ describe("loadConfig", () => {
       "jev/no-shared-test-mutable-setup",
       "jev/no-import-time-side-effect",
       "jev/no-log-and-propagate",
+      "jev/no-mechanism-bound-name",
       // END GENERATED: rule-keys
     ]);
   });

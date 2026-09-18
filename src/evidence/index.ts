@@ -150,6 +150,7 @@ import { buildLopsidedErrorHandlingEvidence } from "./lopsided-error-handling.js
 import { buildLossyErrorTranslationEvidence } from "./lossy-error-translation.js";
 import { buildLossySentinelReturnEvidence } from "./lossy-sentinel-return.js";
 import { buildLowCohesionClassEvidence } from "./low-cohesion-class.js";
+import { buildMechanismBoundNameEvidence } from "./mechanism-bound-name.js";
 import { buildMessageChainEvidence } from "./message-chain.js";
 import { buildMirroredDerivedStateEvidence } from "./mirrored-derived-state.js";
 import { buildMisdirectingErrorMessageEvidence } from "./misdirecting-error-message.js";
@@ -469,6 +470,7 @@ type EvidenceRegistry = {
   "jev/no-lossy-error-translation": EvidenceBuilder;
   "jev/no-lossy-sentinel-return": EvidenceBuilder;
   "jev/no-low-cohesion-class": EvidenceBuilder;
+  "jev/no-mechanism-bound-name": EvidenceBuilder;
   "jev/no-message-chain": EvidenceBuilder;
   "jev/no-mirrored-derived-state": EvidenceBuilder;
   "jev/no-misdirecting-error-message": EvidenceBuilder;
@@ -926,6 +928,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildLossySentinelReturnEvidence(candidate, projectFiles),
   "jev/no-low-cohesion-class": (candidate, projectFiles) =>
     buildLowCohesionClassEvidence(candidate, projectFiles),
+  "jev/no-mechanism-bound-name": (candidate, projectFiles) =>
+    buildMechanismBoundNameEvidence(candidate, projectFiles),
   "jev/no-message-chain": (candidate, projectFiles) =>
     buildMessageChainEvidence(candidate, projectFiles),
   "jev/no-mirrored-derived-state": (candidate, projectFiles) =>

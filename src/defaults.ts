@@ -8310,6 +8310,34 @@ export const defaultConfig: JevLintConfig = {
         },
       },
       message: "This catch block records the error and propagates it, handling one failure twice.",
+    },
+
+    "jev/no-mechanism-bound-name": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this function or variable name describe the mechanism or algorithm (how it works) rather than the caller's goal, so the name lies after any reimplementation?",
+          inspect: "Compare each flagged name and its mechanism tokens with the function body operations, the caller's goal visible at repository call sites, and sibling abstractions stating the higher concept in the supplied evidence.",
+          focus: "Judge whether the name would have to change if the algorithm changed while the goal stayed the same — the reimplementation test.",
+          decision_boundary: [
+            "A name that must change when the algorithm changes while the outcome stays the same is strong evidence of mechanism binding, such as findUserByLoop or parseWithRegex.",
+            "A mechanism token that states the promised contract or domain concept answers negatively, such as a hash that callers store and compare or a tree that is the domain structure being walked.",
+            "Sibling abstractions naming the same outcome without the mechanism token show the higher concept the name could have used.",
+            "Callers that depend only on the outcome, never on the named mechanism, corroborate the binding.",
+            "If the evidence does not show a goal distinct from the mechanism, or the name carries no mechanism token, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The name binds the caller's vocabulary to an implementation choice that a reimplementation would have to rename",
+            remedy: "Rename for the caller's goal and push the mechanism detail into the body or a lower-level helper",
+          },
+          false: {
+            what: "The mechanism token is the promised contract or domain concept, or the evidence does not separate the goal from the mechanism",
+          },
+        },
+      },
+      message: "This name describes the mechanism rather than the caller's goal.",
 
     },
   },

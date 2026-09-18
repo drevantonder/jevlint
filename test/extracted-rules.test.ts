@@ -151,6 +151,7 @@ const extractedRules = [
   ["jev/no-lossy-error-translation", "function"],
   ["jev/no-lossy-sentinel-return", "function"],
   ["jev/no-low-cohesion-class", "abstraction"],
+  ["jev/no-mechanism-bound-name", "function"],
   ["jev/no-message-chain", "function"],
   ["jev/no-mirrored-derived-state", "function"],
   ["jev/no-misdirecting-error-message", "function"],
