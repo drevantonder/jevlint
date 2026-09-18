@@ -328,6 +328,7 @@ describe("loadConfig", () => {
       "jev/no-log-and-propagate",
       "jev/no-mechanism-bound-name",
       "jev/no-retained-caller-alias",
+      "jev/no-content-free-nominal",
       // END GENERATED: rule-keys
     ]);
   });

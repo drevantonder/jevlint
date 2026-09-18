@@ -39,6 +39,7 @@ const extractedRules = [
   ["jev/no-confusion-confessing-comment", "comment"],
   ["jev/no-console-residue", "function"],
   ["jev/no-construction-in-use", "function"],
+  ["jev/no-content-free-nominal", "abstraction"],
   ["jev/no-context-homonym-type", "abstraction"],
   ["jev/no-contextless-error", "function"],
   ["jev/no-contract-narrowing-after-ship", "change"],
