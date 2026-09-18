@@ -44,7 +44,7 @@ export { CachedEvaluator } from "./cache.js";
 export type { CacheMode, CacheStatistics, CachedEvaluatorOptions, EvaluatorIdentity } from "./cache.js";
 export { extractCandidates, filterCandidatesByChangedLines } from "./candidates.js";
 export { parseChangedLineRanges } from "./changed-lines.js";
-export { defaultConfig, defineConfig, definePlugin, defineRule, loadConfig } from "./config.js";
+export { defaultConfig, defineConfig, definePlugin, defineRule, loadConfig, optInRuleDefaults } from "./config.js";
 export type {
   CustomEvidenceBuilder,
   CustomRuleDescriptor,

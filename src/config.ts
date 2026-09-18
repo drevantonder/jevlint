@@ -2,7 +2,7 @@ import { access } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createJiti } from "jiti";
 import { z } from "zod";
-import { defaultConfig } from "./defaults.js";
+import { defaultConfig, optInRuleDefaults } from "./defaults.js";
 import type {
   CandidateKind,
   CustomEvidenceBuilder,
@@ -68,7 +68,7 @@ const userConfigSchema = z.object({
   rules: z.record(z.string(), z.union([z.literal("off"), ruleConfigSchema])).optional(),
 });
 
-export { defaultConfig } from "./defaults.js";
+export { defaultConfig, optInRuleDefaults } from "./defaults.js";
 
 export function defineConfig(config: UserConfig): UserConfig {
   return config;
@@ -292,7 +292,10 @@ function mergeConfig(
     rules.set(custom.key, custom.rule);
     customEvidence[custom.key] = custom.builder;
   }
-  const knownKeys = new Set(rules.keys());
+  // Opt-in rules are known keys with bundled defaults, but OFF unless the
+  // user explicitly enables one with a full RuleConfig value. "off" (or
+  // omission) leaves them disabled; reshaping enables with custom text.
+  const knownKeys = new Set([...rules.keys(), ...Object.keys(optInRuleDefaults)]);
   for (const [ruleId, setting] of Object.entries(userRules ?? {})) {
     if (!knownKeys.has(ruleId)) {
       throw new Error(`jevlint: unknown rule "${ruleId}". Did you mean "${closestKey([...knownKeys], ruleId)}"?`);
@@ -301,6 +304,8 @@ function mergeConfig(
       rules.delete(ruleId);
       delete customEvidence[ruleId];
     } else {
+      // A full RuleConfig on an opt-in key enables it; on any other known
+      // key it reshapes scope/question/message as before.
       rules.set(ruleId, setting);
     }
   }

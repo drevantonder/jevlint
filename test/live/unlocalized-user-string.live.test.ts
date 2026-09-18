@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { analyzeFile } from "../../src/analyze.js";
-import { defaultConfig } from "../../src/config.js";
+import { optInRuleDefaults } from "../../src/config.js";
 import { TypeSafeEvaluator } from "../../src/typesafe-evaluator.js";
 import type { EvaluationRequest, Evaluator, JevLintConfig, ProjectFile } from "../../src/types.js";
 
@@ -47,7 +47,7 @@ export function CheckoutSummaryClean() {
 
 async function lint(projectFiles: ProjectFile[], evaluator: Evaluator) {
   const changed = projectFiles[0];
-  const rule = defaultConfig.rules["jev/no-unlocalized-user-string"];
+  const rule = optInRuleDefaults["jev/no-unlocalized-user-string"];
   expect(changed).toBeDefined();
   expect(rule).toBeDefined();
   if (!changed || !rule) return [];

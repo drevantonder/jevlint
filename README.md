@@ -210,6 +210,24 @@ export default defineConfig({
 });
 ```
 
+One bundled rule is opt-in: `jev/no-unlocalized-user-string` stays off
+unless a project explicitly enables it, because English-only developer CLIs
+are the common case and flagging them would lecture a decision the team
+already made. Enabling it also gates on i18n intent — a framework import,
+a locale directory or data file, or project `Intl`/helper usage — so repos
+without that intent abstain structurally instead of scoring. Enable it with
+its bundled default (or a reshaped question) via `optInRuleDefaults`:
+
+```ts
+import { defineConfig, optInRuleDefaults } from "jevlint";
+
+export default defineConfig({
+  rules: {
+    "jev/no-unlocalized-user-string": optInRuleDefaults["jev/no-unlocalized-user-string"],
+  },
+});
+```
+
 ## Custom rules
 
 Projects add rules by registering a local plugin file in the config. The entry `name` is the namespace prefix for every rule the file provides, and `specifier` is a project-local relative path resolved against the config file. Custom rules are enabled by default and use the same `rules` record as bundled rules: `"off"` disables one, and a full entry reshapes its scope, question, or message while keeping its evidence builder.

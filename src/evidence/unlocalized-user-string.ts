@@ -34,6 +34,8 @@ export type UnlocalizedUserStringEvidence = {
   plurals: HandRolledPlural[];
   i18nInFunction: boolean;
   projectI18nFrameworks: string[];
+  /** Which intent signals (see the gate comment above) the repository showed. Non-empty by construction. */
+  i18nIntentSignals: string[];
   callers: FunctionCaller[];
 };
 
@@ -54,6 +56,30 @@ const I18N_SOURCES = [
 const UI_SINK_PATTERN = /toast|alert|notify|confirm|prompt|snackbar|banner|flash/i;
 const COUNT_PATTERN = /count|length|total|num\b|plural/i;
 const ERROR_NAMES = new Set(["Error", "TypeError", "RangeError", "SyntaxError", "AggregateError"]);
+
+/**
+ * i18n intent signals. This rule fires ONLY when the repository shows at
+ * least one of them; otherwise the candidate abstains structurally
+ * (undefined evidence, no probability) instead of scoring low. An
+ * English-only codebase shows none of these, so it is never lectured.
+ *
+ * The exact signals:
+ * 1. `framework-import` — a project file imports a known i18n package
+ *    (I18N_SOURCES). The team already ships an i18n framework.
+ * 2. `locale-path` — a project file lives under a locale directory
+ *    (LOCALE_DIR_PATTERN: locales, locale, lang, langs, languages, i18n,
+ *    intl, messages, translations) or is a locale data file
+ *    (LOCALE_FILE_PATTERN: *.locale.*, *.lang.*, or a locale-code JSON
+ *    file such as en.json). The team already maintains locale assets.
+ * 3. `project-intl-usage` — a project file calls the Intl API, renders an
+ *    i18n component, invokes an i18n hook/helper, or imports a known i18n
+ *    binding (I18N_BINDING_PATTERN). The team already formats through
+ *    locale-aware code.
+ */
+const LOCALE_DIR_PATTERN = /(^|\/)(locales?|langs?|languages|i18n|intl|messages|translations)(\/|$)/;
+const LOCALE_FILE_PATTERN = /(^|\.)(locale|lang)\.[\w]+$|^[a-z]{2}([_-][A-Za-z]{2})?\.json$/i;
+const INTL_USAGE_PATTERN = /\bIntl\s*\.|<(FormattedMessage|Trans)[\s/>]|\b(useTranslation|useIntl|useTranslations|getTranslations|formatMessage)\s*\(/;
+const I18N_BINDING_PATTERN = /^(t|useTranslation|useIntl|formatMessage|FormattedMessage)$/;
 
 function lineAt(source: string, offset: number): number {
   let line = 1;
@@ -171,19 +197,37 @@ export function buildUnlocalizedUserStringEvidence(
 
   if (!i18nInFunction) {
     i18nInFunction = moduleImports(parsed.program).some(({ local }) =>
-      /^(t|useTranslation|useIntl|formatMessage|FormattedMessage)$/.test(local)
+      I18N_BINDING_PATTERN.test(local)
     );
   }
 
   const frameworks = new Set<string>();
+  const intentSignals: string[] = [];
   for (const file of projectFiles) {
+    const basename = file.filePath.split("/").pop() ?? file.filePath;
+    if (LOCALE_DIR_PATTERN.test(file.filePath) || LOCALE_FILE_PATTERN.test(basename)) {
+      intentSignals.push(`locale-path:${file.filePath}`);
+    }
     const fileParsed = parseCached(file.filePath, file.source);
     if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
     for (const { source } of moduleImports(fileParsed.program)) {
       if (I18N_SOURCES.some((framework) => source === framework || source.startsWith(`${framework}/`))) {
         frameworks.add(source);
+        intentSignals.push(`framework-import:${source}`);
       }
     }
+    if (
+      INTL_USAGE_PATTERN.test(file.source)
+      || moduleImports(fileParsed.program).some(({ local }) => I18N_BINDING_PATTERN.test(local))
+    ) {
+      intentSignals.push(`project-intl-usage:${file.filePath}`);
+    }
+  }
+
+  // Intent gate: no i18n intent anywhere in the repo means the team ships
+  // English-only by decision. Abstain structurally instead of scoring.
+  if (intentSignals.length === 0) {
+    return undefined;
   }
 
   return {
@@ -197,6 +241,7 @@ export function buildUnlocalizedUserStringEvidence(
     plurals,
     i18nInFunction,
     projectI18nFrameworks: [...frameworks],
+    i18nIntentSignals: [...new Set(intentSignals)].slice(0, 20),
     callers: findFunctionCallers(candidate.filePath, name, projectFiles),
   };
 }

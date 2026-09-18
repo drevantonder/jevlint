@@ -61,16 +61,24 @@ describe("unlocalized user string evidence", () => {
       plurals: [{ expression: expect.stringContaining("item") }],
       i18nInFunction: false,
       projectI18nFrameworks: ["i18next"],
+      i18nIntentSignals: [expect.stringContaining("framework-import")],
     });
   });
 
-  it("captures thrown messages for surfaced-error judgment", () => {
+  it("captures thrown messages for surfaced-error judgment when intent exists", () => {
     const filePath = "src/cart.ts";
-    const files = [{ filePath, source: thrown }];
+    const files = [{ filePath, source: thrown }, i18nModule];
     const evidence = buildUnlocalizedUserStringEvidence(candidateFor(thrown, filePath, "loadCart"), files);
 
     expect(evidence?.surfaceStrings).toMatchObject([{ kind: "thrown" }]);
-    expect(evidence?.projectI18nFrameworks).toEqual([]);
+    expect(evidence?.projectI18nFrameworks).toEqual(["i18next"]);
+  });
+
+  it("abstains structurally for an English-only repo with no i18n intent", () => {
+    const filePath = "src/cart.ts";
+    const files = [{ filePath, source: thrown }];
+    expect(buildUnlocalizedUserStringEvidence(candidateFor(thrown, filePath, "loadCart"), files))
+      .toBeUndefined();
   });
 
   it("abstains when copy already passes through translation", () => {
@@ -99,6 +107,7 @@ describe("unlocalized user string evidence", () => {
         filePath: "src/page.tsx",
         source: `import { CheckoutSummary } from "./summary";\nexport function Page() { return CheckoutSummary({ count: 2 }); }`,
       },
+      i18nModule,
     ];
     const evidence = buildUnlocalizedUserStringEvidence(
       candidateFor(smelly, filePath, "CheckoutSummary"),
