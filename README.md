@@ -11,6 +11,12 @@ The bundled Jev rules are catalogued in `src/defaults.ts` (rule set, order, scop
 Needs Node.js 22 or newer. The only credential is `TYPESAFE_API_KEY`, read from the environment on each live run and stored nowhere. A missing key exits 2 naming the variable.
 
 ```sh
+npm install --allow-git=all --prefix <dir> github:drevantonder/jevlint
+```
+
+Bare `--allow-git` is refused by npm 12; pnpm needs an `allowBuilds` approval for the prepare build. From a checkout instead:
+
+```sh
 pnpm install
 pnpm build
 export TYPESAFE_API_KEY="your-key"
