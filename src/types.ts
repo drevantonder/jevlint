@@ -43,12 +43,38 @@ export interface RuleConfig {
 
 export type RuleSetting = RuleConfig | "off";
 
+export interface PluginEntry {
+  name: string;
+  specifier: string;
+}
+
+export type CustomEvidenceBuilder = (
+  candidate: Candidate,
+  projectFiles: ProjectFile[],
+  changes: SourceFile[],
+) => JsonValue | undefined;
+
+export interface CustomRuleDescriptor {
+  name: string;
+  scope: CandidateKind;
+  question: RuleQuestion;
+  message: string;
+  buildEvidence: CustomEvidenceBuilder;
+}
+
+export interface PluginContainer {
+  name?: string;
+  rules: Record<string, CustomRuleDescriptor>;
+}
+
 export interface UserConfig {
+  plugins?: PluginEntry[];
   rules?: Record<string, RuleSetting>;
 }
 
 export interface JevLintConfig {
   rules: Record<string, RuleConfig>;
+  customEvidence?: Record<string, CustomEvidenceBuilder>;
 }
 
 export interface EvaluationCandidate {

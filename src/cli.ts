@@ -52,6 +52,7 @@ import type {
   EvaluationRequest,
   EvaluationStatistics,
   Evaluator,
+  JevLintConfig,
   Judgment,
   StructuralAbstentionCount,
 } from "./types.js";
@@ -657,6 +658,10 @@ async function resolveEvaluator(
   return { evaluator, cachedEvaluator };
 }
 
+function printableConfig(config: JevLintConfig): JevLintConfig {
+  return { rules: config.rules };
+}
+
 function printRules(options: CliOptions, stdout: (text: string) => void): number {
   const keys = Object.keys(defaultConfig.rules);
   if (options.format === "json") {
@@ -683,7 +688,7 @@ async function runAudit(
     collectRepositoryFiles({ cwd, staged: false }),
   ]);
   if (options.printConfig) {
-    stdout(`${JSON.stringify(config, null, 2)}\n`);
+    stdout(`${JSON.stringify(printableConfig(config), null, 2)}\n`);
     return 0;
   }
   const projectFiles = options.paths.length === 0
@@ -771,7 +776,7 @@ async function runReview(
     collectRepositoryFiles({ cwd, staged: options.staged }),
   ]);
   if (options.printConfig) {
-    stdout(`${JSON.stringify(config, null, 2)}\n`);
+    stdout(`${JSON.stringify(printableConfig(config), null, 2)}\n`);
     return 0;
   }
   const scope = options.paths.length === 0
@@ -926,7 +931,7 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
     return await runReview(cwd, parsed.options, dependencies, stdout, stderr);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    stderr(`jevlint: ${message}\n`);
+    stderr(message.startsWith("jevlint: ") ? `${message}\n` : `jevlint: ${message}\n`);
     return 2;
   }
 }

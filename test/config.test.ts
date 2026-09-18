@@ -343,12 +343,7 @@ describe("loadConfig", () => {
       configPath,
       `export default {
         rules: {
-          "jev/no-narrating-comment": "off",
-          "personal/suspicious-name": {
-            scope: "function",
-            question: { instructions: "Is this function misleadingly named?" },
-            message: "Function name does not match its behavior."
-          }
+          "jev/no-narrating-comment": "off"
         }
       }`,
     );
@@ -359,10 +354,25 @@ describe("loadConfig", () => {
     expect(config.rules["jev/no-pass-through-wrapper"]).toEqual(
       defaultConfig.rules["jev/no-pass-through-wrapper"],
     );
-    expect(config.rules["personal/suspicious-name"]).toEqual({
-      scope: "function",
-      question: { instructions: "Is this function misleadingly named?" },
-      message: "Function name does not match its behavior.",
-    });
+  });
+
+  it("rejects rules keys that match no bundled or plugin rule", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jevlint-config-"));
+    await writeFile(
+      join(directory, "jevlint.config.ts"),
+      `export default {
+        rules: {
+          "personal/suspicious-name": {
+            scope: "function",
+            question: { instructions: "Is this function misleadingly named?" },
+            message: "Function name does not match its behavior."
+          }
+        }
+      }`,
+    );
+
+    await expect(loadConfig({ cwd: directory })).rejects.toThrow(
+      /jevlint: unknown rule "personal\/suspicious-name"\. Did you mean ".+"\?/,
+    );
   });
 });
