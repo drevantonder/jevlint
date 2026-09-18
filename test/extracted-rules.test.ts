@@ -9,6 +9,7 @@ const extractedRules = [
   ["jev/no-ambient-dependency-grab", "function"],
   ["jev/no-ambiguous-positional-siblings", "function"],
   ["jev/no-anemic-type", "abstraction"],
+  ["jev/no-any-widened-interface", "function"],
   ["jev/no-assertion-free-test", "function"],
   ["jev/no-asymmetric-normalization", "function"],
   ["jev/no-avoidable-orchestration", "function"],

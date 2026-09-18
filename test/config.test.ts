@@ -317,6 +317,7 @@ describe("loadConfig", () => {
       "jev/no-stacked-error-boilerplate",
       "jev/no-bare-json-parse",
       "jev/no-indiscriminable-error",
+      "jev/no-any-widened-interface",
       // END GENERATED: rule-keys
     ]);
   });
