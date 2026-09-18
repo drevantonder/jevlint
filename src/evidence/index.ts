@@ -37,6 +37,7 @@ import { buildConditionallyValidStateEvidence } from "./conditionally-valid-stat
 import { buildConfusionConfessingCommentEvidence } from "./confusion-confessing-comment.js";
 import { buildConsoleResidueEvidence } from "./console-residue.js";
 import { buildConstructionInUseEvidence } from "./construction-in-use.js";
+import { buildContentFreeNominalEvidence } from "./content-free-nominal.js";
 import { buildContextHomonymTypeEvidence } from "./context-homonym-type.js";
 import { buildContextlessErrorEvidence } from "./contextless-error.js";
 import { buildContractNarrowingEvidence } from "./contract-narrowing-after-ship.js";
@@ -346,6 +347,7 @@ type EvidenceRegistry = {
   "jev/no-confusion-confessing-comment": EvidenceBuilder;
   "jev/no-console-residue": EvidenceBuilder;
   "jev/no-construction-in-use": EvidenceBuilder;
+  "jev/no-content-free-nominal": EvidenceBuilder;
   "jev/no-context-homonym-type": EvidenceBuilder;
   "jev/no-contextless-error": EvidenceBuilder;
   "jev/no-contract-narrowing-after-ship": EvidenceBuilder;
@@ -680,6 +682,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildConsoleResidueEvidence(candidate, projectFiles),
   "jev/no-construction-in-use": (candidate, projectFiles) =>
     buildConstructionInUseEvidence(candidate, projectFiles),
+  "jev/no-content-free-nominal": (candidate, projectFiles) =>
+    buildContentFreeNominalEvidence(candidate, projectFiles),
   "jev/no-context-homonym-type": (candidate, projectFiles) =>
     buildContextHomonymTypeEvidence(candidate, projectFiles),
   "jev/no-contextless-error": (candidate, projectFiles) =>

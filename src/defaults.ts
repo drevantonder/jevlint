@@ -8033,5 +8033,34 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-content-free-nominal": {
+      scope: "abstraction",
+      question: {
+        instructions: {
+          question: "Does this class or type name end in a content-free nominal that promises no domain role while its members span unrelated responsibilities?",
+          inspect: "Compare the terminal nominal with each member's domain: the fields every method touches, the fields shared across methods, and the members that share nothing with the rest.",
+          focus: "Judge member cohesion behind the bland name, not the suffix alone: disjoint member groups with no shared invariant against a genuinely narrow role.",
+          decision_boundary: [
+            "Method groups touching mutually disjoint field sets, with no field bridging the groups, are strong evidence the nominal hides incoherence.",
+            "A bland name over one narrow responsibility, such as a handler with a single event method and one field set, answers the question negatively.",
+            "Signatures without bodies carry only name-level evidence; weigh interface and type-alias members lightly.",
+            "Member count alone is never enough. If the evidence does not show unrelated responsibilities, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The class or type carries a content-free nominal while its members serve unrelated responsibilities with no shared invariant",
+            examples: [
+              "A UserManager that creates users, sends newsletter email, and computes payroll from mutually disjoint state",
+            ],
+            remedy: "Split the members along the disjoint responsibilities and name each part for the domain role it owns",
+          },
+          false: {
+            what: "The nominal marks a narrow role, the members share state or one audience, the terminal word carries domain meaning here, or the evidence shows no unrelated responsibilities",
+          },
+        },
+      },
+      message: "This class or type name promises no domain role while its members span unrelated responsibilities.",
+    },
   },
 };
