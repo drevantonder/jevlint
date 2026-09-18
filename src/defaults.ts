@@ -8033,5 +8033,33 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-indiscriminable-error": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this change throw or propagate an error callers cannot discriminate, where distinct failures need distinct handling?",
+          inspect: "Use each extracted throw and rejection site, its error type, code, status, cause linkage, message genericity, bare-rethrow shape, and the repository catch sites that branch on failure kind in the supplied evidence.",
+          focus: "Judge whether callers can programmatically tell this failure apart from other failures, not whether the message reads clearly to a human.",
+          decision_boundary: [
+            "A bare Error construction with a generic message and no code, status, cause, or distinguishing subclass is strong evidence callers cannot tell this failure apart from others.",
+            "An operation-naming message still leaves callers without a programmatic discriminant; human-readable text is not a failure kind.",
+            "A custom error subclass, a code or status field, or a cause linkage already gives callers a discriminant and answers the question negatively.",
+            "A repository catch site that branches on error kind with instanceof, code, or status checks confirms distinct failures need distinct handling.",
+            "A bare rethrow preserves whatever discriminability the original error had; judge the originating site, not the relay.",
+            "If the function raises no error, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The change raises failures callers cannot tell apart — bare errors with no code, status, cause, or distinguishing type — where handling must branch on failure kind",
+            remedy: "Raise a distinguishing error subclass or attach a code and cause so each failure kind is programmatically identifiable",
+          },
+          false: {
+            what: "Each raised failure is identifiable by type, code, status, or cause, handling never branches on failure kind, or the function raises nothing",
+          },
+        },
+      },
+      message: "This error gives callers no way to tell failures apart.",
+    },
   },
 };

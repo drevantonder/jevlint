@@ -129,6 +129,7 @@ const extractedRules = [
   ["jev/no-inappropriate-intimacy", "function"],
   ["jev/no-incidental-snapshot", "function"],
   ["jev/no-inconsistent-error-contract", "function"],
+  ["jev/no-indiscriminable-error", "function"],
   ["jev/no-inline-lifecycle-phases", "function"],
   ["jev/no-interaction-pinning-test", "function"],
   ["jev/no-interchangeable-domain-primitives", "function"],

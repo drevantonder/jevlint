@@ -128,6 +128,7 @@ import { buildImpossibleErrorBranchEvidence } from "./impossible-error-branch.js
 import { buildInappropriateIntimacyEvidence } from "./inappropriate-intimacy.js";
 import { buildIncidentalSnapshotEvidence } from "./incidental-snapshot.js";
 import { buildInconsistentErrorContractEvidence } from "./inconsistent-error-contract.js";
+import { buildIndiscriminableErrorEvidence } from "./indiscriminable-error.js";
 import { buildInlineLifecyclePhasesEvidence } from "./inline-lifecycle-phases.js";
 import { buildInteractionPinningTestEvidence } from "./interaction-pinning-test.js";
 import { buildInterchangeableDomainPrimitivesEvidence } from "./interchangeable-domain-primitives.js";
@@ -437,6 +438,7 @@ type EvidenceRegistry = {
   "jev/no-inappropriate-intimacy": EvidenceBuilder;
   "jev/no-incidental-snapshot": EvidenceBuilder;
   "jev/no-inconsistent-error-contract": EvidenceBuilder;
+  "jev/no-indiscriminable-error": EvidenceBuilder;
   "jev/no-inline-lifecycle-phases": EvidenceBuilder;
   "jev/no-interaction-pinning-test": EvidenceBuilder;
   "jev/no-interchangeable-domain-primitives": EvidenceBuilder;
@@ -862,6 +864,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildIncidentalSnapshotEvidence(candidate, projectFiles),
   "jev/no-inconsistent-error-contract": (candidate, projectFiles) =>
     buildInconsistentErrorContractEvidence(candidate, projectFiles),
+  "jev/no-indiscriminable-error": (candidate, projectFiles) =>
+    buildIndiscriminableErrorEvidence(candidate, projectFiles),
   "jev/no-inline-lifecycle-phases": (candidate, projectFiles) =>
     buildInlineLifecyclePhasesEvidence(candidate, projectFiles),
   "jev/no-interaction-pinning-test": (candidate, projectFiles) =>
