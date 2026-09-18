@@ -232,6 +232,7 @@ const extractedRules = [
   ["jev/no-stability-inversion", "abstraction"],
   ["jev/no-stable-surface-widening", "module"],
   ["jev/no-stable-to-volatile-edge", "module"],
+  ["jev/no-stacked-error-boilerplate", "function"],
   ["jev/no-stale-binding-use", "function"],
   ["jev/no-stale-comment", "comment"],
   ["jev/no-stale-feature-flag", "function"],

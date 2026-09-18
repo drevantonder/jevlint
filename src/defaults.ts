@@ -8033,5 +8033,32 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-stacked-error-boilerplate": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this changed error construction restate the obvious or duplicate context the cause chain already carries, instead of adding new information?",
+          inspect: "Use each extracted error construction, its boilerplate phrases, whether the static text carries anything beyond boilerplate, cause linkage, catch placement, duplication of the caught error in the message, and interpolations naming values beyond the caught error in the supplied evidence.",
+          focus: "Judge whether the new message earns its existence with facts the cause chain does not already carry, not whether error wrapping appears at all.",
+          decision_boundary: [
+            "A message built only from boilerplate phrases such as failed to, could not, or something went wrong, with no named values and no cause linkage, is strong evidence of restating the obvious.",
+            "An outer message that reprints the caught error alongside a cause linkage duplicates context the chain already carries and answers the question affirmatively.",
+            "A message that interpolates operation values beyond the caught error, such as identifiers, paths, or limits, adds new information and answers the question negatively.",
+            "A specific static message with no boilerplate phrase and no duplication of the caught error answers the question negatively.",
+            "If the function constructs no error with a message, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "The error message restates the obvious with boilerplate or duplicates the cause chain without adding new facts",
+            remedy: "Name the operation values involved or drop the wrapper and let the original error propagate",
+          },
+          false: {
+            what: "The message adds specific facts the cause chain lacks, or the function constructs no error message",
+          },
+        },
+      },
+      message: "This error message restates the obvious or duplicates the cause chain instead of adding new information.",
+    },
   },
 };

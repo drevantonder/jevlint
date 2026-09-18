@@ -230,6 +230,7 @@ import { buildSpeculativeGeneralityEvidence } from "./speculative-generality.js"
 import { buildStabilityInversionEvidence } from "./stability-inversion.js";
 import { buildStableSurfaceWideningEvidence } from "./stable-surface-widening.js";
 import { buildStableToVolatileEdgeEvidence } from "./stable-to-volatile-edge.js";
+import { buildStackedErrorBoilerplateEvidence } from "./stacked-error-boilerplate.js";
 import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildStaleFeatureFlagEvidence } from "./stale-feature-flag.js";
@@ -539,6 +540,7 @@ type EvidenceRegistry = {
   "jev/no-stability-inversion": EvidenceBuilder;
   "jev/no-stable-surface-widening": EvidenceBuilder;
   "jev/no-stable-to-volatile-edge": EvidenceBuilder;
+  "jev/no-stacked-error-boilerplate": EvidenceBuilder;
   "jev/no-stale-binding-use": EvidenceBuilder;
   "jev/no-stale-comment": EvidenceBuilder;
   "jev/no-stale-feature-flag": EvidenceBuilder;
@@ -1066,6 +1068,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildStableSurfaceWideningEvidence(candidate, projectFiles, changes),
   "jev/no-stable-to-volatile-edge": (candidate, projectFiles, changes) =>
     buildStableToVolatileEdgeEvidence(candidate, projectFiles, changes),
+  "jev/no-stacked-error-boilerplate": (candidate, projectFiles) =>
+    buildStackedErrorBoilerplateEvidence(candidate, projectFiles),
   "jev/no-stale-binding-use": (candidate, projectFiles) =>
     buildStaleBindingUseEvidence(candidate, projectFiles),
   "jev/no-stale-comment": (candidate, projectFiles, changes) =>
