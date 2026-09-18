@@ -371,6 +371,31 @@ describe("live-run credential flow", () => {
     }
   });
 
+  it("keeps --out-dir artifacts and summary.json free of the key", async () => {
+    const home = await tempHome("jevlint-canary-outdir-");
+    const io = fakeIO(home, { TYPESAFE_API_KEY: CANARY });
+    const cwd = await repository("jevlint-canary-outdir-repo-");
+    await writeFile(join(cwd, "changed.ts"), "export function wrap(value: string) {\n  return value;\n}\n");
+    await execFile("git", ["add", "."], { cwd });
+    await execFile("git", ["commit", "-qm", "add changed"], { cwd });
+    await writeFile(join(cwd, "changed.ts"), CHANGED_FUNCTION);
+    const outDir = join(cwd, "out");
+    const result = await invoke(["review", "--out-dir", outDir], {
+      cwd,
+      evaluator: new PassEvaluator(),
+      authIO: io,
+      stdin: pipeStdin([]),
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).not.toContain(CANARY);
+    expect(result.stderr).not.toContain(CANARY);
+    // SAFETY: --out-dir artifacts mirror the report; assert on raw text, never the key.
+    const summary = await readFile(join(outDir, "summary.json"), "utf8");
+    expect(summary).not.toContain(CANARY);
+    const artifact = await readFile(join(outDir, "changed.ts.json"), "utf8");
+    expect(artifact).not.toContain(CANARY);
+  });
+
   it("leaves --print-config output free of auth fields", async () => {
     const home = await tempHome("jevlint-print-config-");
     const io = fakeIO(home);
