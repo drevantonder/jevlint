@@ -4,7 +4,7 @@
 
 Oxc finds review candidates and builds rule-specific evidence. Jev scores one proposition per judgment as a probability from 0 to 1. The report states probabilities only and never passes or fails.
 
-Three hundred nineteen bundled Jev rules. The bundled Jev rules are catalogued in `src/defaults.ts` (rule set, order, scope, category, and question text).
+The bundled Jev rules are catalogued in `src/defaults.ts` (rule set, order, scope, category, and question text).
 
 ## Install
 
