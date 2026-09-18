@@ -2,7 +2,7 @@
 
 Status: spec only. No `src/` changes, no live Jev calls, no real tokens anywhere.
 Canon applied: first-run prompt (primary) + `jevlint setup` (explicit) replace any
-login/logout/status suite; exactly one env name (`JEVLINT_TYPESAFE_API_KEY`); pre-v1,
+login/logout/status suite; two env names (`JEVLINT_TYPESAFE_API_KEY`, plus the shared-global `TYPESAFE_API_KEY` fallback); pre-v1,
 zero backwards compat (the old name is not detected, not mentioned, not routed).
 
 ## 1. Goal
@@ -73,15 +73,13 @@ force secret-via-argv on anyone who just wants fail-fast.
 | # | Source | Label (`source` in code) | Stored? |
 |---|--------|--------------------------|---------|
 | 1 | `--token <value>` | `flag` | Never. In-memory for this process only. |
-| 2 | `JEVLINT_TYPESAFE_API_KEY` env | `env` | Never touched by jevlint (owner: process env). |
-| 3 | OS keychain (`jevlint` / `typesafe-api-key`) | `keychain` | Yes — primary store. |
-| 4 | `~/.config/jevlint/credentials` (0600, §4) | `config-file` | Yes — fallback store. |
-| 5 | varlock/1Password passthrough (§7) | `varlock` | Never touched by jevlint. |
+| 2 | `JEVLINT_TYPESAFE_API_KEY` env | `env-jevlint` | Never touched by jevlint (owner: process env). |
+| 3 | `TYPESAFE_API_KEY` env (shared global) | `env-shared` | Never touched by jevlint (owner: process env). |
+| 4 | OS keychain (`jevlint` / `typesafe-api-key`) | `keychain` | Yes — primary store. |
+| 5 | `~/.config/jevlint/credentials` (0600, §4) | `config-file` | Yes — fallback store. |
+| 6 | varlock/1Password passthrough (§7) | `varlock` | Never touched by jevlint. |
 
-THE env name is `JEVLINT_TYPESAFE_API_KEY`, namespaced to the tool. Rationale in one
-line: a bare `TYPESAFE_*` name collides with anyone using the Typesafe SDK elsewhere
-and silently couples jevlint's auth to another tool's ambient credentials. There are no
-aliases, no fallbacks, no detection of any other name — pre-v1, one name.
+Two env names, one plain rule: set `JEVLINT_TYPESAFE_API_KEY` or the shared global `TYPESAFE_API_KEY`, and the per-tool variable wins when both are set. The per-tool name stays first so jevlint never silently couples to another tool's ambient credentials; the shared global exists so one key works across Typesafe tools (rangerjev uses it as its only credential). No other names are detected — pre-v1, two names.
 
 First hit wins; lower backends are not consulted (no merging, no union).
 
@@ -151,7 +149,7 @@ auth inputs (`process.env` auth reads exist in one place only):
 
 ```ts
 // src/auth.ts
-type CredentialSource = "flag" | "env" | "keychain" | "config-file" | "varlock";
+type CredentialSource = "flag" | "env-jevlint" | "env-shared" | "keychain" | "config-file" | "varlock";
 interface ResolvedCredential { token: string; source: CredentialSource; }
 async function resolveCredential(opts: { tokenFlag?: string }): Promise<ResolvedCredential | undefined>
 ```

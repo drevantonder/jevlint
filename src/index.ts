@@ -17,6 +17,7 @@ export {
   resetCredentialCache,
   SETUP_CANCELLED_MESSAGE,
   SetupCancelledError,
+  SHARED_ENV_VAR_NAME,
   storeCredential,
   STORED_PREFIX,
   STORED_REMOVED_MESSAGE,
