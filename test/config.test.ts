@@ -313,6 +313,7 @@ describe("loadConfig", () => {
       "jev/no-misplaced-coordination",
       "jev/no-coupled-index-collections",
       "jev/no-tautological-test",
+      "jev/no-stacked-error-boilerplate",
       // END GENERATED: rule-keys
     ]);
   });
