@@ -114,6 +114,64 @@ describe("single caller exported helper evidence", () => {
     });
   });
 
+  it("fires with the callback-passing site as the lone caller", async () => {
+    const source = await readFile(
+      new URL("./fixtures/repositories/unused-export-map-ref/src/splitter.ts", import.meta.url),
+      "utf8",
+    );
+    const projectFiles = [{ filePath: "src/splitter.ts", source }];
+    const candidate = extractCandidates("src/splitter.ts", source)
+      .find(({ source }) => source.includes("describeForSplitter(path"));
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    expect(buildSingleCallerExportedHelperEvidence(candidate, projectFiles)).toMatchObject({
+      function: { name: "describeForSplitter", exported: true },
+      totalCallers: 1,
+      caller: expect.objectContaining({
+        filePath: "src/splitter.ts",
+        call: "files.map(describeForSplitter)",
+        kind: "reference",
+      }),
+      callerOwnership: "same-file",
+      reexport: { reexported: false, reexportPaths: [] },
+    });
+  });
+
+  it("names the callback reference in judgment evidence through a fake evaluator", async () => {
+    const source = await readFile(
+      new URL("./fixtures/repositories/unused-export-map-ref/src/splitter.ts", import.meta.url),
+      "utf8",
+    );
+    const projectFiles = [{ filePath: "src/splitter.ts", source }];
+    const rule = defaultConfig.rules["jev/no-single-caller-exported-helper"];
+    expect(rule).toBeDefined();
+    if (!rule) return;
+    const config: JevLintConfig = { rules: { "jev/no-single-caller-exported-helper": rule } };
+    const evaluator: Evaluator = {
+      async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
+        return Object.fromEntries(Object.keys(request.questions).map((id) => [id, 0.79]));
+      },
+    };
+
+    const result = await analyzeFileWithFailures({
+      filePath: "src/splitter.ts",
+      source,
+      changedLines: [{ start: 1, end: 3 }],
+      config,
+      projectFiles,
+    }, evaluator);
+
+    expect(result.failures).toEqual([]);
+    expect(result.judgments.map((judgment) => judgment.probability)).toEqual([0.79]);
+    const [judgment] = result.judgments;
+    expect(judgment?.ruleId).toBe("jev/no-single-caller-exported-helper");
+    // SAFETY: rule evidence is a JSON object and this builder always sets the caller fields.
+    const evidence = judgment?.evidence as { caller?: { call?: string; kind?: string } } | null;
+    expect(evidence?.caller?.call).toBe("files.map(describeForSplitter)");
+    expect(evidence?.caller?.kind).toBe("reference");
+  });
+
   it("abstains for an unexported helper", () => {
     const source = [
       "function cents(cents: number) { return cents / 100; }",

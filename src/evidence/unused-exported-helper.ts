@@ -2,7 +2,7 @@ import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
-  findFunctionCallersWithCoverage,
+  findFunctionCallersAndReferencesWithCoverage,
   findModuleImporters,
   functionName,
   isFunctionExported,
@@ -154,7 +154,14 @@ export function buildUnusedExportedHelperEvidence(
   const markerWindow = owner.source.slice(Math.max(0, fn.start - 600), fn.start);
   if (MARKER_PATTERN.test(markerWindow)) return undefined;
 
-  const coverage = findFunctionCallersWithCoverage(owner.filePath, name, projectFiles);
+  // Direct calls plus references-as-values: passing the helper as a value
+  // (`files.map(fn)`) keeps it live just as surely as invoking it.
+  const coverage = findFunctionCallersAndReferencesWithCoverage(
+    owner.filePath,
+    name,
+    projectFiles,
+    { start: fn.start, end: fn.end },
+  );
   const { production, test } = partitionCallersByTest(coverage.callers);
   if (production.length > 0) return undefined;
 

@@ -128,6 +128,23 @@ describe("unused exported helper evidence", () => {
     )).toBeUndefined();
   });
 
+  it("abstains when the only production use passes the export as a callback", async () => {
+    const projectFiles = await project("unused-export-map-ref", [
+      "src/splitter.ts",
+    ]);
+    const owner = projectFiles[0];
+    expect(owner).toBeDefined();
+    if (!owner) return;
+
+    // `files.map(describeForSplitter)` is a references-as-values production
+    // use: the helper is live although no direct `describeForSplitter(...)`
+    // invocation exists anywhere in the project.
+    expect(buildUnusedExportedHelperEvidence(
+      functionCandidate(owner.source, owner.filePath, "describeForSplitter"),
+      projectFiles,
+    )).toBeUndefined();
+  });
+
   it("abstains for an unexported zero-caller function", () => {
     const source = "function orphan(items: number[]) { return items.length; }\n"
       + "export function live(items: number[]) { return items.length; }\n";
@@ -135,6 +152,37 @@ describe("unused exported helper evidence", () => {
 
     expect(buildUnusedExportedHelperEvidence(candidate, [{ filePath: "src/totals.ts", source }]))
       .toBeUndefined();
+  });
+
+  it("names the .js-specifier test import as a test caller despite the compiled shadow", async () => {
+    // Sorted like collectRepositoryFiles sorts: the compiled
+    // `src/splitter.js` shadow precedes `src/splitter.ts`, so literal
+    // resolution of `../src/splitter.js` lands on the shadow. The sibling
+    // fallback still attributes the test import to the `.ts` owner.
+    const projectFiles = await project("js-specifier-shadow", [
+      "src/splitter.js",
+      "src/splitter.ts",
+      "test/splitter.test.ts",
+    ]);
+    const owner = projectFiles.find((file) => file.filePath === "src/splitter.ts");
+    expect(owner).toBeDefined();
+    if (!owner) return;
+
+    const evidence = buildUnusedExportedHelperEvidence(
+      functionCandidate(owner.source, owner.filePath, "splitter"),
+      projectFiles,
+    );
+
+    expect(evidence).toMatchObject({
+      function: { name: "splitter", exported: true, filePath: "src/splitter.ts" },
+      callerCount: 0,
+      testCallerCount: 1,
+      testCallers: [expect.objectContaining({
+        filePath: "test/splitter.test.ts",
+        call: 'splitter(["a"])',
+      })],
+      symbolImporters: ["test/splitter.test.ts"],
+    });
   });
 
   it("abstains for a marked implementation owned by the superseded rule", () => {
