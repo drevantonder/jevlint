@@ -318,7 +318,9 @@ function mergeConfig(
       // A full RuleConfig on an opt-in key enables it; on any other known
       // key it reshapes scope/question/message as before. Either way the
       // bundled category is kept when the override omits one.
+      // SAFETY: knownKeys guards ruleId above, so the opt-in lookup hits a defined entry when the default map misses.
       const base = rules.get(ruleId) ?? optInRuleDefaults[ruleId as keyof typeof optInRuleDefaults];
+      // SAFETY: knownKeys guards the lookup above, so base is always defined here.
       // SAFETY: knownKeys guards the lookup above, so base is always defined here.
       const category = setting.category ?? base?.category ?? "maintainability";
       rules.set(ruleId, { ...setting, category });
