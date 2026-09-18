@@ -11,6 +11,7 @@ import {
   resolveModule,
 } from "./repository.js";
 import type { FunctionCaller, FunctionNode } from "./repository.js";
+import { orderScopeFiles, projectOrderIndex, resolvePairwiseBounds } from "./pairwise-scope.js";
 
 export type SiblingSignature = {
   parameterCount: number;
@@ -183,8 +184,16 @@ export function buildParaphrasedSiblingLogicEvidence(
   const candidateCallers = findFunctionCallers(owner.filePath, name, projectFiles);
   const callerFiles = new Set(candidateCallers.map(({ filePath }) => filePath));
 
-  const matches: ParaphrasedSiblingMatch[] = [];
-  for (const file of projectFiles) {
+  const bounds = resolvePairwiseBounds();
+  const scope = orderScopeFiles(owner.filePath, projectFiles, related, bounds.maxScopeFiles);
+  const projectOrder = projectOrderIndex(projectFiles);
+
+  type PreliminaryMatch = Omit<ParaphrasedSiblingMatch, "commonCallerFiles"> & {
+    fileOrder: number;
+    sequence: number;
+  };
+  const preliminary: PreliminaryMatch[] = [];
+  for (const file of scope.files) {
     if (!related.has(file.filePath)) continue;
     const other = parseCached(file.filePath, file.source);
     if (other.errors.some((error) => error.severity === "Error")) continue;
@@ -200,6 +209,8 @@ export function buildParaphrasedSiblingLogicEvidence(
         functions.push(node);
       },
     }).visit(other.program);
+    const fileOrder = projectOrder.get(file.filePath) ?? projectFiles.length;
+    let sequence = 0;
     for (const otherFn of functions) {
       if (file.filePath === owner.filePath && otherFn.start === fn.start && otherFn.end === fn.end) {
         continue;
@@ -219,24 +230,45 @@ export function buildParaphrasedSiblingLogicEvidence(
         otherMembers.has(member) && !GENERIC_MEMBERS.has(member)
       );
       if (sharedMembers.length >= 2) continue;
-      const siblingCallers = findFunctionCallers(file.filePath, otherName, projectFiles);
-      matches.push({
+      preliminary.push({
         filePath: file.filePath,
         functionName: otherName,
         signature: otherSignature,
         dissimilarity: Math.round(distance * 100) / 100,
         sharedLiteralValues: sharedLiterals.slice(0, 10),
         sharedMemberNames: sharedMembers.slice(0, 10),
-        commonCallerFiles: [...new Set(
-          siblingCallers.map(({ filePath }) => filePath).filter((path) => callerFiles.has(path)),
-        )].slice(0, 10),
         sourceExcerpt: otherSource.slice(0, 2_000),
+        fileOrder,
+        sequence,
       });
+      sequence += 1;
     }
   }
 
-  if (matches.length === 0) return undefined;
-  matches.sort((left, right) => right.dissimilarity - left.dissimilarity);
+  if (preliminary.length === 0) return undefined;
+  preliminary.sort((left, right) =>
+    right.dissimilarity - left.dissimilarity
+    || left.fileOrder - right.fileOrder
+    || left.sequence - right.sequence,
+  );
+
+  // Caller scans run only for ranked survivors. Ranking uses no caller
+  // data, so deferring them changes nothing but cost.
+  const matches: ParaphrasedSiblingMatch[] = preliminary.slice(0, 5).map((entry) => {
+    const siblingCallers = findFunctionCallers(entry.filePath, entry.functionName, projectFiles);
+    return {
+      filePath: entry.filePath,
+      functionName: entry.functionName,
+      signature: entry.signature,
+      dissimilarity: entry.dissimilarity,
+      sharedLiteralValues: entry.sharedLiteralValues,
+      sharedMemberNames: entry.sharedMemberNames,
+      commonCallerFiles: [...new Set(
+        siblingCallers.map(({ filePath }) => filePath).filter((path) => callerFiles.has(path)),
+      )].slice(0, 10),
+      sourceExcerpt: entry.sourceExcerpt,
+    };
+  });
 
   return {
     function: {
@@ -246,7 +278,7 @@ export function buildParaphrasedSiblingLogicEvidence(
       source: candidate.source,
     },
     signature,
-    matches: matches.slice(0, 5),
+    matches,
     callers: candidateCallers,
   };
 }

@@ -9,8 +9,20 @@ import {
   isFunctionExported,
   moduleImports,
   nestedFunctionRanges,
+  resolveModule,
 } from "./repository.js";
 import type { FunctionCaller, FunctionNode } from "./repository.js";
+import {
+  applyComparisonBudget,
+  lineStartOffsets,
+  orderScopeFiles,
+  projectOrderIndex,
+  rankComparisons,
+  resolvePairwiseBounds,
+  sameOpcodeSequence,
+  scopedCandidate,
+  topLevelOpcodes,
+} from "./pairwise-scope.js";
 
 export type SimilarityTrigger = {
   opcodeOverlap: number;
@@ -122,37 +134,6 @@ function fingerprintOf(
   };
 }
 
-function positionOf(source: string, offset: number) {
-  let line = 1;
-  let column = 1;
-  for (let index = 0; index < offset; index += 1) {
-    if (source[index] === "\n") {
-      line += 1;
-      column = 1;
-    } else {
-      column += 1;
-    }
-  }
-  return { line, column };
-}
-
-function candidateOf(file: ProjectFile, node: FunctionNode, index: number): Candidate {
-  const start = positionOf(file.source, node.start);
-  const end = positionOf(file.source, node.end);
-  return {
-    id: `coincidental-similarity-${index}`,
-    kind: "function",
-    filePath: file.filePath,
-    source: file.source.slice(node.start, node.end),
-    start: node.start,
-    end: node.end,
-    startLine: start.line,
-    startColumn: start.column,
-    endLine: end.line,
-    endColumn: end.column,
-  };
-}
-
 function intersect(left: string[], right: string[]): string[] {
   const set = new Set(right);
   return left.filter((item) => set.has(item));
@@ -175,10 +156,6 @@ function opcodeOverlap(left: string[], right: string[]): number {
     }
   }
   return shared;
-}
-
-function sameOpcodeSequence(left: string[], right: string[]): boolean {
-  return left.length >= 3 && left.length === right.length && left.every((opcode, index) => opcode === right[index]);
 }
 
 function nameTokens(name: string): string[] {
@@ -217,9 +194,25 @@ export function buildCoincidentalSimilarityEvidence(
   const candidateCallerFiles = [...new Set(candidateCallers.map(({ filePath }) => filePath))];
   const candidateTokens = nameTokens(name);
 
-  const lookalikes: Array<{ divergence: LookalikeDivergence; score: number; fingerprint: Fingerprint }> = [];
-  let scanned = 0;
-  for (const file of projectFiles) {
+  const bounds = resolvePairwiseBounds();
+  const related = new Set<string>();
+  for (const imported of moduleImports(parsed.program)) {
+    const resolved = resolveModule(owner.filePath, imported.source, projectFiles);
+    if (resolved && resolved.filePath !== owner.filePath) related.add(resolved.filePath);
+  }
+  const scope = orderScopeFiles(owner.filePath, projectFiles, related, bounds.maxScopeFiles);
+  const projectOrder = projectOrderIndex(projectFiles);
+
+  type EnumeratedFunction = {
+    file: ProjectFile;
+    program: Program;
+    node: FunctionNode;
+    name: string;
+    starts: number[];
+    sequence: number;
+  };
+  const enumerated: EnumeratedFunction[] = [];
+  for (const file of scope.files) {
     const other = parseCached(file.filePath, file.source);
     if (other.errors.some((error) => error.severity === "Error")) continue;
     const functions: FunctionNode[] = [];
@@ -234,71 +227,154 @@ export function buildCoincidentalSimilarityEvidence(
         functions.push(node);
       },
     }).visit(other.program);
+    const starts = lineStartOffsets(file.source);
+    let sequence = 0;
     for (const otherFn of functions) {
       if (file.filePath === owner.filePath && otherFn.start === fn.start && otherFn.end === fn.end) continue;
       const otherName = functionName(other.program, otherFn);
       if (!otherName) continue;
-      scanned += 1;
-      const otherFingerprint = fingerprintOf(other.program, otherFn, candidateOf(file, otherFn, scanned));
-      if (otherFingerprint.opcodes.length < 2) continue;
-      const sharedMembers = intersect(fingerprint.memberNames, otherFingerprint.memberNames)
-        .filter((member) => !GENERIC_MEMBERS.has(member));
-      const sharedLiterals = intersect(fingerprint.literalValues, otherFingerprint.literalValues);
-      const sequence = sameOpcodeSequence(fingerprint.opcodes, otherFingerprint.opcodes);
-      const triggered = sharedLiterals.length >= 1 || sharedMembers.length >= 2 || sequence;
-      if (!triggered) continue;
-      const otherCallers = findFunctionCallers(file.filePath, otherName, projectFiles);
+      if (topLevelOpcodes(otherFn).length < 2) continue;
+      enumerated.push({ file, program: other.program, node: otherFn, name: otherName, starts, sequence });
+      sequence += 1;
+    }
+  }
+
+  const budget = applyComparisonBudget(
+    // Divergent names are the signal here, so the cheap rank must not
+    // reward shared vocabulary; opcode overlap alone orders the set.
+    rankComparisons(fingerprint.opcodes, name, enumerated, 0),
+    bounds.maxFullComparisons,
+    bounds.prePass,
+  );
+
+  type PreliminaryLookalike = {
+    file: ProjectFile;
+    program: Program;
+    node: FunctionNode;
+    name: string;
+    fingerprint: Fingerprint;
+    preliminaryScore: number;
+    fileOrder: number;
+    sequence: number;
+  };
+  const ownerRole = moduleRole(owner.filePath);
+  const preliminary: PreliminaryLookalike[] = [];
+  budget.selected.forEach((ranked, index) => {
+    const target = ranked.entry;
+    const otherFingerprint = fingerprintOf(
+      target.program,
+      target.node,
+      scopedCandidate(target.file, target.file.source, target.starts, target.node, `coincidental-similarity-${index}`),
+    );
+    const sharedMembers = intersect(fingerprint.memberNames, otherFingerprint.memberNames)
+      .filter((member) => !GENERIC_MEMBERS.has(member));
+    const sharedLiterals = intersect(fingerprint.literalValues, otherFingerprint.literalValues);
+    const sequence = sameOpcodeSequence(fingerprint.opcodes, otherFingerprint.opcodes);
+    const triggered = sharedLiterals.length >= 1 || sharedMembers.length >= 2 || sequence;
+    if (!triggered) return;
+    const otherTokens = nameTokens(target.name);
+    const candidateOnlyMembers = difference(
+      fingerprint.memberNames.filter((member) => !GENERIC_MEMBERS.has(member)),
+      otherFingerprint.memberNames,
+    );
+    const matchOnlyMembers = difference(
+      otherFingerprint.memberNames.filter((member) => !GENERIC_MEMBERS.has(member)),
+      fingerprint.memberNames,
+    );
+    const distinctTokens = [...new Set([
+      ...difference(candidateTokens, otherTokens),
+      ...difference(otherTokens, candidateTokens),
+    ])];
+    preliminary.push({
+      file: target.file,
+      program: target.program,
+      node: target.node,
+      name: target.name,
+      fingerprint: otherFingerprint,
+      preliminaryScore: candidateOnlyMembers.length + matchOnlyMembers.length + distinctTokens.length,
+      fileOrder: projectOrder.get(target.file.filePath) ?? projectFiles.length,
+      sequence: target.sequence,
+    });
+  });
+
+  if (preliminary.length === 0) return undefined;
+  // Caller scans run only for the preliminary leaders. The preliminary
+  // score already contains every ranking term except the common-caller
+  // term, so whenever all qualifying comparisons fit the resolution
+  // budget the final ranking is unchanged.
+  preliminary.sort((left, right) =>
+    right.preliminaryScore - left.preliminaryScore
+    || left.fileOrder - right.fileOrder
+    || left.sequence - right.sequence,
+  );
+  const leaders = preliminary.slice(0, bounds.maxCallerResolutions);
+  const lookalikes: Array<{
+    divergence: LookalikeDivergence;
+    score: number;
+    fingerprint: Fingerprint;
+    fileOrder: number;
+    sequence: number;
+  }> = leaders
+    .map((entry) => {
+      const otherCallers = findFunctionCallers(entry.file.filePath, entry.name, projectFiles);
       const matchCallerFiles = [...new Set(otherCallers.map(({ filePath }) => filePath))];
-      const otherTokens = nameTokens(otherName);
+      const otherTokens = nameTokens(entry.name);
       const sharedTokens = intersect(candidateTokens, otherTokens);
-      const ownerRole = moduleRole(owner.filePath);
-      const otherImports = moduleImports(other.program).map(({ source }) => source);
+      const otherImports = moduleImports(entry.program).map(({ source }) => source);
+      const candidateOnlyMembers = difference(
+        fingerprint.memberNames.filter((member) => !GENERIC_MEMBERS.has(member)),
+        entry.fingerprint.memberNames,
+      ).slice(0, 20);
+      const matchOnlyMembers = difference(
+        entry.fingerprint.memberNames.filter((member) => !GENERIC_MEMBERS.has(member)),
+        fingerprint.memberNames,
+      ).slice(0, 20);
+      const distinctTokens = [...new Set([
+        ...difference(candidateTokens, otherTokens),
+        ...difference(otherTokens, candidateTokens),
+      ])].slice(0, 20);
+      const commonCallerFiles = [...new Set(
+        matchCallerFiles.filter((path) => candidateCallerFiles.includes(path)),
+      )].slice(0, 10);
       const divergence: LookalikeDivergence = {
-        filePath: file.filePath,
-        functionName: otherName,
-        sourceExcerpt: file.source.slice(otherFn.start, otherFn.end).slice(0, 2_000),
-        candidateOnlyMembers: difference(
-          fingerprint.memberNames.filter((member) => !GENERIC_MEMBERS.has(member)),
-          otherFingerprint.memberNames,
-        ).slice(0, 20),
-        matchOnlyMembers: difference(
-          otherFingerprint.memberNames.filter((member) => !GENERIC_MEMBERS.has(member)),
-          fingerprint.memberNames,
-        ).slice(0, 20),
+        filePath: entry.file.filePath,
+        functionName: entry.name,
+        sourceExcerpt: entry.file.source.slice(entry.node.start, entry.node.end).slice(0, 2_000),
+        candidateOnlyMembers,
+        matchOnlyMembers,
         candidateOnlyLiterals: difference(
           fingerprint.literalValues,
-          otherFingerprint.literalValues,
+          entry.fingerprint.literalValues,
         ).slice(0, 20),
         matchOnlyLiterals: difference(
-          otherFingerprint.literalValues,
+          entry.fingerprint.literalValues,
           fingerprint.literalValues,
         ).slice(0, 20),
         sharedNameTokens: sharedTokens,
-        distinctNameTokens: [...new Set([
-          ...difference(candidateTokens, otherTokens),
-          ...difference(otherTokens, candidateTokens),
-        ])].slice(0, 20),
-        sameModuleRole: ownerRole === moduleRole(file.filePath),
+        distinctNameTokens: distinctTokens,
+        sameModuleRole: ownerRole === moduleRole(entry.file.filePath),
         candidateCallerFiles: candidateCallerFiles.slice(0, 10),
         matchCallerFiles: matchCallerFiles.slice(0, 10),
-        commonCallerFiles: [...new Set(
-          matchCallerFiles.filter((path) => candidateCallerFiles.includes(path)),
-        )].slice(0, 10),
+        commonCallerFiles,
         sharedImportSources: [...new Set(
           otherImports.filter((source) => ownerImports.has(source)),
         )].slice(0, 10),
       };
-      lookalikes.push({
+      return {
         divergence,
-        fingerprint: otherFingerprint,
-        score: divergence.candidateOnlyMembers.length + divergence.matchOnlyMembers.length
-          + divergence.distinctNameTokens.length - divergence.commonCallerFiles.length * 2,
-      });
-    }
-  }
+        fingerprint: entry.fingerprint,
+        score: candidateOnlyMembers.length + matchOnlyMembers.length
+          + distinctTokens.length - commonCallerFiles.length * 2,
+        fileOrder: entry.fileOrder,
+        sequence: entry.sequence,
+      };
+    });
 
-  if (lookalikes.length === 0) return undefined;
-  lookalikes.sort((left, right) => right.score - left.score);
+  lookalikes.sort((left, right) =>
+    right.score - left.score
+    || left.fileOrder - right.fileOrder
+    || left.sequence - right.sequence,
+  );
   const top = lookalikes.slice(0, 3);
 
   const first = top[0];
