@@ -244,6 +244,7 @@ describe("loadConfig", () => {
       "jev/no-overloaded-boolean-return",
       "jev/no-parallel-enumerations",
       "jev/no-synonym-vocabulary",
+      "jev/no-standard-method-synonym",
       "jev/no-knob-multiplicity",
       "jev/no-boolean-fanout",
       "jev/no-hand-rolled-uuid",

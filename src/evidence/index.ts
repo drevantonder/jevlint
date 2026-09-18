@@ -233,6 +233,7 @@ import { buildStableToVolatileEdgeEvidence } from "./stable-to-volatile-edge.js"
 import { buildStaleBindingUseEvidence } from "./stale-binding-use.js";
 import { buildStaleCommentEvidence } from "./stale-comment.js";
 import { buildStaleFeatureFlagEvidence } from "./stale-feature-flag.js";
+import { buildStandardMethodSynonymEvidence } from "./standard-method-synonym.js";
 import { buildStringDuplicatedEnumerationEvidence } from "./string-duplicated-enumeration.js";
 import { buildSubclassFragilityHookEvidence } from "./subclass-fragility-hook.js";
 import { buildSupersededApiUseEvidence } from "./superseded-api-use.js";
@@ -542,6 +543,7 @@ type EvidenceRegistry = {
   "jev/no-stale-binding-use": EvidenceBuilder;
   "jev/no-stale-comment": EvidenceBuilder;
   "jev/no-stale-feature-flag": EvidenceBuilder;
+  "jev/no-standard-method-synonym": EvidenceBuilder;
   "jev/no-string-duplicated-enumeration": EvidenceBuilder;
   "jev/no-subclass-fragility-hook": EvidenceBuilder;
   "jev/no-superseded-api-use": EvidenceBuilder;
@@ -1072,6 +1074,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildStaleCommentEvidence(candidate, projectFiles, changes),
   "jev/no-stale-feature-flag": (candidate, projectFiles) =>
     buildStaleFeatureFlagEvidence(candidate, projectFiles),
+  "jev/no-standard-method-synonym": (candidate, projectFiles) =>
+    buildStandardMethodSynonymEvidence(candidate, projectFiles),
   "jev/no-string-duplicated-enumeration": (candidate, projectFiles, changes) =>
     buildStringDuplicatedEnumerationEvidence(candidate, changes, projectFiles),
   "jev/no-subclass-fragility-hook": (candidate, projectFiles) =>
