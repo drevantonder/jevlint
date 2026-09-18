@@ -1,15 +1,8 @@
 # jevlint auth
 
-One credential: the `TYPESAFE_API_KEY` environment variable. Nothing else.
-
-## First run
-
-Set the variable, or run `jevlint setup`: it asks for the key once (hidden
-input) and appends `export TYPESAFE_API_KEY='…'` to `~/.bashrc` and
-`~/.zshrc`. Files that do not exist are created with mode `0600`; files that
-exist are backed up to `<file>.jevlint.bak` before editing. Re-runs replace
-the old line instead of duplicating it. Then restart the shell (or run the
-printed `source` line). `jevlint setup --forget` removes those lines.
+One credential: the `TYPESAFE_API_KEY` environment variable. Set it, done.
+Nothing is stored anywhere, ever: no setup command, no prompt, no keychain,
+no config file, no shell-file edits.
 
 ## Live runs
 
@@ -18,7 +11,7 @@ Every live run (`review`, `audit` without `--dry-run`) reads
 prints one error and exits 2:
 
 ```text
-jevlint: no Typesafe API key found. Set TYPESAFE_API_KEY or run 'jevlint setup'.
+jevlint: no Typesafe API key found. Set TYPESAFE_API_KEY.
 ```
 
 A key the API rejects maps to

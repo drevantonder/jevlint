@@ -9,7 +9,7 @@ Oxc discovers review candidates and builds rule-specific repository evidence; Je
 
 ## Run it
 
-One credential: `TYPESAFE_API_KEY` in the environment. Save it once with `jevlint setup` (writes `~/.bashrc` and `~/.zshrc`; restart the shell after). Never copy the key itself:
+One credential: `TYPESAFE_API_KEY` in the environment. Set it before any live run; nothing is stored anywhere. Never copy the key itself:
 
 ```sh
 pnpm jevlint                       # full-tree audit: no subcommand, no diff needed

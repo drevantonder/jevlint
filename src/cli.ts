@@ -25,22 +25,10 @@ import {
 import type { CreateReviewReportInput } from "./format.js";
 import {
   defaultAuthIO,
-  installShellKey,
   MISSING_CREDENTIAL_MESSAGE,
-  promptForApiKey,
-  removeShellKey,
   resolveCredentialWithIO,
-  SETUP_CANCELLED_MESSAGE,
-  SETUP_NON_TTY_MESSAGE,
-  STORED_REMOVED_MESSAGE,
-  SetupCancelledError,
 } from "./auth.js";
-import type {
-  AuthIO,
-  CredentialSource,
-  PromptStdin,
-  StderrWriter,
-} from "./auth.js";
+import type { AuthIO, CredentialSource } from "./auth.js";
 import { createFileArtifact, writeFileArtifact, writeSummaryArtifact } from "./out-dir.js";
 import type { DisplayOptions } from "./types.js";
 import { collectChangedFiles, collectRepositoryFiles, repositoryCacheContext } from "./git.js";
@@ -60,7 +48,7 @@ import type { NoulQuestion } from "@typesafe-ai/sdk";
 
 type DebugMode = "files" | "timings" | "cache";
 
-type HelpCommand = "general" | "review" | "audit" | "setup";
+type HelpCommand = "general" | "review" | "audit";
 
 const OPTIONS_SHARED = `Shared options:
   --format <format>  Output text, json, or github (also -f)
@@ -99,7 +87,6 @@ Commands:
   (none)            Audit the full tree; bare jevlint is audit with no subcommand
   review            Review changed code and report probability scores
   audit             Survey the whole codebase and report probability scores
-  setup             Store your Typesafe (Jev) API key for future runs
 
   With no subcommand, jevlint audits the full tree, or the given files or
   directories when PATHs are given. review stays explicit for change-scoped
@@ -107,8 +94,7 @@ Commands:
   without needing a diff and runs to completion by default: every
   candidate/rule pair is prepared unless you opt into a limit below.
   Bare, review, and audit all report probabilities only: no
-  pass/fail, no thresholds, no bands. Live runs read TYPESAFE_API_KEY;
-  jevlint setup saves it to your shell startup files on demand.
+  pass/fail, no thresholds, no bands. Live runs read TYPESAFE_API_KEY.
 
 Review defaults to changed files; audit defaults to the full tree. PATH filters
 scope to files or directories. Unknown paths follow the unmatched-pattern rule:
@@ -168,11 +154,10 @@ export interface CliDependencies {
   stdout?: (text: string) => void;
   stderr?: (text: string) => void;
   authIO?: AuthIO;
-  stdin?: PromptStdin;
 }
 
 interface EnsureCredentialInput {
-  stderr: StderrWriter;
+  stderr: (text: string) => void;
   authIO: AuthIO | undefined;
 }
 
@@ -186,7 +171,7 @@ type CredentialOutcome =
   | { ok: false; exitCode: number };
 
 interface CliOptions {
-  command: "review" | "audit" | "setup";
+  command: "review" | "audit";
   paths: string[];
   staged: boolean;
   format: "text" | "json" | "github";
@@ -199,7 +184,6 @@ interface CliOptions {
   debug: DebugMode[];
   printConfig: boolean;
   listRules: boolean;
-  setupForget: boolean;
   help: boolean;
   maxQuestions?: number;
   evidenceBudgetMs?: number;
@@ -235,7 +219,7 @@ function parseDebugModes(raw: string): DebugMode[] | undefined {
   return [...new Set(modes)];
 }
 
-function baseOptions(command: "review" | "audit" | "setup"): CliOptions {
+function baseOptions(command: "review" | "audit"): CliOptions {
   const options: CliOptions = {
     command,
     paths: [],
@@ -247,7 +231,6 @@ function baseOptions(command: "review" | "audit" | "setup"): CliOptions {
     debug: [],
     printConfig: false,
     listRules: false,
-    setupForget: false,
     help: false,
     dryRun: false,
   };
@@ -353,41 +336,10 @@ function parseFlags(args: string[], start: number, options: CliOptions): boolean
   return true;
 }
 
-function parseSetupFlags(args: string[], options: CliOptions): boolean {
-  for (let index = 1; index < args.length; index += 1) {
-    const argument = args[index] ?? "";
-    if (argument === "--forget") {
-      options.setupForget = true;
-    } else if (argument === "--help") {
-      options.help = true;
-    } else {
-      return false;
-    }
-  }
-  return true;
-}
-
-const USAGE_SETUP = `Usage: jevlint setup [options]
-
-Ask for your Typesafe (Jev) API key and save it to your shell startup files
-(~/.bashrc and ~/.zshrc) so TYPESAFE_API_KEY is set in every new shell.
-Run setup again to replace the saved key.
-
-Options:
-  --forget           Remove the saved key from your shell startup files and exit
-  --help             Show this help
-`;
-
 function parseArgs(args: string[]): ParsedArgs {
   if (args.length === 0) return { ok: true, options: baseOptions("audit") };
   if (args[0] === "--help" && args.length === 1) return { ok: false, help: "general" };
   const command = args[0];
-  if (command === "setup") {
-    const options = baseOptions("setup");
-    if (!parseSetupFlags(args, options)) return { ok: false };
-    if (options.help) return { ok: false, help: "setup" };
-    return { ok: true, options };
-  }
   if (command === "review" || command === "audit") {
     const options = baseOptions(command);
     if (!parseFlags(args, 1, options)) return { ok: false };
@@ -588,44 +540,6 @@ async function ensureLiveCredential(input: EnsureCredentialInput): Promise<Crede
   if (resolved !== undefined) return { ok: true, credential: resolved };
   input.stderr(`${MISSING_CREDENTIAL_MESSAGE}\n`);
   return { ok: false, exitCode: 2 };
-}
-
-async function runSetup(
-  options: CliOptions,
-  dependencies: CliDependencies,
-  stderr: (text: string) => void,
-): Promise<number> {
-  const io = dependencies.authIO ?? defaultAuthIO();
-  const stdin: PromptStdin = dependencies.stdin ?? process.stdin;
-  if (options.setupForget) {
-    await removeShellKey(io);
-    stderr(`${STORED_REMOVED_MESSAGE}\n`);
-    return 0;
-  }
-  if (stdin.isTTY !== true) {
-    stderr(`${SETUP_NON_TTY_MESSAGE}\n`);
-    return 2;
-  }
-  let entered: string;
-  try {
-    entered = await promptForApiKey(stdin, stderr);
-  } catch (error) {
-    if (error instanceof SetupCancelledError) {
-      stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
-      return 2;
-    }
-    throw error;
-  }
-  const token = entered.trim();
-  if (token.length === 0) {
-    stderr(`${SETUP_CANCELLED_MESSAGE}\n`);
-    return 2;
-  }
-  const saved = await installShellKey(token, io);
-  const files = saved.map((entry) => entry.display).join(", ");
-  const first = saved[0]?.display ?? "~/.bashrc";
-  stderr(`jevlint: API key saved to ${files}. Restart your shell or run: source ${first}\n`);
-  return 0;
 }
 
 async function resolveEvaluator(
@@ -900,10 +814,6 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
   const parsed = parseArgs(args);
 
   if (!parsed.ok) {
-    if (parsed.help === "setup") {
-      stdout(USAGE_SETUP);
-      return 0;
-    }
     if (parsed.help === "review") {
       stdout(USAGE_REVIEW);
       return 0;
@@ -922,9 +832,6 @@ export async function runCli(args: string[], dependencies: CliDependencies = {})
 
   const cwd = dependencies.cwd ?? process.cwd();
   try {
-    if (parsed.options.command === "setup") {
-      return await runSetup(parsed.options, dependencies, stderr);
-    }
     if (parsed.options.command === "audit") {
       return await runAudit(cwd, parsed.options, dependencies, stdout, stderr);
     }
