@@ -177,6 +177,7 @@ import { buildOverbroadOriginTrustEvidence } from "./overbroad-origin-trust.js";
 import { buildOverloadResolutionAmbiguityEvidence } from "./overload-resolution-ambiguity.js";
 import { buildOverloadedBooleanReturnEvidence } from "./overloaded-boolean-return.js";
 import { buildOversizedWorkingSetEvidence } from "./oversized-working-set.js";
+import { buildOwnedModuleMockEvidence } from "./owned-module-mock.js";
 import { buildParallelAbstractionEvidence } from "./parallel-abstraction.js";
 import { buildParallelEnumerationsEvidence } from "./parallel-enumerations.js";
 import { buildParaphrasedSiblingLogicEvidence } from "./paraphrased-sibling-logic.js";
@@ -486,6 +487,7 @@ type EvidenceRegistry = {
   "jev/no-overload-resolution-ambiguity": EvidenceBuilder;
   "jev/no-overloaded-boolean-return": EvidenceBuilder;
   "jev/no-oversized-working-set": EvidenceBuilder;
+  "jev/no-owned-module-mock": EvidenceBuilder;
   "jev/no-parallel-abstraction": EvidenceBuilder;
   "jev/no-parallel-enumerations": EvidenceBuilder;
   "jev/no-paraphrased-sibling-logic": EvidenceBuilder;
@@ -960,6 +962,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildOverloadedBooleanReturnEvidence(candidate, projectFiles),
   "jev/no-oversized-working-set": (candidate, projectFiles) =>
     buildOversizedWorkingSetEvidence(candidate, projectFiles),
+  "jev/no-owned-module-mock": (candidate, projectFiles) =>
+    buildOwnedModuleMockEvidence(candidate, projectFiles),
   "jev/no-parallel-abstraction": (candidate, projectFiles) =>
     buildParallelAbstractionEvidence(candidate, projectFiles),
   "jev/no-parallel-enumerations": (candidate, projectFiles) =>

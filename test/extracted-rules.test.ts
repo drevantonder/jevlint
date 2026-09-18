@@ -179,6 +179,7 @@ const extractedRules = [
   ["jev/no-overload-resolution-ambiguity", "function"],
   ["jev/no-overloaded-boolean-return", "function"],
   ["jev/no-oversized-working-set", "function"],
+  ["jev/no-owned-module-mock", "function"],
   ["jev/no-parallel-abstraction", "function"],
   ["jev/no-parallel-enumerations", "abstraction"],
   ["jev/no-paraphrased-sibling-logic", "function"],
