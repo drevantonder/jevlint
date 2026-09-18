@@ -3,5 +3,9 @@ dist/
 coverage/
 .worktrees/
 .env
+.env.*
+*.env
 credentials
 *.log
+.scratch/perf-bench/results/
+.scratch/bench-*.json
