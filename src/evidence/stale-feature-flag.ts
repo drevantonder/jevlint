@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Expression, PrivateIdentifier, Statement } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -149,7 +150,7 @@ export type FlagSource = {
 function sourceHintFor(
   flagRoot: string | undefined,
   owner: ProjectFile,
-  program: ReturnType<typeof parseSync>["program"],
+  program: ReturnType<typeof parseCached>["program"],
   projectFiles: ProjectFile[],
 ): FlagSource {
   if (!flagRoot) return { hint: "unknown", detail: null };
@@ -183,7 +184,7 @@ export function buildStaleFeatureFlagEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

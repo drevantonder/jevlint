@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Expression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -196,7 +197,7 @@ export function buildDoubledPureHelperEvidence(
     if (!specifier.startsWith(".")) continue;
     const target = resolveModule(owner.filePath, specifier, projectFiles);
     if (!target) continue;
-    const targetParsed = parseSync(target.filePath, target.source, { range: true });
+    const targetParsed = parseCached(target.filePath, target.source);
     if (targetParsed.errors.some((error) => error.severity === "Error")) continue;
     const doubledLocals = imports
       .filter((entry) => entry.source === specifier && entry.imported !== "*" && used.has(entry.local))

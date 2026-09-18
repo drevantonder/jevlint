@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { functionName } from "./repository.js";
 import type { FunctionNode } from "./repository.js";
@@ -42,7 +43,7 @@ function verbAndEntity(name: string): { verb: string; entity: string } | undefin
 }
 
 function collectModuleFunctions(filePath: string, source: string): { name: string; source: string }[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const result: { name: string; source: string }[] = [];
   const add = (node: FunctionNode): void => {

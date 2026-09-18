@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { functionName, isFunctionExported } from "./repository.js";
 import type { FunctionNode } from "./repository.js";
@@ -200,7 +201,7 @@ export function buildStaleCommentEvidence(
   if (candidate.kind !== "comment") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
 
   const claims = behaviorClaims(candidate.source);

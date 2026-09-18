@@ -1,5 +1,6 @@
 import { posix } from "node:path";
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { isTestFile } from "./module.js";
 import {
@@ -76,7 +77,7 @@ function importStatementRanges(
   filePath: string,
   source: string,
 ): { source: string; start: number; end: number; typeOnly: boolean }[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const ranges: { source: string; start: number; end: number; typeOnly: boolean }[] = [];
   for (const statement of parsed.program.body) {
@@ -98,7 +99,7 @@ function valueUsesOf(
   local: string,
   importRanges: { start: number; end: number }[],
 ): number {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return 0;
   let uses = 0;
   new Visitor({
@@ -119,7 +120,7 @@ export function buildDevDependencyRuntimeLeakEvidence(
   if (isTestFile(candidate.filePath)) return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

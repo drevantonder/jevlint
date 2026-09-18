@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Node, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -120,7 +121,7 @@ export function buildParallelAbstractionEvidence(
   if (candidate.kind !== "function") return undefined;
   const ownerFile = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!ownerFile) return undefined;
-  const parsed = parseSync(ownerFile.filePath, ownerFile.source, { range: true });
+  const parsed = parseCached(ownerFile.filePath, ownerFile.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -135,7 +136,7 @@ export function buildParallelAbstractionEvidence(
   for (const sibling of siblingSourceFiles(candidate.filePath, projectFiles)) {
     let siblingProgram: Program;
     try {
-      const siblingParsed = parseSync(sibling.filePath, sibling.source, { range: true });
+      const siblingParsed = parseCached(sibling.filePath, sibling.source);
       if (siblingParsed.errors.some((error) => error.severity === "Error")) continue;
       siblingProgram = siblingParsed.program;
     } catch {

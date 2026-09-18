@@ -1,5 +1,5 @@
 import { posix } from "node:path";
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { ProjectFile, SourceFile } from "../types.js";
 import { resolveModule } from "./repository.js";
@@ -227,7 +227,7 @@ export function inferLayer(dir: string): LayerFact {
 }
 
 export function parseProgram(filePath: string, source: string): Program | undefined {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   return parsed.program;
 }
@@ -335,7 +335,7 @@ export type ModuleGraph = {
   exports: Map<string, string[] | undefined>;
 }
 
-export function buildModuleGraph(projectFiles: ProjectFile[]): ModuleGraph {
+export function buildModuleGraphUncached(projectFiles: ProjectFile[]): ModuleGraph {
   const specifiers = new Map<string, string[]>();
   const exports = new Map<string, string[] | undefined>();
   for (const file of projectFiles) {
@@ -350,6 +350,38 @@ export function buildModuleGraph(projectFiles: ProjectFile[]): ModuleGraph {
     exports.set(file.filePath, moduleExportNames(program));
   }
   return { specifiers, exports };
+}
+
+// Single-entry shared graph: audit and review runs pass the same
+// projectFiles array (and the same source string objects) to every
+// rule-candidate pair, so identity comparison is O(files) pointer checks
+// with zero content hashing. Any new array, reordered array, or replaced
+// source string misses and rebuilds. Callers must not mutate the returned
+// graph (no current caller does; gates verify this).
+const graphCache = new WeakMap<
+  ProjectFile[],
+  { refs: ProjectFile[]; sources: string[]; graph: ModuleGraph }
+>();
+
+export function buildModuleGraph(projectFiles: ProjectFile[]): ModuleGraph {
+  if (process.env["JEVLINT_PARSE_CACHE"] === "0") {
+    return buildModuleGraphUncached(projectFiles);
+  }
+  const cached = graphCache.get(projectFiles);
+  if (
+    cached !== undefined
+    && cached.refs.length === projectFiles.length
+    && projectFiles.every((file, index) =>
+      file === cached.refs[index] && file.source === cached.sources[index]
+    )
+  ) return cached.graph;
+  const graph = buildModuleGraphUncached(projectFiles);
+  graphCache.set(projectFiles, {
+    refs: [...projectFiles],
+    sources: projectFiles.map((file) => file.source),
+    graph,
+  });
+  return graph;
 }
 
 function makeEdge(from: string, to: string, resolved: string | null): ImportEdge {

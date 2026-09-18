@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -73,7 +74,7 @@ function quotedInner(raw: string): string | null {
 }
 
 function collectBlocks(file: ProjectFile): FixtureBlockEvidence[] {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const blocks: FixtureBlockEvidence[] = [];
   new Visitor({

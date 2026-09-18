@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Class, Node } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findFunctionCallersWithCoverage } from "./repository.js";
@@ -86,7 +87,7 @@ function memberKey(member: Class["body"]["body"][number]): string | undefined {
 }
 
 function parsedDeclarationRanges(filePath: string, source: string): DeclarationRange[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const starts = lineStarts(source);
   const result: DeclarationRange[] = [];
@@ -170,7 +171,7 @@ function identifiersForHunk(
   source: string,
   hunk: { start: number; end: number },
 ): string[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const starts = lineStarts(source);
   const names = new Set<string>();
@@ -219,7 +220,7 @@ function declarationCallers(
   const sampleCalls: string[] = [];
   let total = 0;
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       CallExpression(call: CallExpression) {

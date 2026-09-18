@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { ParamPattern } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -84,7 +84,7 @@ export function buildHeterogeneousPrimitiveCallersEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find(({ filePath }) => filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some(({ severity }) => severity === "Error")) return undefined;
   const fn: FunctionNode | undefined = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
@@ -40,7 +41,7 @@ function lineAt(source: string, offset: number): number {
 function identifiersOf(test: string): Set<string> {
   const names = new Set<string>();
   const wrapped = `function __pred() { return (${test}); }`;
-  const parsed = parseSync("pred.ts", wrapped, { range: true });
+  const parsed = parseCached("pred.ts", wrapped);
   if (parsed.errors.some((error) => error.severity === "Error")) return names;
   new Visitor({
     Identifier(node) {
@@ -66,7 +67,7 @@ export function buildRepeatedPredicateEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn || !fn.body) return undefined;

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import {
@@ -137,7 +138,7 @@ function resolveCallee(
   if (local) {
     const owner = projectFiles.find((file) => file.filePath === callerPath);
     if (owner) {
-      const parsed = parseSync(owner.filePath, owner.source, { range: true });
+      const parsed = parseCached(owner.filePath, owner.source);
       if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
       const fn = findNamedFunction(parsed.program, callee);
       if (fn) return { file: owner, program: parsed.program, fn };
@@ -147,7 +148,7 @@ function resolveCallee(
   if (!imported || !imported.source.startsWith(".")) return undefined;
   const target = resolveModule(callerPath, imported.source, projectFiles);
   if (!target) return undefined;
-  const parsed = parseSync(target.filePath, target.source, { range: true });
+  const parsed = parseCached(target.filePath, target.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findNamedFunction(parsed.program, imported.imported === "default" ? callee : imported.imported);
   if (!fn) return undefined;
@@ -218,7 +219,7 @@ export function buildMysteryLiteralArgumentEvidence(
 
   for (const change of changes) {
     if (callSites.length >= MAX_SITES) break;
-    const parsed = parseSync(change.filePath, change.source, { range: true });
+    const parsed = parseCached(change.filePath, change.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const calls: CallExpression[] = [];
     new Visitor({

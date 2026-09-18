@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Class, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -76,7 +77,7 @@ function overrideMethodName(
 }
 
 function definedClass(file: ProjectFile, className: string): Class | undefined {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   let found: Class | undefined;
   new Visitor({
@@ -88,7 +89,7 @@ function definedClass(file: ProjectFile, className: string): Class | undefined {
 }
 
 function defaultExportedClass(file: ProjectFile): Class | undefined {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   let found: Class | undefined;
   for (const statement of parsed.program.body) {
@@ -105,7 +106,7 @@ function findSuperclass(
 ): { file: ProjectFile; node: Class } | undefined {
   const local = definedClass(owner, superName);
   if (local) return { file: owner, node: local };
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   for (const imported of moduleImports(parsed.program)) {
     if (imported.local !== superName) continue;
@@ -167,7 +168,7 @@ export function buildSubclassFragilityHookEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -204,7 +205,7 @@ export function buildSubclassFragilityHookEvidence(
   for (const file of projectFiles) {
     if (siblingOverrides.length >= MAX_SIBLINGS) break;
     if (file.filePath === owner.filePath) continue;
-    const fileParsed = parseSync(file.filePath, file.source, { range: true });
+    const fileParsed = parseCached(file.filePath, file.source);
     if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       ClassDeclaration(node) {

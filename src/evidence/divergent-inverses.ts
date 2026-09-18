@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
@@ -79,7 +80,7 @@ function unquote(text: string): string {
 
 function collectSets(source: string, start: number, end: number): InverseSideSets {
   const body = `function __side() ${source.slice(start, end).startsWith("{") ? source.slice(start, end) : `{ ${source.slice(start, end)} }`}`;
-  const parsed = parseSync("side.ts", body, { range: true });
+  const parsed = parseCached("side.ts", body);
   const fieldsRead = new Set<string>();
   const keysWritten = new Set<string>();
   const variants = new Set<string>();
@@ -127,7 +128,7 @@ export function buildDivergentInversesEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn || !fn.body) return undefined;

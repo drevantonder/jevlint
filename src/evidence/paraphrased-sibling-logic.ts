@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -148,7 +149,7 @@ function relatedPaths(ownerPath: string, program: Program, projectFiles: Project
   }
   for (const file of projectFiles) {
     if (related.has(file.filePath)) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     for (const imported of moduleImports(parsed.program)) {
       if (resolveModule(file.filePath, imported.source, projectFiles)?.filePath === ownerPath) {
@@ -166,7 +167,7 @@ export function buildParaphrasedSiblingLogicEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -185,7 +186,7 @@ export function buildParaphrasedSiblingLogicEvidence(
   const matches: ParaphrasedSiblingMatch[] = [];
   for (const file of projectFiles) {
     if (!related.has(file.filePath)) continue;
-    const other = parseSync(file.filePath, file.source, { range: true });
+    const other = parseCached(file.filePath, file.source);
     if (other.errors.some((error) => error.severity === "Error")) continue;
     const functions: FunctionNode[] = [];
     new Visitor({

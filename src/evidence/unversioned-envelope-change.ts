@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   Program,
   TSInterfaceDeclaration,
@@ -188,8 +188,8 @@ export function buildUnversionedEnvelopeChangeEvidence(
   for (const change of ordered) {
     if (envelopeBreaks.length >= MAX_BREAKS) break;
     if (change.oldSource === null) continue;
-    const beforeParsed = parseSync(change.filePath, change.oldSource, { range: true });
-    const afterParsed = parseSync(change.filePath, change.source, { range: true });
+    const beforeParsed = parseCached(change.filePath, change.oldSource);
+    const afterParsed = parseCached(change.filePath, change.source);
     if (
       beforeParsed.errors.some((error) => error.severity === "Error")
       || afterParsed.errors.some((error) => error.severity === "Error")

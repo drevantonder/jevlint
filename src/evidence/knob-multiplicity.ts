@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { findDirectAbstraction } from "./repository.js";
 
@@ -106,7 +107,7 @@ function collectConfigSites(stem: string, projectFiles: ProjectFile[]): KnobSite
   const stemPattern = new RegExp(escapeRegExp(stem), "i");
   const sites: KnobSiteEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const members: { name: string; start: number }[] = [];
     new Visitor({
@@ -141,7 +142,7 @@ function collectParameterSites(stem: string, projectFiles: ProjectFile[]): KnobS
   const stemLower = stem.toLowerCase();
   const sites: KnobSiteEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const addParams = (node: { params: { start: number; end: number }[] }): void => {
       for (const parameter of node.params) {
@@ -188,7 +189,7 @@ function collectOrderingSites(
   const patterns = knobSpellings.map((spelling) => new RegExp(`\\b${escapeRegExp(spelling)}\\b`));
   const sites: OrderingSiteEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       FunctionDeclaration(node) {
@@ -229,7 +230,7 @@ export function buildKnobMultiplicityEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const declaration = findDirectAbstraction(parsed.program, candidate);
   if (!declaration) return undefined;

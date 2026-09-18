@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Class, Program } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findModuleImporters } from "./repository.js";
@@ -205,7 +205,7 @@ export function buildMutableSurfaceExpansionEvidence(
   for (const change of ordered) {
     if (expansions.length >= MAX_EXPANSIONS) break;
     if (change.oldSource === null) {
-      const parsed = parseSync(change.filePath, change.source, { range: true });
+      const parsed = parseCached(change.filePath, change.source);
       if (parsed.errors.some((error) => error.severity === "Error")) continue;
       compared += 1;
       const changed = changedLineSet(change);
@@ -223,8 +223,8 @@ export function buildMutableSurfaceExpansionEvidence(
       }
       continue;
     }
-    const beforeParsed = parseSync(change.filePath, change.oldSource, { range: true });
-    const afterParsed = parseSync(change.filePath, change.source, { range: true });
+    const beforeParsed = parseCached(change.filePath, change.oldSource);
+    const afterParsed = parseCached(change.filePath, change.source);
     if (
       beforeParsed.errors.some((error) => error.severity === "Error")
       || afterParsed.errors.some((error) => error.severity === "Error")

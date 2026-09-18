@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Class, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { moduleImports, resolveModule } from "./repository.js";
@@ -133,7 +134,7 @@ type KnownClass = {
 function knownClasses(projectFiles: ProjectFile[]): KnownClass[] {
   const result: KnownClass[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       ClassDeclaration(node) {
@@ -162,7 +163,7 @@ function unionCaseSiblings(
   const byName = new Map(known.map((item) => [item.name, item]));
   const siblings = new Set<string>();
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       TSTypeAliasDeclaration(node) {
@@ -193,7 +194,7 @@ function sharedClients(
 ): SharedClientEvidence[] {
   const result: SharedClientEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const imports = moduleImports(parsed.program);
     const touched = new Set<string>();
@@ -225,7 +226,7 @@ export function buildDivergentSiblingInterfacesEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const node = findClass(parsed.program, candidate);
   if (!node) return undefined;
@@ -309,7 +310,7 @@ export function buildDivergentSiblingInterfacesEvidence(
   const sharedImportSources = [...new Set(siblings.flatMap(({ filePath }) => {
     const file = projectFiles.find(({ filePath: path }) => path === filePath);
     if (!file) return [];
-    const reparsed = parseSync(file.filePath, file.source, { range: true });
+    const reparsed = parseCached(file.filePath, file.source);
     if (reparsed.errors.some((error) => error.severity === "Error")) return [];
     return moduleImports(reparsed.program)
       .filter(({ source }) => ownerImports.has(source))

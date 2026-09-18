@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";import { moduleImports, resolveModule } from "./repository.js";
 
 export type ConfigChannelKind = "env-read" | "dotenv-init" | "config-file-load" | "flag-parser";
@@ -53,7 +53,7 @@ function kindOf(text: string): ConfigChannelKind | null {
 function findOwnedModule(projectFiles: ProjectFile[]): OwnedConfigModule | null {
   const candidates = new Map<string, string[]>();
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     for (const imported of moduleImports(parsed.program)) {
       const resolved = resolveModule(file.filePath, imported.source, projectFiles);
@@ -85,7 +85,7 @@ export function buildDuplicateConfigSourceEvidence(
   let compared = 0;
 
   for (const change of changes) {
-    const parsed = parseSync(change.filePath, change.source, { range: true });
+    const parsed = parseCached(change.filePath, change.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     compared += 1;
     const changedLines = changedLineSet(change);
@@ -117,7 +117,7 @@ export function buildDuplicateConfigSourceEvidence(
   for (const filePath of readFiles) {
     const file = projectFiles.find((entry) => entry.filePath === filePath);
     if (!file) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     delegatesToOwned = moduleImports(parsed.program).some(({ source }) => {
       const resolved = resolveModule(file.filePath, source, projectFiles);

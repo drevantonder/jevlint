@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findModuleImporters, resolveModule } from "./repository.js";
 
@@ -44,7 +44,7 @@ export function buildBarrelWideReexportEvidence(
   if (!BARREL_PATTERN.test(candidate.filePath)) return undefined;
   const change = changes.find(({ filePath }) => filePath === candidate.filePath);
   if (!change) return undefined;
-  const parsed = parseSync(change.filePath, change.source, { range: true });
+  const parsed = parseCached(change.filePath, change.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
 
   const changedLines = new Set<number>();

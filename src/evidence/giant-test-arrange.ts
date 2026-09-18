@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Node } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -39,7 +40,7 @@ function collectFactoryHelpers(
   const helpers: FactoryHelperEvidence[] = [];
   for (const file of projectFiles) {
     if (!isTestFilePath(file.filePath)) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const add = (name: string): void => {
       if (!/fixture|factory|create[A-Z]|make[A-Z]|build[A-Z]|setup/i.test(name)) return;

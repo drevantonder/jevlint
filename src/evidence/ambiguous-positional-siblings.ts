@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
@@ -105,7 +106,7 @@ export function buildAmbiguousPositionalSiblingsEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -154,7 +155,7 @@ export function buildAmbiguousPositionalSiblingsEvidence(
   for (const caller of callers) {
     const file = projectFiles.find(({ filePath }) => filePath === caller.filePath);
     if (!file) continue;
-    const callerParsed = parseSync(file.filePath, file.source, { range: true });
+    const callerParsed = parseCached(file.filePath, file.source);
     if (callerParsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       CallExpression(node) {

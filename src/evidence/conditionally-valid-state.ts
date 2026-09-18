@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { MemberExpression, TSType } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -98,7 +99,7 @@ function collectCaseUses(
 
   for (const usage of usages) {
     if (usage.kind !== "function") continue;
-    const parsed = parseSync(usage.filePath, usage.source, { range: true });
+    const parsed = parseCached(usage.filePath, usage.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       IfStatement(node) {
@@ -155,7 +156,7 @@ export function buildConditionallyValidStateEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const declaration = findStateModelDeclaration(parsed.program, candidate);
   if (!declaration) return undefined;

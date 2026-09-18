@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { moduleImports, resolveModule } from "./repository.js";
 
@@ -57,7 +58,7 @@ function literalText(raw: string | null): string | undefined {
 }
 
 function valueSetsIn(file: ProjectFile): ValueSetOwner[] {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const sets: ValueSetOwner[] = [];
   new Visitor({
@@ -136,7 +137,7 @@ export function buildStringDuplicatedEnumerationEvidence(
   const anchorFile = projectFiles.find((file) => file.filePath === anchor.filePath);
   let importsOwner = false;
   if (anchorFile) {
-    const parsed = parseSync(anchorFile.filePath, anchorFile.source, { range: true });
+    const parsed = parseCached(anchorFile.filePath, anchorFile.source);
     if (!parsed.errors.some((error) => error.severity === "Error")) {
       importsOwner = moduleImports(parsed.program).some(({ source }) => {
         const resolved = resolveModule(anchorFile.filePath, source, projectFiles);

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
@@ -83,7 +84,7 @@ function paramInfos(fn: FunctionNode, source: string): ParamInfo[] {
 
 function opcodesOf(source: string, start: number, end: number): string[] {
   const wrapped = `function __flag() ${source.slice(start, end).startsWith("{") ? source.slice(start, end) : `{ ${source.slice(start, end)} }`}`;
-  const parsed = parseSync("flag.ts", wrapped, { range: true });
+  const parsed = parseCached("flag.ts", wrapped);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const opcodes: string[] = [];
   new Visitor({
@@ -139,7 +140,7 @@ export function buildModeFlagParameterEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

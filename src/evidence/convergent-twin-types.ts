@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   abstractionName,
@@ -67,7 +68,7 @@ function propertiesOf(source: string, node: AbstractionNode): string[] {
 }
 
 function abstractionsIn(file: ProjectFile): { node: AbstractionNode; name: string }[] {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const result: { node: AbstractionNode; name: string }[] = [];
   new Visitor({
@@ -88,7 +89,7 @@ export function buildConvergentTwinTypesEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const node = findDirectAbstraction(parsed.program, candidate);
   if (!node) return undefined;

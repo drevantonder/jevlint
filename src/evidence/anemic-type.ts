@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   Class,
   Function as OxcFunction,
@@ -262,7 +263,7 @@ function findClientSites(
     : null;
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     if (!importsType(parsed.program, file.filePath, ownerPath, typeName, projectFiles)) continue;
     importingModules.add(file.filePath);
@@ -307,7 +308,7 @@ export function buildAnemicTypeEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const declaration = findDeclaration(parsed.program, candidate);
   if (!declaration) return undefined;

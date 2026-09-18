@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { ConditionalExpression, IfStatement, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -75,7 +76,7 @@ function literalText(raw: string | null): string | undefined {
 
 function predicateSignature(condition: string): PredicateSignature | undefined {
   const wrapped = `const __policy = (${condition});`;
-  const parsed = parseSync("policy.ts", wrapped, { range: true });
+  const parsed = parseCached("policy.ts", wrapped);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const memberNames = new Set<string>();
   const literalValues = new Set<string>();
@@ -158,7 +159,7 @@ function branchEvidence(
 }
 
 function branchesIn(file: ProjectFile): { program: Program; branches: LocatedBranch[] } | undefined {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const functions = functionsIn(parsed.program);
   const branches: LocatedBranch[] = [];

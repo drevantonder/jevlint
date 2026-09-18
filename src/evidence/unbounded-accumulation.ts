@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Expression, Node } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, containsNode, nestedFunctionRanges } from "./function-scope.js";
@@ -92,7 +93,7 @@ export function buildUnboundedAccumulationEvidence(
   if (candidate.kind !== "function") return undefined;
   const ownerFile = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!ownerFile) return undefined;
-  const parsed = parseSync(ownerFile.filePath, ownerFile.source, { range: true });
+  const parsed = parseCached(ownerFile.filePath, ownerFile.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
