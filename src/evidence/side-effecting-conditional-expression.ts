@@ -53,6 +53,15 @@ type ConditionalFrame = {
   depth: number;
   consequentEffects: string[];
   alternateEffects: string[];
+  discarded: boolean;
+  hasNested: boolean;
+  hasMutation: boolean;
+};
+
+type SmellyMeta = {
+  discarded: boolean;
+  hasNested: boolean;
+  hasMutation: boolean;
 };
 
 export function buildSideEffectingConditionalEvidence(
@@ -74,23 +83,28 @@ export function buildSideEffectingConditionalEvidence(
     node.start >= candidate.start && node.end <= candidate.end
     && !nested.some((range) => range.start <= node.start && range.end >= node.end);
 
-  const conditionals: Array<ConditionalExpressionEvidence & { start: number; end: number }> = [];
+  const conditionals: Array<ConditionalExpressionEvidence & { start: number; end: number } & SmellyMeta> = [];
   const logicalStatements: LogicalStatementEvidence[] = [];
   const frames: ConditionalFrame[] = [];
   let conditionalDepth = 0;
+  const discardedRanges = new Set<string>();
+
+  const rangeKey = (node: Range): string => `${node.start}:${node.end}`;
 
   const describeEffect = (node: Range): string => owner.source.slice(node.start, node.end);
 
-  const markEffect = (node: Range): void => {
+  const markEffect = (node: Range, isMutation: boolean): void => {
     for (let index = frames.length - 1; index >= 0; index -= 1) {
       const frame = frames[index];
       if (!frame) continue;
       if (node.start >= frame.consequent.start && node.end <= frame.consequent.end) {
         frame.consequentEffects.push(describeEffect(node));
+        if (isMutation) frame.hasMutation = true;
         return;
       }
       if (node.start >= frame.alternate.start && node.end <= frame.alternate.end) {
         frame.alternateEffects.push(describeEffect(node));
+        if (isMutation) frame.hasMutation = true;
         return;
       }
     }
@@ -100,12 +114,17 @@ export function buildSideEffectingConditionalEvidence(
     ConditionalExpression(node) {
       if (!inScope(node)) return;
       conditionalDepth += 1;
+      const parent = frames[frames.length - 1];
+      if (parent) parent.hasNested = true;
       frames.push({
         consequent: { start: node.consequent.start, end: node.consequent.end },
         alternate: { start: node.alternate.start, end: node.alternate.end },
         depth: conditionalDepth,
         consequentEffects: [],
         alternateEffects: [],
+        discarded: discardedRanges.has(rangeKey(node)) || parent?.discarded === true,
+        hasNested: false,
+        hasMutation: false,
       });
     },
     "ConditionalExpression:exit"(node) {
@@ -119,6 +138,9 @@ export function buildSideEffectingConditionalEvidence(
           nestingDepth: frame.depth,
           consequentEffects: frame.consequentEffects,
           alternateEffects: frame.alternateEffects,
+          discarded: frame.discarded,
+          hasNested: frame.hasNested,
+          hasMutation: frame.hasMutation,
           start: node.start,
           end: node.end,
         });
@@ -126,19 +148,22 @@ export function buildSideEffectingConditionalEvidence(
     },
     CallExpression(node) {
       if (!inScope(node)) return;
-      markEffect(node);
+      markEffect(node, false);
     },
     AssignmentExpression(node) {
       if (!inScope(node)) return;
-      markEffect(node);
+      markEffect(node, true);
     },
     UpdateExpression(node) {
       if (!inScope(node)) return;
-      markEffect(node);
+      markEffect(node, true);
     },
     ExpressionStatement(node) {
       if (!inScope(node)) return;
       const expression = node.expression;
+      if (expression.type === "ConditionalExpression") {
+        discardedRanges.add(rangeKey(expression));
+      }
       if (expression.type !== "LogicalExpression") return;
       if (expression.operator === "??") return;
       const right = owner.source.slice(expression.right.start, expression.right.end);
@@ -156,10 +181,15 @@ export function buildSideEffectingConditionalEvidence(
     },
   }).visit(parsed.program);
 
+  // A flat ternary whose value is used (assigned, returned, passed along) and whose
+  // arms only call functions is value selection: the calls compute the selected
+  // value. Only discarded-position calls (a bare `cond ? a() : b();` statement),
+  // arm mutations, or nesting readers must execute count as this smell.
   const smelly = conditionals.filter(
-    (entry) => entry.consequentEffects.length > 0
-      || entry.alternateEffects.length > 0
-      || entry.nestingDepth >= 2,
+    (entry) => entry.nestingDepth >= 2
+      || entry.hasNested
+      || entry.hasMutation
+      || ((entry.consequentEffects.length > 0 || entry.alternateEffects.length > 0) && entry.discarded),
   );
   if (smelly.length === 0 && logicalStatements.length === 0) return undefined;
 

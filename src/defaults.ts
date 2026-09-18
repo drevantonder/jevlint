@@ -4634,6 +4634,7 @@ export const defaultConfig: JevLintConfig = {
           focus: "Judge statement-position effects and nesting, not value selection; a flat ternary choosing between two pure values is not this smell.",
           decision_boundary: [
             "Mutating calls or assignments inside ternary arms, nesting two or more levels deep, are strong evidence readers must execute the expression.",
+            "Calls in the arms of a flat assigned-or-returned ternary compute the selected value; only discarded-position calls, arm mutations, or nesting count as this smell.",
             "Statement-position && or || chains that invoke effects are the same smell in logical form.",
             "One flat ternary selecting between two pure values answers the question negatively.",
             "Data-mapping branches a lookup could replace belong to another rule even when written as a ternary.",

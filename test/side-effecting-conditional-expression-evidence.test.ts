@@ -19,6 +19,36 @@ const flatPure = `export function label(ok: boolean) {
 }
 `;
 
+const assignedValueCall = `export function resolveCacheDir(useCustom: boolean, input: { cache: { dir?: string } }) {
+  const cacheDir = useCustom ? (input.cache.dir ?? defaultCacheDir()) : undefined;
+  return cacheDir;
+}
+`;
+
+const assignedAwaitedCall = `export async function lookupAnswer(unit: string | undefined) {
+  const hit = unit === undefined ? undefined : await readCachedAnswer(unit);
+  return hit;
+}
+`;
+
+const returnedValueCall = `export function describeStatus(ok: boolean, detail: string) {
+  return ok ? formatDetail(detail) : fallbackStatus();
+}
+`;
+
+const discardedCalls = `export function trigger(ready: boolean) {
+  ready ? initialize() : cleanup();
+  return ready;
+}
+`;
+
+const armMutation = `export function pick(cond: boolean) {
+  let selected = "default";
+  const value = cond ? (selected = computeSelection()) : selected;
+  return value;
+}
+`;
+
 function project(source: string, filePath = "src/routing.ts"): ProjectFile[] {
   return [{ filePath, source }];
 }
@@ -58,6 +88,53 @@ describe("side effecting conditional expression evidence", () => {
   it("abstains for a flat ternary selecting pure values", () => {
     const filePath = "src/label.ts";
     expect(buildSideEffectingConditionalEvidence(candidateFor(flatPure, filePath, "label"), project(flatPure, filePath))).toBeUndefined();
+  });
+
+  it("abstains for an assigned ternary whose arm call computes the value", () => {
+    const filePath = "src/cache.ts";
+    expect(buildSideEffectingConditionalEvidence(
+      candidateFor(assignedValueCall, filePath, "resolveCacheDir"),
+      project(assignedValueCall, filePath),
+    )).toBeUndefined();
+  });
+
+  it("abstains for an assigned ternary awaiting the selected value", () => {
+    const filePath = "src/lookup.ts";
+    expect(buildSideEffectingConditionalEvidence(
+      candidateFor(assignedAwaitedCall, filePath, "lookupAnswer"),
+      project(assignedAwaitedCall, filePath),
+    )).toBeUndefined();
+  });
+
+  it("abstains for a returned ternary choosing between two calls", () => {
+    const filePath = "src/status.ts";
+    expect(buildSideEffectingConditionalEvidence(
+      candidateFor(returnedValueCall, filePath, "describeStatus"),
+      project(returnedValueCall, filePath),
+    )).toBeUndefined();
+  });
+
+  it("records a discarded ternary that invokes effects as statements", () => {
+    const filePath = "src/trigger.ts";
+    const evidence = buildSideEffectingConditionalEvidence(
+      candidateFor(discardedCalls, filePath, "trigger"),
+      project(discardedCalls, filePath),
+    );
+    expect(evidence?.conditionals).toHaveLength(1);
+    expect(evidence?.conditionals[0]).toMatchObject({ nestingDepth: 1 });
+    expect(evidence?.conditionals.every(
+      ({ consequentEffects, alternateEffects }) => consequentEffects.length > 0 || alternateEffects.length > 0,
+    )).toBe(true);
+  });
+
+  it("records a flat ternary that mutates through an arm", () => {
+    const filePath = "src/pick.ts";
+    const evidence = buildSideEffectingConditionalEvidence(
+      candidateFor(armMutation, filePath, "pick"),
+      project(armMutation, filePath),
+    );
+    expect(evidence?.conditionals).toHaveLength(1);
+    expect(evidence?.conditionals[0]?.consequentEffects.join(" ")).toContain("selected =");
   });
 
   it("abstains for non-function candidates", () => {
