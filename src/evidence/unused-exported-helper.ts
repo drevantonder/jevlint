@@ -8,6 +8,8 @@ import {
   isFunctionExported,
   resolveModule,
 } from "./repository.js";
+import type { FunctionCaller } from "./repository.js";
+import { partitionCallersByTest } from "./test-scope.js";
 
 export type UnusedExportReexport = {
   reexported: boolean;
@@ -24,6 +26,8 @@ export type UnusedExportedHelperEvidence = {
   };
   callerCount: number;
   callerExcerpts: string[];
+  testCallers: FunctionCaller[];
+  testCallerCount: number;
   symbolImporters: string[];
   reexport: UnusedExportReexport;
   sameFileReferences: number;
@@ -151,7 +155,8 @@ export function buildUnusedExportedHelperEvidence(
   if (MARKER_PATTERN.test(markerWindow)) return undefined;
 
   const coverage = findFunctionCallersWithCoverage(owner.filePath, name, projectFiles);
-  if (coverage.total > 0) return undefined;
+  const { production, test } = partitionCallersByTest(coverage.callers);
+  if (production.length > 0) return undefined;
 
   const importers = findModuleImporters(owner.filePath, projectFiles)
     .filter(({ importedSymbols }) =>
@@ -172,6 +177,8 @@ export function buildUnusedExportedHelperEvidence(
     },
     callerCount: 0,
     callerExcerpts: [],
+    testCallers: test.slice(0, 10),
+    testCallerCount: test.length,
     symbolImporters: importers,
     reexport: {
       reexported: paths.length > 0,

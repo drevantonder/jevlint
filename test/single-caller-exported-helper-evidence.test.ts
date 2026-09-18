@@ -54,6 +54,56 @@ describe("single caller exported helper evidence", () => {
       .toBeUndefined();
   });
 
+  it("abstains when the only caller lives in a test file", () => {
+    const helper = "export function formatCents(cents: number): string {\n"
+      + "  return (cents / 100).toFixed(2);\n"
+      + "}\n";
+    const probe = "import { expect, it } from \"vitest\";\n"
+      + "import { formatCents } from \"../src/helper.js\";\n"
+      + "it(\"formats\", () => { expect(formatCents(5)).toBe(\"0.05\"); });\n";
+    const projectFiles = [
+      { filePath: "src/helper.ts", source: helper },
+      { filePath: "test/helper.test.ts", source: probe },
+    ];
+    const candidate = extractCandidates("src/helper.ts", helper)[0];
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    expect(buildSingleCallerExportedHelperEvidence(candidate, projectFiles))
+      .toBeUndefined();
+  });
+
+  it("names test callers alongside the single production caller", () => {
+    const helper = "export function formatCents(cents: number): string {\n"
+      + "  return (cents / 100).toFixed(2);\n"
+      + "}\n";
+    const app = "import { formatCents } from \"./helper.js\";\n"
+      + "export function label(total: number): string {\n"
+      + "  return `$${formatCents(total)}`;\n"
+      + "}\n";
+    const probe = "import { expect, it } from \"vitest\";\n"
+      + "import { formatCents } from \"../src/helper.js\";\n"
+      + "it(\"formats\", () => { expect(formatCents(5)).toBe(\"0.05\"); });\n";
+    const projectFiles = [
+      { filePath: "src/helper.ts", source: helper },
+      { filePath: "src/app.ts", source: app },
+      { filePath: "test/helper.test.ts", source: probe },
+    ];
+    const candidate = extractCandidates("src/helper.ts", helper)[0];
+    expect(candidate).toBeDefined();
+    if (!candidate) return;
+
+    expect(buildSingleCallerExportedHelperEvidence(candidate, projectFiles)).toMatchObject({
+      function: { name: "formatCents", exported: true },
+      totalCallers: 1,
+      caller: expect.objectContaining({ filePath: "src/app.ts" }),
+      callerOwnership: "importing-module",
+      testCallerCount: 1,
+      testCallers: [expect.objectContaining({ filePath: "test/helper.test.ts" })],
+      reexport: { reexported: false, reexportPaths: [] },
+    });
+  });
+
   it("abstains for an unexported helper", () => {
     const source = [
       "function cents(cents: number) { return cents / 100; }",

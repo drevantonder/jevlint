@@ -3,7 +3,7 @@ import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { calleeRootName, findDirectFunction } from "./repository.js";
-import type { FunctionNode } from "./repository.js";
+import type { FunctionCaller, FunctionNode } from "./repository.js";
 
 export interface TestFunctionScope {
   owner: ProjectFile;
@@ -18,6 +18,24 @@ export function isTestFilePath(filePath: string): boolean {
   const base = normalized.split("/").pop() ?? normalized;
   if (/(^|\.)(test|spec)\.[cm]?[jt]sx?$/i.test(base)) return true;
   return /(^|\/)__tests__\//.test(normalized);
+}
+
+export interface PartitionedCallers {
+  production: FunctionCaller[];
+  test: FunctionCaller[];
+}
+
+/** Split callers into production callers and test callers.
+ * A test caller exercises the function without making it live in the product,
+ * so rules count only production callers while naming test callers as evidence. */
+export function partitionCallersByTest(callers: FunctionCaller[]): PartitionedCallers {
+  const production: FunctionCaller[] = [];
+  const test: FunctionCaller[] = [];
+  for (const caller of callers) {
+    if (isTestFilePath(caller.filePath)) test.push(caller);
+    else production.push(caller);
+  }
+  return { production, test };
 }
 
 export function parseTestFunction(

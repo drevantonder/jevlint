@@ -9,6 +9,7 @@ import {
   resolveModule,
 } from "./repository.js";
 import type { FunctionCaller } from "./repository.js";
+import { partitionCallersByTest } from "./test-scope.js";
 
 export type SingleCallerReexport = {
   reexported: boolean;
@@ -26,6 +27,8 @@ export type SingleCallerExportedHelperEvidence = {
   totalCallers: number;
   caller: FunctionCaller;
   callerOwnership: "same-file" | "importing-module" | "unresolved";
+  testCallers: FunctionCaller[];
+  testCallerCount: number;
   reexport: SingleCallerReexport;
 };
 
@@ -73,8 +76,9 @@ export function buildSingleCallerExportedHelperEvidence(
   if (!isFunctionExported(parsed.program, fn, name)) return undefined;
 
   const coverage = findFunctionCallersWithCoverage(owner.filePath, name, projectFiles);
-  if (coverage.total !== 1) return undefined;
-  const caller = coverage.callers[0];
+  const { production, test } = partitionCallersByTest(coverage.callers);
+  if (production.length !== 1) return undefined;
+  const caller = production[0];
   if (!caller) return undefined;
 
   const ownership: SingleCallerExportedHelperEvidence["callerOwnership"] =
@@ -94,9 +98,11 @@ export function buildSingleCallerExportedHelperEvidence(
       source: candidate.source,
       paramCount: fn.params.length,
     },
-    totalCallers: coverage.total,
+    totalCallers: production.length,
     caller,
     callerOwnership: ownership,
+    testCallers: test.slice(0, 10),
+    testCallerCount: test.length,
     reexport: {
       reexported: paths.length > 0,
       reexportPaths: paths,
