@@ -147,6 +147,7 @@ describe("loadConfig", () => {
       "jev/no-sleep-in-test",
       "jev/no-logic-in-test",
       "jev/no-mock-everything",
+      "jev/no-owned-module-mock",
       "jev/no-duplicated-fixture-drift",
       "jev/no-stale-feature-flag",
       "jev/no-unlabeled-interactive-element",

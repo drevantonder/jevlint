@@ -3629,6 +3629,33 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "This test verifies its own doubles rather than the subject.",
     },
+    "jev/no-owned-module-mock": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this test replace a module the repository itself owns with a mock, rather than mocking at a genuine system boundary?",
+          inspect: "Use the extracted module mocks with their specifiers, whether each target resolves to a repository file, whether the resolved file looks like a thin system-boundary adapter, and whether the remaining mocks stay at true boundaries in the supplied evidence.",
+          focus: "Judge whether the mocked seam is owned behavior the test should execute for real, not whether mocks exist at all.",
+          decision_boundary: [
+            "A mock whose target resolves to a repository file holding behavior the test could execute is strong evidence of mocking an owned module.",
+            "Mocks of bare specifiers, node builtins, clocks, network, or filesystem stay at genuine system boundaries and weigh against the proposition.",
+            "An owned mock whose resolved file is a thin boundary adapter (network, clock, or storage names) is the correct seam; weigh it against the proposition.",
+            "A mock whose target cannot be resolved against the repository cannot establish ownership; answer no on unknown targets alone.",
+            "If the evidence cannot establish any static module-mock target, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "A double stands in for a module the repository owns, bypassing behavior the test should execute",
+            remedy: "Mock at genuine system boundaries and let owned modules run for real, or promote the seam to an explicit boundary adapter",
+          },
+          false: {
+            what: "Mocks stay at system boundaries, the owned target is a thin adapter, or no owned module mock is established",
+          },
+        },
+      },
+      message: "This test mocks a module the repository owns instead of mocking at a system boundary.",
+    },
     "jev/no-duplicated-fixture-drift": {
       scope: "function",
       question: {
