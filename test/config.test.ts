@@ -329,6 +329,7 @@ describe("loadConfig", () => {
       "jev/no-mechanism-bound-name",
       "jev/no-retained-caller-alias",
       "jev/no-content-free-nominal",
+      "jev/no-cardinality-lying-type",
       // END GENERATED: rule-keys
     ]);
   });
