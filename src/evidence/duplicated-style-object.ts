@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { ObjectExpression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, nestedFunctionRanges } from "./function-scope.js";
@@ -100,7 +101,7 @@ function themeModules(projectFiles: ProjectFile[]): ThemeModule[] {
     for (const file of projectFiles) {
       if (file.filePath === theme.filePath) continue;
       if (importedBy.length >= 10) break;
-      const parsed = parseSync(file.filePath, file.source, { range: true });
+      const parsed = parseCached(file.filePath, file.source);
       if (parsed.errors.some((error) => error.severity === "Error")) continue;
       const uses = moduleImports(parsed.program).some(({ source }) =>
         source.includes(theme.filePath.replace(/\.[cm]?[jt]sx?$/, "").split("/").pop() ?? "")
@@ -123,7 +124,7 @@ export function buildDuplicatedStyleObjectEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -133,7 +134,7 @@ export function buildDuplicatedStyleObjectEvidence(
 
   const matches: StyleObjectMatch[] = [];
   for (const file of projectFiles) {
-    const other = parseSync(file.filePath, file.source, { range: true });
+    const other = parseCached(file.filePath, file.source);
     if (other.errors.some((error) => error.severity === "Error")) continue;
     const objects: { node: ObjectExpression; holder: string | null }[] = [];
     const holders = new Map<string, string>();

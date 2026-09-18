@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   Expression,
   MemberExpression,
@@ -167,7 +168,7 @@ function fellowImporters(
   const importers: string[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     if (moduleImports(parsed.program).some((imported) => imported.source === source)) {
       importers.push(file.filePath);
@@ -189,7 +190,7 @@ export function buildInappropriateIntimacyEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -217,7 +218,7 @@ export function buildInappropriateIntimacyEvidence(
     if (advertised === undefined) {
       const resolved = resolveModule(owner.filePath, imported.source, projectFiles);
       if (resolved && ownership === "project-module") {
-        const target = parseSync(resolved.filePath, resolved.source, { range: true });
+        const target = parseCached(resolved.filePath, resolved.source);
         if (!target.errors.some((error) => error.severity === "Error")) {
           const { members, reExportAll } = exportedNames(target.program);
           advertised = new Set(members);

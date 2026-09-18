@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   abstractionName,
@@ -59,7 +59,7 @@ export function buildLeakyInternalExportEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const declaration = findDirectAbstraction(parsed.program, candidate);
   if (!declaration) return undefined;

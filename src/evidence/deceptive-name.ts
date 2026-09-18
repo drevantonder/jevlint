@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Expression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -264,7 +265,7 @@ function collectReuses(
   const reuses: DeceptiveNameReuse[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath || reuses.length >= 8) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       VariableDeclarator(node) {
@@ -297,7 +298,7 @@ export function buildDeceptiveNameEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

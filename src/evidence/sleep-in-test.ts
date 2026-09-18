@@ -1,5 +1,5 @@
 import { Visitor } from "oxc-parser";
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -60,7 +60,7 @@ function pollingHelperFiles(ownerPath: string, projectFiles: ProjectFile[]): str
   const files: string[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath || !isTestFilePath(file.filePath)) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     let found = false;
     new Visitor({

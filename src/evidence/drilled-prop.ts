@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import { containsNode } from "./function-scope.js";
 import {
@@ -136,7 +137,7 @@ function stateChannels(projectFiles: ProjectFile[]): StateChannel[] {
     }
   };
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     for (const imported of moduleImports(parsed.program)) {
       if (!STATE_HOOK_PATTERN.test(imported.local)) continue;
@@ -169,7 +170,7 @@ export function buildDrilledPropEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

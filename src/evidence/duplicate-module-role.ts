@@ -1,5 +1,5 @@
 import { posix } from "node:path";
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { ModuleExportName } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findModuleImporters } from "./repository.js";
@@ -28,7 +28,7 @@ function exportedSpecifierName(exported: ModuleExportName): string {
 }
 
 function exportNames(filePath: string, source: string): string[] | undefined {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const names: string[] = [];
   const push = (name: string): void => {

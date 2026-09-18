@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { AbstractionNode } from "./repository.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -44,7 +45,7 @@ type KnownType = {
 function knownTypes(projectFiles: ProjectFile[]): KnownType[] {
   const result: KnownType[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       TSInterfaceDeclaration(node) {
@@ -89,7 +90,7 @@ function importsFile(
   targetPath: string,
   projectFiles: ProjectFile[],
 ): boolean {
-  const parsed = parseSync(fromFile.filePath, fromFile.source, { range: true });
+  const parsed = parseCached(fromFile.filePath, fromFile.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return false;
   return moduleImports(parsed.program).some((imported) =>
     resolveModule(fromFile.filePath, imported.source, projectFiles)?.filePath === targetPath
@@ -103,7 +104,7 @@ export function buildContextHomonymTypeEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const node = findDirectAbstraction(parsed.program, candidate);
   if (!node) return undefined;

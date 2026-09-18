@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { BindingPattern, Expression, ParamPattern, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -209,7 +210,7 @@ export function buildHiddenCollaboratorReadEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -310,7 +311,7 @@ export function buildHiddenCollaboratorReadEvidence(
     if (imported === "*" || imported === "default") continue;
     const target = resolveModule(owner.filePath, source, projectFiles);
     if (!target) continue;
-    const targetParsed = parseSync(target.filePath, target.source, { range: true });
+    const targetParsed = parseCached(target.filePath, target.source);
     if (targetParsed.errors.some((error) => error.severity === "Error")) continue;
     if (literalConstExports(targetParsed.program).has(imported)) {
       stableRoots.add(local);
@@ -365,7 +366,7 @@ export function buildHiddenCollaboratorReadEvidence(
     for (const file of projectFiles) {
       if (scanned.has(file.filePath) || file.filePath === defining?.filePath) continue;
       if (targets.length >= 10) break;
-      const fileParsed = parseSync(file.filePath, file.source, { range: true });
+      const fileParsed = parseCached(file.filePath, file.source);
       if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
       const locals = moduleImports(fileParsed.program)
         .filter(({ source: from, imported: symbol }) => from === source && symbol === exportedName)
@@ -377,7 +378,7 @@ export function buildHiddenCollaboratorReadEvidence(
     }
     for (const { file, names } of targets) {
       if (externalWriters.length >= 5) break;
-      const fileParsed = parseSync(file.filePath, file.source, { range: true });
+      const fileParsed = parseCached(file.filePath, file.source);
       if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
       for (const binding of names) {
         for (const { operation, start, end } of writeOperationsTo(file.source, fileParsed.program, binding)) {

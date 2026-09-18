@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { resolveModule } from "./repository.js";
 
@@ -34,7 +34,7 @@ function lineAt(source: string, offset: number): number {
 function buildGraph(projectFiles: ProjectFile[]): Adjacency {
   const graph: Adjacency = new Map();
   for (const file of projectFiles.slice(0, MAX_FILES)) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const edges = new Map<string, { source: string; valueImport: boolean; symbols: string[] }>();
     for (const statement of parsed.program.body) {
@@ -123,7 +123,7 @@ export function buildImportCycleTangleEvidence(
     let closingEdgeIsNew = false;
     const closing = edges.find(({ from }) => from === changed.filePath);
     if (closing && changed.oldSource !== null) {
-      const parsed = parseSync(changed.filePath, changed.source, { range: true });
+      const parsed = parseCached(changed.filePath, changed.source);
       if (!parsed.errors.some((error) => error.severity === "Error")) {
         const changedLines = new Set<number>();
         for (const range of changed.changedLines) {

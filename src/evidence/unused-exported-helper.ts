@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
   findDirectFunction,
@@ -44,7 +44,7 @@ function reexportPaths(
   const paths: string[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     for (const statement of parsed.program.body) {
       if (statement.type === "ExportAllDeclaration") {
@@ -65,7 +65,7 @@ function reexportPaths(
 }
 
 function topLevelInitCalls(source: string, filePath: string): string[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const calls: string[] = [];
   for (const statement of parsed.program.body) {
@@ -139,7 +139,7 @@ export function buildUnusedExportedHelperEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

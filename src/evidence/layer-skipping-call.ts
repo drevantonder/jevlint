@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { dirOf, inferLayer } from "./module.js";
@@ -53,7 +54,7 @@ export type LayerSkippingCallEvidence = {
 
 function previousSpecifiers(filePath: string, oldSource: string | null): Set<string> | undefined {
   if (oldSource === null) return new Set();
-  const parsed = parseSync(filePath, oldSource, { range: true });
+  const parsed = parseCached(filePath, oldSource);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   return new Set(moduleImports(parsed.program).map((item) => item.source));
 }
@@ -78,7 +79,7 @@ export function buildLayerSkippingCallEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -120,7 +121,7 @@ export function buildLayerSkippingCallEvidence(
       if (!edge.source.startsWith(".")) continue;
       const middle = resolveModule(owner.filePath, edge.source, projectFiles);
       if (!middle || middle.filePath === owner.filePath || middle.filePath === target.filePath) continue;
-      const middleParsed = parseSync(middle.filePath, middle.source, { range: true });
+      const middleParsed = parseCached(middle.filePath, middle.source);
       if (middleParsed.errors.some((error) => error.severity === "Error")) continue;
       const reachesTarget = moduleImports(middleParsed.program).some((item) =>
         item.source.startsWith(".")

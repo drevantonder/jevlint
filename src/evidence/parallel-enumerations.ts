@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   TSEnumDeclaration,
   TSInterfaceDeclaration,
@@ -131,7 +132,7 @@ function collectSiblingSets(
   const result: LiteralSetSite[] = [];
   const ownerSet = new Set(ownerLiterals);
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const visit = (node: NamedDeclaration): void => {
       if (file.filePath === ownerPath && node.id.name === ownerName) return;
@@ -164,7 +165,7 @@ function findMappingFunction(
   const ownerPattern = new RegExp(`\\b${escapeRegExp(ownerName)}\\b`);
   const siblingPattern = new RegExp(`\\b${escapeRegExp(siblingName)}\\b`);
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     let found: MappingFunctionEvidence | null = null;
     new Visitor({
@@ -191,7 +192,7 @@ export function buildParallelEnumerationsEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const declaration = findDirectAbstraction(parsed.program, candidate);
   if (!declaration) return undefined;

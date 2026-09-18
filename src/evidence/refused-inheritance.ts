@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Class, Expression, Program, Statement } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { moduleImports, resolveModule } from "./repository.js";
@@ -80,7 +81,7 @@ function definedClass(
   file: ProjectFile,
   className: string,
 ): Class | undefined {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   let found: Class | undefined;
   new Visitor({
@@ -92,7 +93,7 @@ function definedClass(
 }
 
 function defaultExportedClass(file: ProjectFile): Class | undefined {
-  const parsed = parseSync(file.filePath, file.source, { range: true });
+  const parsed = parseCached(file.filePath, file.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   let found: Class | undefined;
   for (const statement of parsed.program.body) {
@@ -109,7 +110,7 @@ function findSuperclass(
 ): { file: ProjectFile; node: Class } | undefined {
   const local = definedClass(owner, superName);
   if (local) return { file: owner, node: local };
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   for (const imported of moduleImports(parsed.program)) {
     if (imported.local !== superName) continue;
@@ -223,7 +224,7 @@ function instantiations(
 ): UsageEvidence[] {
   const result: UsageEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       NewExpression(node) {
@@ -248,7 +249,7 @@ function supertypeUsages(
 ): UsageEvidence[] {
   const result: UsageEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       TSTypeReference(node) {
@@ -275,7 +276,7 @@ export function buildRefusedInheritanceEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const node = findClass(parsed.program, candidate);
   if (!node) return undefined;

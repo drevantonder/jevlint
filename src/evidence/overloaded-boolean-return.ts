@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Expression } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -66,7 +67,7 @@ type BranchSite = {
 };
 
 function branchSites(source: string, filePath: string): BranchSite[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const sites: BranchSite[] = [];
   new Visitor({
@@ -97,7 +98,7 @@ export function buildOverloadedBooleanReturnEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn || !fn.body) return undefined;
@@ -160,7 +161,7 @@ export function buildOverloadedBooleanReturnEvidence(
       sites = branchSites(file.source, file.filePath);
       aliases = new Set<string>();
       functions = [];
-      const parsedCaller = parseSync(file.filePath, file.source, { range: true });
+      const parsedCaller = parseCached(file.filePath, file.source);
       if (!parsedCaller.errors.some((error) => error.severity === "Error")) {
         const foundAliases = aliases;
         const foundFunctions = functions;

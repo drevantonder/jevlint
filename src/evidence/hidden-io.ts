@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Expression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -129,7 +130,7 @@ function declarationRange(program: Program, name: string): SourceRange | undefin
 }
 
 function projectBoundary(target: ProjectFile, importedName: string): Boundary | undefined {
-  const parsed = parseSync(target.filePath, target.source, { range: true });
+  const parsed = parseCached(target.filePath, target.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const range = importedName === "default"
     ? { start: parsed.program.start, end: parsed.program.end }
@@ -162,7 +163,7 @@ export function buildHiddenIoEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./evidence/parse-cache.js";
 import type { Candidate, LineRange, ProjectFile, SourceFile } from "./types.js";
 import { buildModuleGraph, isSourcePath, planModuleCandidates } from "./evidence/module.js";
 import type { ModuleGraph } from "./evidence/module.js";
@@ -62,7 +63,7 @@ function candidate(
 }
 
 export function extractCandidates(filePath: string, source: string): Candidate[] {
-  const result = parseSync(filePath, source, { range: true });
+  const result = parseCached(filePath, source);
   const parseErrors = result.errors.filter((error) => error.severity === "Error");
   if (parseErrors.length > 0) {
     throw new Error(`Could not parse ${filePath}: ${parseErrors[0]?.message ?? "unknown error"}`);

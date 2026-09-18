@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 
 export type FlagLifecycle = {
@@ -56,7 +57,7 @@ function flagNameOf(text: string): string | undefined {
   return match?.[1] ?? match?.[2];
 }
 
-function gateExpressions(program: ReturnType<typeof parseSync>["program"], source: string): string[] {
+function gateExpressions(program: ReturnType<typeof parseCached>["program"], source: string): string[] {
   const gates: string[] = [];
   new Visitor({
     IfStatement(node) {
@@ -95,7 +96,7 @@ export function buildUnownedFeatureFlagEvidence(
 
   for (const change of changes) {
     if (newGates.length >= MAX_GATES) break;
-    const afterParsed = parseSync(change.filePath, change.source, { range: true });
+    const afterParsed = parseCached(change.filePath, change.source);
     if (afterParsed.errors.some((error) => error.severity === "Error")) continue;
     compared += 1;
     const changed = changedLineSet(change);
@@ -103,7 +104,7 @@ export function buildUnownedFeatureFlagEvidence(
     if (afterGates.length === 0) continue;
     const beforeGates = new Set<string>();
     if (change.oldSource !== null) {
-      const beforeParsed = parseSync(change.filePath, change.oldSource, { range: true });
+      const beforeParsed = parseCached(change.filePath, change.oldSource);
       if (!beforeParsed.errors.some((error) => error.severity === "Error")) {
         for (const gate of gateExpressions(beforeParsed.program, change.oldSource)) {
           beforeGates.add(gate);
@@ -132,7 +133,7 @@ export function buildUnownedFeatureFlagEvidence(
   let siblingFlagsWithoutLifecycle = 0;
   const newNames = new Set(newGates.map(({ flagName }) => flagName));
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const gates = gateExpressions(parsed.program, file.source);
     for (const gate of gates) {

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   CallExpression,
   Class,
@@ -127,7 +128,7 @@ function methodCallers(
   const callers: MethodCallerEvidence["callers"] = [];
   let total = 0;
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const calls: CallExpression[] = [];
     new Visitor({
@@ -202,7 +203,7 @@ export function buildLowCohesionClassEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const node = findClass(parsed.program, candidate);
   if (!node) return undefined;

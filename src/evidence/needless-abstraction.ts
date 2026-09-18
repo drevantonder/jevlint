@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Class, Program, TSInterfaceDeclaration } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { moduleImports, resolveModule } from "./repository.js";
@@ -74,7 +75,7 @@ function findImplementations(
 ): ImplementationEvidence[] {
   const implementations: ImplementationEvidence[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const aliases = interfaceAliases(
       parsed.program,
@@ -112,7 +113,7 @@ function findConsumers(
   const consumers: ConsumerEvidence[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath || implementationFiles.has(file.filePath)) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const consumes = moduleImports(parsed.program).some((imported) => {
       const resolved = resolveModule(file.filePath, imported.source, projectFiles);
@@ -132,7 +133,7 @@ export function buildNeedlessAbstractionEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const declaration = findInterface(parsed.program, candidate);
   if (!declaration) return undefined;

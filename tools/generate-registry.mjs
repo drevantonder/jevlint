@@ -51,6 +51,7 @@ const NON_RULE_FILES = new Set([
   "state-model.ts",
   "test-scope.ts",
   "module.ts",
+  "parse-cache.ts",
 ]);
 
 const KNOWN_PARAMS = ["candidate", "projectFiles", "changes"];

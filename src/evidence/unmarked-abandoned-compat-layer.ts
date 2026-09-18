@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -104,7 +105,7 @@ function reexportPaths(
   const paths: string[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     for (const statement of parsed.program.body) {
       if (statement.type === "ExportAllDeclaration") {
@@ -131,7 +132,7 @@ export function buildUnmarkedAbandonedCompatLayerEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -151,7 +152,7 @@ export function buildUnmarkedAbandonedCompatLayerEvidence(
 
   const successors: CompatSuccessor[] = [];
   for (const file of projectFiles) {
-    const fileParsed = parseSync(file.filePath, file.source, { range: true });
+    const fileParsed = parseCached(file.filePath, file.source);
     if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
     for (const entry of exportedFunctions(file.filePath, fileParsed.program)) {
       if (entry.name === name) continue;

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { IfStatement, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, containsNode, nestedFunctionRanges } from "./function-scope.js";
@@ -321,7 +322,7 @@ export function buildNonExhaustiveDomainHandlingEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -340,7 +341,7 @@ export function buildNonExhaustiveDomainHandlingEvidence(
   const importedDomains = moduleImports(parsed.program).flatMap((imported) => {
     const resolved = resolveModule(owner.filePath, imported.source, projectFiles);
     if (!resolved) return [];
-    const moduleParsed = parseSync(resolved.filePath, resolved.source, { range: true });
+    const moduleParsed = parseCached(resolved.filePath, resolved.source);
     if (moduleParsed.errors.some((error) => error.severity === "Error")) return [];
     return collectDomains(moduleParsed.program, resolved.source).map((domain) => ({
       ...domain,

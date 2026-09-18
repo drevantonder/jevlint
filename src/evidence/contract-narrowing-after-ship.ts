@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Expression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findFunctionCallers } from "./repository.js";
@@ -212,8 +213,8 @@ export function buildContractNarrowingEvidence(
     if (narrowings.length >= MAX_NARROWINGS) break;
     if (change.oldSource === null) continue;
     const oldSource: string = change.oldSource;
-    const beforeParsed = parseSync(change.filePath, oldSource, { range: true });
-    const afterParsed = parseSync(change.filePath, change.source, { range: true });
+    const beforeParsed = parseCached(change.filePath, oldSource);
+    const afterParsed = parseCached(change.filePath, change.source);
     if (
       beforeParsed.errors.some((error) => error.severity === "Error")
       || afterParsed.errors.some((error) => error.severity === "Error")
@@ -320,7 +321,7 @@ export function buildContractNarrowingEvidence(
       const [typeName, prop] = narrowing.target.split(".");
       for (const file of projectFiles) {
         if (file.filePath !== narrowing.filePath) continue;
-        const parsed = parseSync(file.filePath, file.source, { range: true });
+        const parsed = parseCached(file.filePath, file.source);
         if (parsed.errors.some((error) => error.severity === "Error")) continue;
         for (const scope of [...functionScopes(parsed.program), ...variableFunctionScopes(parsed.program)]) {
           const scopeText = file.source.slice(scope.node.start, scope.node.end);

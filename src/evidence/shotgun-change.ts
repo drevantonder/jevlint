@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { moduleImports, resolveModule } from "./repository.js";
 
@@ -104,7 +104,7 @@ export function buildShotgunChangeEvidence(
   for (const change of included) {
     const projectFile = projectFiles.find((file) => file.filePath === change.filePath);
     if (!projectFile) continue;
-    const parsed = parseSync(projectFile.filePath, projectFile.source, { range: true });
+    const parsed = parseCached(projectFile.filePath, projectFile.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     for (const imported of moduleImports(parsed.program)) {
       const resolved = resolveModule(change.filePath, imported.source, projectFiles);

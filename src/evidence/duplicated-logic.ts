@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -168,7 +169,7 @@ export function buildDuplicatedLogicEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -185,7 +186,7 @@ export function buildDuplicatedLogicEvidence(
   const matches: DuplicatedLogicMatch[] = [];
   let scanned = 0;
   for (const file of projectFiles) {
-    const other = parseSync(file.filePath, file.source, { range: true });
+    const other = parseCached(file.filePath, file.source);
     if (other.errors.some((error) => error.severity === "Error")) continue;
     const functions: FunctionNode[] = [];
     new Visitor({

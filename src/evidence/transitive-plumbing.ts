@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { belongsDirectlyToFunction, containsNode, nestedFunctionRanges } from "./function-scope.js";
@@ -194,7 +195,7 @@ export function buildTransitivePlumbingEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -211,7 +212,7 @@ export function buildTransitivePlumbingEvidence(
       if (declaredFunctionNames(parsed.program, name).includes(callee)) return true;
       return projectFiles.some((file) => {
         if (file.filePath === owner.filePath) return false;
-        const fileParsed = parseSync(file.filePath, file.source, { range: true });
+        const fileParsed = parseCached(file.filePath, file.source);
         if (fileParsed.errors.some((error) => error.severity === "Error")) return false;
         return declaredFunctionNames(fileParsed.program, name).includes(callee);
       });
@@ -227,7 +228,7 @@ export function buildTransitivePlumbingEvidence(
   for (const param of plumbedParams) {
     const forwarders: ForwarderTally = { count: 0, passThrough: [] };
     for (const file of projectFiles.slice(0, MAX_PROJECT_FILES)) {
-      const fileParsed = parseSync(file.filePath, file.source, { range: true });
+      const fileParsed = parseCached(file.filePath, file.source);
       if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
       for (const declared of declaredFunctionNames(fileParsed.program, param.name)) {
         if (file.filePath === owner.filePath && declared === candidateName) continue;

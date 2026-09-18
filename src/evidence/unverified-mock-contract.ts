@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   ArrowFunctionExpression,
   BlockStatement,
@@ -373,7 +374,7 @@ export function buildUnverifiedMockContractEvidence(
     const resolved = resolveModule(owner.filePath, mock.specifier, projectFiles);
     if (!resolved || resolved.filePath === owner.filePath) continue;
     const importedFrom = importedFiles.get(resolved.filePath) ?? null;
-    const parsed = parseSync(resolved.filePath, resolved.source, { range: true });
+    const parsed = parseCached(resolved.filePath, resolved.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const exports = exportedNames(parsed.program);
 

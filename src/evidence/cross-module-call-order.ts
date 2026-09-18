@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import {
@@ -155,7 +156,7 @@ export function buildCrossModuleCallOrderEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;
@@ -201,7 +202,7 @@ export function buildCrossModuleCallOrderEvidence(
 
       const targetFile = projectFiles.find((file) => file.filePath === left.target);
       if (!targetFile) continue;
-      const targetParsed = parseSync(targetFile.filePath, targetFile.source, { range: true });
+      const targetParsed = parseCached(targetFile.filePath, targetFile.source);
       if (targetParsed.errors.some((error) => error.severity === "Error")) continue;
       const functions = targetFunctions(targetParsed.program);
       const writer = functions.find(({ exportName }) => exportName === left.imported);

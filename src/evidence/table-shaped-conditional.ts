@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Candidate, ProjectFile } from "../types.js";
 import type { IfStatement, Program } from "oxc-parser";
 import {
@@ -67,7 +68,7 @@ function literalInner(test: string): string {
 
 function armHasBehavior(source: string, start: number, end: number): boolean {
   const wrapped = `function __arm() {${source.slice(start, end)}}`;
-  const parsed = parseSync("arm.ts", wrapped, { range: true });
+  const parsed = parseCached("arm.ts", wrapped);
   if (parsed.errors.some((error) => error.severity === "Error")) return true;
   let behavior = false;
   new Visitor({
@@ -252,7 +253,7 @@ function otherMappersOf(
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
     if (!pattern.test(file.source)) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const functions: FunctionNode[] = [];
     new Visitor({
@@ -286,7 +287,7 @@ export function buildTableConditionalEvidence(
   if (candidate.kind !== "function") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const fn = findDirectFunction(parsed.program, candidate);
   if (!fn) return undefined;

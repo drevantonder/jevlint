@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import {
@@ -73,7 +73,7 @@ function topLevelFunctions(program: Program): TopLevelFunction[] {
 }
 
 function parses(filePath: string, source: string): Program | undefined {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   return parsed.program;
 }

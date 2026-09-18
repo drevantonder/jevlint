@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { IfStatement, Program } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 
@@ -231,7 +232,7 @@ function collectMirrors(
 ): MirrorSite[] {
   const mirrors: MirrorSite[] = [];
   const seenIfChains = new Set<string>();
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return mirrors;
   new Visitor({
     SwitchStatement(node) {
@@ -329,8 +330,8 @@ export function buildChangeAmplifierCaseEvidence(
   for (const change of ordered) {
     if (addedCases.length >= MAX_ADDED) break;
     if (change.oldSource === null) continue;
-    const beforeParsed = parseSync(change.filePath, change.oldSource, { range: true });
-    const afterParsed = parseSync(change.filePath, change.source, { range: true });
+    const beforeParsed = parseCached(change.filePath, change.oldSource);
+    const afterParsed = parseCached(change.filePath, change.source);
     if (
       beforeParsed.errors.some((error) => error.severity === "Error")
       || afterParsed.errors.some((error) => error.severity === "Error")

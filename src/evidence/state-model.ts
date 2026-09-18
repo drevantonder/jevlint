@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   ArrowFunctionExpression,
   Function as OxcFunction,
@@ -148,7 +149,7 @@ export function findStateModelUsages(
 ): StateModelUsageResult {
   const found: UsageRange[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const aliases = aliasesForStateModel(
       parsed.program,

@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { CallExpression } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { calleeRootName, moduleImports, resolveModule } from "./repository.js";
@@ -62,7 +63,7 @@ function overlapsChanged(
 }
 
 function touchedDeclarations(change: SourceFile): string[] {
-  const parsed = parseSync(change.filePath, change.source, { range: true });
+  const parsed = parseCached(change.filePath, change.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const starts = lineStarts(change.source);
   const names: string[] = [];
@@ -102,7 +103,7 @@ function runnerRoot(callee: CallExpression["callee"]): string | null {
 }
 
 function changedTestFunctions(change: SourceFile): string[] {
-  const parsed = parseSync(change.filePath, change.source, { range: true });
+  const parsed = parseCached(change.filePath, change.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const starts = lineStarts(change.source);
   const names: string[] = [];
@@ -133,7 +134,7 @@ function changedTestFunctions(change: SourceFile): string[] {
 }
 
 function testFileTargetsImpl(testChange: SourceFile, implPath: string, projectFiles: ProjectFile[]): boolean {
-  const parsed = parseSync(testChange.filePath, testChange.source, { range: true });
+  const parsed = parseCached(testChange.filePath, testChange.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return false;
   return moduleImports(parsed.program).some((entry) => {
     if (!entry.source.startsWith(".")) return false;

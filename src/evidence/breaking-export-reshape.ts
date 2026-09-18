@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Function as OxcFunction, Program } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findFunctionCallers } from "./repository.js";
@@ -153,8 +154,8 @@ export function buildBreakingExportEvidence(
   for (const change of ordered) {
     if (contractBreaks.length >= MAX_BREAKS) break;
     if (change.oldSource === null) continue;
-    const beforeParsed = parseSync(change.filePath, change.oldSource, { range: true });
-    const afterParsed = parseSync(change.filePath, change.source, { range: true });
+    const beforeParsed = parseCached(change.filePath, change.oldSource);
+    const afterParsed = parseCached(change.filePath, change.source);
     if (
       beforeParsed.errors.some((error) => error.severity === "Error")
       || afterParsed.errors.some((error) => error.severity === "Error")

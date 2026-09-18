@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 import { functionName } from "./repository.js";
@@ -197,7 +198,7 @@ function hasCallExpression(program: Program): boolean {
 }
 
 function tryParse(filePath: string, text: string): Program | undefined {
-  const parsed = parseSync(filePath, text, { range: true });
+  const parsed = parseCached(filePath, text);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   return parsed.program;
 }
@@ -235,7 +236,7 @@ function liveDuplicate(
   candidate: Candidate,
   names: string[],
 ): CommentLiveDuplicate | null {
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return null;
   const functions: FunctionNode[] = [];
   new Visitor({

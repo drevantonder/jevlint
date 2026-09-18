@@ -1,4 +1,4 @@
-import { parseSync } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Node } from "oxc-parser";
 import type { Candidate, ProjectFile, SourceFile } from "../types.js";
 import { findFunctionCallersWithCoverage } from "./repository.js";
@@ -121,7 +121,7 @@ function declarationStatement(statement: Node): Node | null {
 }
 
 function parsedDeclarations(filePath: string, source: string): ParsedDeclaration[] {
-  const parsed = parseSync(filePath, source, { range: true });
+  const parsed = parseCached(filePath, source);
   if (parsed.errors.some((error) => error.severity === "Error")) return [];
   const result: ParsedDeclaration[] = [];
   for (const statement of parsed.program.body) {

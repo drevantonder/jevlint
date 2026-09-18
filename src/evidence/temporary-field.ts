@@ -1,4 +1,5 @@
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type { Class, Expression, MemberExpression, MethodDefinition, Program } from "oxc-parser";
 import type { Candidate, ProjectFile } from "../types.js";
 
@@ -99,7 +100,7 @@ export function buildTemporaryFieldEvidence(
   if (candidate.kind !== "abstraction") return undefined;
   const owner = projectFiles.find((file) => file.filePath === candidate.filePath);
   if (!owner) return undefined;
-  const parsed = parseSync(owner.filePath, owner.source, { range: true });
+  const parsed = parseCached(owner.filePath, owner.source);
   if (parsed.errors.some((error) => error.severity === "Error")) return undefined;
   const node = findClass(parsed.program, candidate);
   if (!node) return undefined;
@@ -216,7 +217,7 @@ export function buildTemporaryFieldEvidence(
     .map((definition) => methodName(definition));
   const externalCalls = new Map<string, number>(methodNames.map((method) => [method, 0]));
   for (const file of projectFiles) {
-    const fileParsed = parseSync(file.filePath, file.source, { range: true });
+    const fileParsed = parseCached(file.filePath, file.source);
     if (fileParsed.errors.some((error) => error.severity === "Error")) continue;
     new Visitor({
       CallExpression(call) {

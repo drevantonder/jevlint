@@ -1,5 +1,6 @@
 import { posix } from "node:path";
-import { parseSync, Visitor } from "oxc-parser";
+import { Visitor } from "oxc-parser";
+import { parseCached } from "./parse-cache.js";
 import type {
   ArrowFunctionExpression,
   CallExpression,
@@ -254,7 +255,7 @@ function collectFunctionCallers(
 ): FunctionCaller[] {
   const result: FunctionCaller[] = [];
   for (const file of projectFiles) {
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const names = file.filePath === ownerPath
       ? { identifiers: new Set([functionName]), namespaces: new Set<string>() }
@@ -348,7 +349,7 @@ export function findModuleImporters(
   const result: ModuleImporter[] = [];
   for (const file of projectFiles) {
     if (file.filePath === ownerPath) continue;
-    const parsed = parseSync(file.filePath, file.source, { range: true });
+    const parsed = parseCached(file.filePath, file.source);
     if (parsed.errors.some((error) => error.severity === "Error")) continue;
     const symbols: string[] = [];
     for (const imported of moduleImports(parsed.program)) {
