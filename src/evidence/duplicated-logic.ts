@@ -9,8 +9,20 @@ import {
   isFunctionExported,
   moduleImports,
   nestedFunctionRanges,
+  resolveModule,
 } from "./repository.js";
 import type { FunctionCaller, FunctionNode } from "./repository.js";
+import {
+  applyComparisonBudget,
+  lineStartOffsets,
+  orderScopeFiles,
+  projectOrderIndex,
+  rankComparisons,
+  resolvePairwiseBounds,
+  sameOpcodeSequence,
+  scopedCandidate,
+  topLevelOpcodes,
+} from "./pairwise-scope.js";
 
 export type BodyFingerprint = {
   opcodes: string[];
@@ -109,36 +121,6 @@ function fingerprintOf(
   };
 }
 
-function positionOf(source: string, offset: number) {
-  let line = 1;
-  let column = 1;
-  for (let index = 0; index < offset; index += 1) {
-    if (source[index] === "\n") {
-      line += 1;
-      column = 1;
-    } else {
-      column += 1;
-    }
-  }
-  return { line, column };
-}
-
-function candidateOf(file: ProjectFile, node: FunctionNode, index: number): Candidate {
-  const start = positionOf(file.source, node.start);
-  const end = positionOf(file.source, node.end);
-  return {
-    id: `duplicated-logic-${index}`,
-    kind: "function",
-    filePath: file.filePath,
-    source: file.source.slice(node.start, node.end),
-    start: node.start,
-    end: node.end,
-    startLine: start.line,
-    startColumn: start.column,
-    endLine: end.line,
-    endColumn: end.column,
-  };
-}
 function intersect(left: string[], right: string[]): string[] {
   const set = new Set(right);
   return left.filter((item) => set.has(item));
@@ -156,10 +138,6 @@ function opcodeOverlap(left: string[], right: string[]): number {
     }
   }
   return shared;
-}
-
-function sameOpcodeSequence(left: string[], right: string[]): boolean {
-  return left.length >= 3 && left.length === right.length && left.every((opcode, index) => opcode === right[index]);
 }
 
 export function buildDuplicatedLogicEvidence(
@@ -183,9 +161,27 @@ export function buildDuplicatedLogicEvidence(
   const candidateCallers = findFunctionCallers(owner.filePath, name, projectFiles);
   const callerFiles = new Set(candidateCallers.map(({ filePath }) => filePath));
 
-  const matches: DuplicatedLogicMatch[] = [];
-  let scanned = 0;
-  for (const file of projectFiles) {
+  const bounds = resolvePairwiseBounds();
+  // Import neighbours first: same-module and directly connected comparisons
+  // carry the strongest signal, so they survive when the scope budget binds.
+  const related = new Set<string>();
+  for (const imported of moduleImports(parsed.program)) {
+    const resolved = resolveModule(owner.filePath, imported.source, projectFiles);
+    if (resolved && resolved.filePath !== owner.filePath) related.add(resolved.filePath);
+  }
+  const scope = orderScopeFiles(owner.filePath, projectFiles, related, bounds.maxScopeFiles);
+  const projectOrder = projectOrderIndex(projectFiles);
+
+  type EnumeratedFunction = {
+    file: ProjectFile;
+    program: Program;
+    node: FunctionNode;
+    name: string;
+    starts: number[];
+    sequence: number;
+  };
+  const enumerated: EnumeratedFunction[] = [];
+  for (const file of scope.files) {
     const other = parseCached(file.filePath, file.source);
     if (other.errors.some((error) => error.severity === "Error")) continue;
     const functions: FunctionNode[] = [];
@@ -200,41 +196,85 @@ export function buildDuplicatedLogicEvidence(
         functions.push(node);
       },
     }).visit(other.program);
+    const starts = lineStartOffsets(file.source);
+    let sequence = 0;
     for (const otherFn of functions) {
       if (file.filePath === owner.filePath && otherFn.start === fn.start && otherFn.end === fn.end) continue;
       const otherName = functionName(other.program, otherFn);
       if (!otherName) continue;
-      scanned += 1;
-      const otherFingerprint = fingerprintOf(other.program, otherFn, candidateOf(file, otherFn, scanned));
-      if (otherFingerprint.opcodes.length < 2) continue;
-      const sharedMembers = intersect(fingerprint.memberNames, otherFingerprint.memberNames)
-        .filter((member) => !GENERIC_MEMBERS.has(member));
-      const sharedLiterals = intersect(fingerprint.literalValues, otherFingerprint.literalValues);
-      const qualifies = sharedLiterals.length >= 1
-        || sharedMembers.length >= 2
-        || sameOpcodeSequence(fingerprint.opcodes, otherFingerprint.opcodes);
-      if (!qualifies) continue;
-      const otherImports = moduleImports(other.program).map(({ source }) => source);
-      const sharedImports = otherImports.filter((source) => ownerImports.has(source));
-      const resolved = findFunctionCallers(file.filePath, otherName, projectFiles).map(({ filePath }) => filePath);
-      matches.push({
-        filePath: file.filePath,
-        functionName: otherName,
-        sourceExcerpt: file.source.slice(otherFn.start, otherFn.end).slice(0, 2_000),
-        sharedOpcodes: opcodeOverlap(fingerprint.opcodes, otherFingerprint.opcodes),
-        sharedMemberNames: sharedMembers.slice(0, 20),
-        sharedLiteralValues: sharedLiterals.slice(0, 20),
-        sharedImportSources: [...new Set(sharedImports)].slice(0, 10),
-        commonCallerFiles: [...new Set(resolved.filter((path) => callerFiles.has(path)))].slice(0, 10),
-      });
+      // Opcode shape is free (read off the node); the length gate below
+      // matches the fingerprinter's own minimum exactly.
+      if (topLevelOpcodes(otherFn).length < 2) continue;
+      enumerated.push({ file, program: other.program, node: otherFn, name: otherName, starts, sequence });
+      sequence += 1;
     }
   }
 
-  if (matches.length === 0) return undefined;
-  matches.sort((left, right) =>
-    (right.sharedLiteralValues.length * 2 + right.sharedMemberNames.length + right.sharedOpcodes)
-    - (left.sharedLiteralValues.length * 2 + left.sharedMemberNames.length + left.sharedOpcodes),
+  const budget = applyComparisonBudget(
+    rankComparisons(fingerprint.opcodes, name, enumerated),
+    bounds.maxFullComparisons,
+    bounds.prePass,
   );
+
+  type PreliminaryMatch = Omit<DuplicatedLogicMatch, "sharedImportSources" | "commonCallerFiles"> & {
+    other: Program;
+    fileOrder: number;
+    sequence: number;
+  };
+  const preliminary: PreliminaryMatch[] = [];
+  budget.selected.forEach((ranked, index) => {
+    const target = ranked.entry;
+    const otherFingerprint = fingerprintOf(
+      target.program,
+      target.node,
+      scopedCandidate(target.file, target.file.source, target.starts, target.node, `duplicated-logic-${index}`),
+    );
+    const sharedMembers = intersect(fingerprint.memberNames, otherFingerprint.memberNames)
+      .filter((member) => !GENERIC_MEMBERS.has(member));
+    const sharedLiterals = intersect(fingerprint.literalValues, otherFingerprint.literalValues);
+    const qualifies = sharedLiterals.length >= 1
+      || sharedMembers.length >= 2
+      || sameOpcodeSequence(fingerprint.opcodes, otherFingerprint.opcodes);
+    if (!qualifies) return;
+    preliminary.push({
+      filePath: target.file.filePath,
+      functionName: target.name,
+      sourceExcerpt: target.file.source.slice(target.node.start, target.node.end).slice(0, 2_000),
+      sharedOpcodes: opcodeOverlap(fingerprint.opcodes, otherFingerprint.opcodes),
+      sharedMemberNames: sharedMembers.slice(0, 20),
+      sharedLiteralValues: sharedLiterals.slice(0, 20),
+      other: target.program,
+      fileOrder: projectOrder.get(target.file.filePath) ?? projectFiles.length,
+      sequence: target.sequence,
+    });
+  });
+
+  if (preliminary.length === 0) return undefined;
+  preliminary.sort((left, right) =>
+    (right.sharedLiteralValues.length * 2 + right.sharedMemberNames.length + right.sharedOpcodes)
+    - (left.sharedLiteralValues.length * 2 + left.sharedMemberNames.length + left.sharedOpcodes)
+    || left.fileOrder - right.fileOrder
+    || left.sequence - right.sequence,
+  );
+
+  // Caller scans run only for ranked survivors. Ranking uses no caller
+  // data, so deferring them changes nothing but cost.
+  const matches: DuplicatedLogicMatch[] = preliminary.slice(0, 5).map((entry) => {
+    const otherImports = moduleImports(entry.other).map(({ source }) => source);
+    const sharedImports = otherImports.filter((source) => ownerImports.has(source));
+    const resolved = findFunctionCallers(entry.filePath, entry.functionName, projectFiles)
+      .map(({ filePath }) => filePath);
+    return {
+      filePath: entry.filePath,
+      functionName: entry.functionName,
+      sourceExcerpt: entry.sourceExcerpt,
+      sharedOpcodes: entry.sharedOpcodes,
+      sharedMemberNames: entry.sharedMemberNames,
+      sharedLiteralValues: entry.sharedLiteralValues,
+      sharedImportSources: [...new Set(sharedImports)].slice(0, 10),
+      commonCallerFiles: [...new Set(resolved.filter((path) => callerFiles.has(path)))].slice(0, 10),
+    };
+  });
 
   return {
     function: {
@@ -244,7 +284,7 @@ export function buildDuplicatedLogicEvidence(
       source: candidate.source,
     },
     fingerprint,
-    matches: matches.slice(0, 5),
+    matches,
     callers: candidateCallers,
   };
 }
