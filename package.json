@@ -23,19 +23,16 @@
     "build": "tsc -p tsconfig.build.json",
     "check": "tsc --noEmit && node tools/generate-registry.mjs --check && vitest run",
     "generate:registry": "node tools/generate-registry.mjs",
-    "env:check": "varlock load --agent",
-    "jevlint": "varlock run -- node dist/cli.js",
+    "jevlint": "node dist/cli.js",
     "lint": "oxlint",
     "test": "vitest run",
-    "test:live": "varlock run --inject vars -- env RUN_LIVE_JEV=1 vitest run test/live",
+    "test:live": "RUN_LIVE_JEV=1 vitest run test/live",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0",
-    "@varlock/1password-plugin": "^2.0.4",
     "jiti": "^2.6.1",
     "oxc-parser": "^0.150.0",
-    "varlock": "^1.19.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -45,8 +42,5 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
-  "packageManager": "pnpm@11.3.0",
-  "optionalDependencies": {
-    "keytar": "^7.9.0"
-  }
+  "packageManager": "pnpm@11.3.0"
 }

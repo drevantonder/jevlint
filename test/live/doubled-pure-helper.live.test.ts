@@ -39,8 +39,8 @@ liveDescribe("doubled pure helper with purity evidence", () => {
     ]);
 
     const [doubledJudgments, plainJudgments] = await Promise.all([
-      lint(doubled, "test/slug.test.ts", new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
-      lint(plain, "test/report.test.ts", new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
+      lint(doubled, "test/slug.test.ts", new TypeSafeEvaluator({ apiKey: process.env.TYPESAFE_API_KEY ?? "" })),
+      lint(plain, "test/report.test.ts", new TypeSafeEvaluator({ apiKey: process.env.TYPESAFE_API_KEY ?? "" })),
     ]);
 
     expect(doubledJudgments.length).toBeGreaterThan(0);

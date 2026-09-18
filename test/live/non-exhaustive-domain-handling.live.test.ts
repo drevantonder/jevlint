@@ -5,7 +5,7 @@ import type { Evaluator, JevLintConfig, ProjectFile } from "../../src/types.js";
 import { TypeSafeEvaluator } from "../../src/typesafe-evaluator.js";
 
 const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
-const evaluator: Evaluator = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
+const evaluator: Evaluator = new TypeSafeEvaluator({ apiKey: process.env.TYPESAFE_API_KEY ?? "" });
 
 const SMELLY: ProjectFile = {
   filePath: "src/order.ts",

@@ -1,10 +1,12 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
-import { runCli } from "../src/cli.js";
+import { mainModuleMatches, runCli } from "../src/cli.js";
 import { defaultConfig } from "../src/defaults.js";
 import type { EvaluationRequest, Evaluator } from "../src/types.js";
 
@@ -730,5 +732,47 @@ describe("runCli", () => {
     expect(capture.exitCode).toBe(0);
     // SAFETY: --rules only prints the bundled rule keys from the defaults registry.
     expect(JSON.parse(capture.stdout)).toEqual(expected);
+  });
+});
+
+describe("main module detection", () => {
+  it("matches a direct path to the module", () => {
+    const modulePath = new URL("../src/cli.ts", import.meta.url).pathname;
+    expect(mainModuleMatches(modulePath, pathToFileURL(modulePath).href)).toBe(true);
+  });
+
+  it("matches a symlinked path to the same module", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jevlint-symlink-unit-"));
+    const target = join(directory, "real.mjs");
+    await writeFile(target, "export const value = 1;\n");
+    const link = join(directory, "link.mjs");
+    await symlink(target, link);
+    expect(mainModuleMatches(link, pathToFileURL(target).href)).toBe(true);
+    expect(mainModuleMatches(target, pathToFileURL(target).href)).toBe(true);
+  });
+
+  it("rejects other paths and missing argv", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jevlint-symlink-miss-"));
+    const other = join(directory, "other.mjs");
+    await writeFile(other, "export const value = 2;\n");
+    const moduleUrl = pathToFileURL(join(directory, "real.mjs")).href;
+    expect(mainModuleMatches(other, moduleUrl)).toBe(false);
+    expect(mainModuleMatches(join(directory, "no-such-file.mjs"), moduleUrl)).toBe(false);
+    expect(mainModuleMatches(undefined, moduleUrl)).toBe(false);
+  });
+});
+
+const distCli = new URL("../dist/cli.js", import.meta.url).pathname;
+
+describe.runIf(existsSync(distCli))("global install invocation", () => {
+  it("prints identical output through a symlinked argv path", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jevlint-symlink-dist-"));
+    const link = join(directory, "jevlint");
+    await symlink(distCli, link);
+    const direct = await execFile(process.execPath, [distCli, "--rules"], { cwd: directory });
+    const linked = await execFile(process.execPath, [link, "--rules"], { cwd: directory });
+    expect(linked.stdout).toBe(direct.stdout);
+    expect(linked.stdout).toContain("jev/no-pass-through-wrapper");
+    expect(linked.stderr).toBe("");
   });
 });
