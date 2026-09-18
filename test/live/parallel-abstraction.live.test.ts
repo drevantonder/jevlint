@@ -59,7 +59,7 @@ export function emitNotification(message: string) {
 
 class RecordingEvaluator implements Evaluator {
   probability: number | undefined;
-  readonly delegate = new TypeSafeEvaluator();
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
 
   async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
     const answers = await this.delegate.evaluate(request);

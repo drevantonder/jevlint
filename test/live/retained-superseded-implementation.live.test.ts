@@ -39,8 +39,8 @@ liveDescribe("retained superseded implementation with marker evidence", () => {
     ]);
 
     const [retained, successor] = await Promise.all([
-      lint(projectFiles, "src/legacy.ts", new TypeSafeEvaluator()),
-      lint(projectFiles, "src/format.ts", new TypeSafeEvaluator()),
+      lint(projectFiles, "src/legacy.ts", new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
+      lint(projectFiles, "src/format.ts", new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
     ]);
 
     expect(retained.length).toBeGreaterThan(0);

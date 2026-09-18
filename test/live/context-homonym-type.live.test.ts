@@ -7,7 +7,7 @@ import type { Evaluator, JevLintConfig, ProjectFile } from "../../src/types.js";
 const liveDescribe = process.env.RUN_LIVE_JEV === "1" ? describe : describe.skip;
 
 class PassthroughEvaluator implements Evaluator {
-  readonly delegate = new TypeSafeEvaluator();
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
   evaluate(request: Parameters<Evaluator["evaluate"]>[0]) {
     return this.delegate.evaluate(request);
   }

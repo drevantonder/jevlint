@@ -22,7 +22,7 @@ const fallbackEvidenceSchema = z.object({
 
 class RecordingEvaluator implements Evaluator {
   readonly probabilities = new Map<string, number>();
-  readonly delegate = new TypeSafeEvaluator();
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
 
   async evaluate(request: EvaluationRequest): Promise<Record<string, number>> {
     const answers = await this.delegate.evaluate(request);

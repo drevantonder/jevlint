@@ -41,8 +41,8 @@ liveDescribe("unpinned compat quirk with caller dependence evidence", () => {
     const withoutCaller: ProjectFile[] = [{ filePath: "src/lib.ts", source: PLAIN_LIB }];
 
     const [quirkJudgments, cleanJudgments] = await Promise.all([
-      lint(LIB, withCaller, new TypeSafeEvaluator()),
-      lint(PLAIN_LIB, withoutCaller, new TypeSafeEvaluator()),
+      lint(LIB, withCaller, new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
+      lint(PLAIN_LIB, withoutCaller, new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" })),
     ]);
 
     expect(quirkJudgments.length).toBeGreaterThan(0);

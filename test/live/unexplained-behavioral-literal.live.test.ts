@@ -9,7 +9,7 @@ const RULE = "jev/no-unexplained-behavioral-literal";
 
 class RecordingEvaluator implements Evaluator {
   readonly probabilities = new Map<string, number>();
-  readonly delegate = new TypeSafeEvaluator();
+  readonly delegate = new TypeSafeEvaluator({ apiKey: process.env.JEVLINT_TYPESAFE_API_KEY ?? "" });
   async evaluate(request: Parameters<Evaluator["evaluate"]>[0]) {
     const answers = await this.delegate.evaluate(request);
     const probability = answers.q0;
