@@ -9,6 +9,7 @@ import { buildAdversarialRegexEvidence } from "./adversarial-regex.js";
 import { buildAmbientDependencyGrabEvidence } from "./ambient-dependency-grab.js";
 import { buildAmbiguousPositionalSiblingsEvidence } from "./ambiguous-positional-siblings.js";
 import { buildAnemicTypeEvidence } from "./anemic-type.js";
+import { buildAnyWidenedInterfaceEvidence } from "./any-widened-interface.js";
 import { buildAssertionFreeTestEvidence } from "./assertion-free-test.js";
 import { buildAsymmetricNormalizationEvidence } from "./asymmetric-normalization.js";
 import { buildAvoidableOrchestrationEvidence } from "./avoidable-orchestration.js";
@@ -318,6 +319,7 @@ type EvidenceRegistry = {
   "jev/no-ambient-dependency-grab": EvidenceBuilder;
   "jev/no-ambiguous-positional-siblings": EvidenceBuilder;
   "jev/no-anemic-type": EvidenceBuilder;
+  "jev/no-any-widened-interface": EvidenceBuilder;
   "jev/no-assertion-free-test": EvidenceBuilder;
   "jev/no-asymmetric-normalization": EvidenceBuilder;
   "jev/no-avoidable-orchestration": EvidenceBuilder;
@@ -624,6 +626,8 @@ const evidenceBuilders: EvidenceRegistry = {
     buildAmbiguousPositionalSiblingsEvidence(candidate, projectFiles),
   "jev/no-anemic-type": (candidate, projectFiles) =>
     buildAnemicTypeEvidence(candidate, projectFiles),
+  "jev/no-any-widened-interface": (candidate, projectFiles) =>
+    buildAnyWidenedInterfaceEvidence(candidate, projectFiles),
   "jev/no-assertion-free-test": (candidate, projectFiles) =>
     buildAssertionFreeTestEvidence(candidate, projectFiles),
   "jev/no-asymmetric-normalization": (candidate, projectFiles) =>

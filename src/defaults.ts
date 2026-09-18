@@ -8033,5 +8033,32 @@ export const defaultConfig: JevLintConfig = {
       },
       message: "Two collections advance in lockstep under one shared index instead of one record collection.",
     },
+    "jev/no-any-widened-interface": {
+      scope: "function",
+      question: {
+        instructions: {
+          question: "Does this change expose `any` in this function's caller-visible signature (parameters, return) where a narrower type was available, rather than confining `any` to generic internals?",
+          inspect: "Use each widened parameter and return annotation, the internal any notes, the generic-constraint and disable-comment exceptions, the narrower types available in the module, and the repository callers in the supplied evidence.",
+          focus: "Judge whether callers lose type information they could have had, not whether `any` appears anywhere in the body.",
+          decision_boundary: [
+            "An `any` parameter or return annotation on an exported function, with a domain interface or imported type available in the module, is strong evidence the interface was widened past a narrower alternative.",
+            "An `any` confined to locals, `as any` casts, or the function body answers the question negatively on its own; casts are escape-rule territory and appear only as notes.",
+            "A generic rest-forwarding constraint such as `(...args: any[]) => any`, or an adjacent explicit-any disable or ts-expect-error comment, marks a deliberate documented exception.",
+            "A non-exported helper narrows the audience; judge how much of the widening still reaches callers through the module's exports.",
+            "If no `any` appears in a caller-visible annotation, answer no.",
+          ],
+        },
+        criteria: {
+          true: {
+            what: "Callers receive or return `any` where a narrower module type was available, so misuse the compiler could have caught compiles silently",
+            remedy: "Narrow the parameter and return annotations to the domain or imported types the module already has, and keep `any` inside generic bodies only",
+          },
+          false: {
+            what: "The signature is fully typed, the `any` stays in generic constraints or body internals, or a documented exception covers the widening",
+          },
+        },
+      },
+      message: "This function exposes `any` in its caller-visible signature where a narrower type was available.",
+    },
   },
 };
